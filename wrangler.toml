@@ -1,4 +1,4 @@
-name = "taiwan-opendata-mcp-server"
+name = "opendata-mcp"
 main = "src/index.ts"
 compatibility_date = "2026-07-19"
 compatibility_flags = ["nodejs_compat"]
