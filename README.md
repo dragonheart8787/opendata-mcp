@@ -1,135 +1,91 @@
 # opendata-mcp
 
-一個開源的**台灣開放資料 Remote MCP Server**，讓 Claude（或任何支援 [MCP](https://modelcontextprotocol.io) 的用戶端）可以即時查詢台灣中央氣象署（CWA）的天氣預報與地震資訊。
+## 這是什麼？
 
-- 使用官方 [`@modelcontextprotocol/sdk`](https://github.com/modelcontextprotocol/typescript-sdk)（TypeScript）
-- Transport 採用 **stateless Streamable HTTP**（無 session 狀態，每個請求獨立處理，適合部署在 serverless 環境）
-- 部署目標為 **Cloudflare Workers**（透過 Git 整合自動部署，push 到 `main` 即上線）
-- 資料來源為 [中央氣象署開放資料平臺](https://opendata.cwa.gov.tw/)
+`opendata-mcp` 是一個提供**台灣開放資料**的 Remote MCP Server。簡單說，它讓你可以直接在 Claude 對話裡問「臺北市明天天氣如何？」「最近台灣有地震嗎？」，不用自己打開中央氣象署網站查資料——Claude 會透過這個服務即時幫你查詢並整理成好讀的答案。
 
-## 提供的工具（Tools）
+目前支援的資料集：
 
-| 工具名稱 | 說明 | 資料集 |
-| --- | --- | --- |
-| `tw_weather_forecast` | 查詢指定縣市的 36 小時天氣預報（天氣狀況、降雨機率、氣溫、舒適度） | [F-C0032-001](https://opendata.cwa.gov.tw/dataset/forecast/F-C0032-001) |
-| `tw_recent_earthquakes` | 查詢近期顯著有感地震報告（規模、深度、震央、各地最大震度） | [E-A0015-001](https://opendata.cwa.gov.tw/dataset/earthquake/E-A0015-001) |
+- 🌤️ **36 小時天氣預報**（中央氣象署 F-C0032-001）
+- 🌏 **顯著有感地震報告**（中央氣象署 E-A0015-001）
 
-兩個工具都：
+你可以直接使用我們提供的公開服務，也可以自己架設一份（免費，只需要 Cloudflare 帳號）。
 
-- 用 [Zod](https://zod.dev/) 定義輸入參數並在執行前驗證
-- 只回傳篩選過的精簡結構化資料（`structuredContent`），不會把 CWA 原始 JSON 整包丟給模型
-- 金鑰無效、缺少金鑰、找不到資料等情況都會回傳**可行動的錯誤訊息**（附上申請金鑰的網址）
+---
 
-> **注意**：`tw_weather_forecast` 的 `city` 參數使用中央氣象署官方縣市名稱，用字是「**臺**」而非「台」（例如「臺北市」「臺中市」「臺東縣」），共 22 縣市。
+## 直接使用（不想自己架設？）
 
-## 專案結構
+如果你只是想試用看看，不需要寫任何程式碼，照著下面步驟把它加到 Claude 就能用：
 
-```
-src/
-├── index.ts                    # Cloudflare Workers fetch handler + MCP server 註冊
-├── constants.ts                 # API 網址、22 縣市清單
-├── types.ts                     # CWA API 原始回應型別
-├── services/cwa-client.ts       # 共用的 CWA API 呼叫與錯誤處理
-└── tools/
-    ├── weather-forecast.ts      # tw_weather_forecast 的邏輯與資料篩選
-    └── recent-earthquakes.ts    # tw_recent_earthquakes 的邏輯與資料篩選
-test/
-├── fixtures/                    # 依照 CWA 官方文件範例建立的假資料（無需真實金鑰即可測試）
-└── *.test.ts
-```
+1. 打開 [claude.ai](https://claude.ai) → 左下角 **設定（Settings）** → **Customize** → **Connectors**
+2. 點選 **Add custom connector**
+3. 貼上以下網址：
+
+   ```
+   https://opendata-mcp.dragonheartliu1440.workers.dev/mcp
+   ```
+
+4. 儲存後，回到對話視窗，就可以直接問：
+
+   - 「臺北市明天天氣如何？」
+   - 「最近台灣有地震嗎？」
+
+> ⚠️ **提醒**：這是一個公開的展示（demo）服務，僅供測試使用。流量較大時可能會回應較慢或暫時不穩定。若要長期、穩定地使用，建議參考下面「自行部署」章節，架設一份屬於自己的服務。
+
+---
 
 ## 自行部署（Cloudflare Workers）
 
-### 1. 申請 CWA API 金鑰
+自行架設完全免費，大約 10 分鐘就能完成，不需要自己的伺服器。
 
-至 [氣象資料開放平臺會員中心](https://opendata.cwa.gov.tw/user/authkey) 註冊帳號並申請免費的授權碼（Authorization Key）。
+### 前置需求
 
-### 2. Fork / Clone 這個 repo，連接 Cloudflare Workers 的 Git 整合
+- 一個 [Cloudflare](https://dash.cloudflare.com/sign-up) 帳號（免費即可）
+- 一組**中央氣象署開放資料平臺**的會員帳號與 API 授權碼（免費申請）：
+  👉 前往 [氣象資料開放平臺會員中心](https://opendata.cwa.gov.tw/user/authkey) 註冊並申請授權碼（Authorization Key）
 
-1. 登入 [Cloudflare Dashboard](https://dash.cloudflare.com/) → **Workers & Pages** → **Create** → **Import an existing Git repository**
-2. 選擇這個 repo，Build 設定使用預設值即可（`wrangler.toml` 已包含 `main = "src/index.ts"`）
-3. 之後每次 push 到 `main` 分支都會自動觸發部署
+### 部署步驟
 
-### 3. 設定 API 金鑰（Workers Secret）
+1. 把這個 repo Fork 到你自己的 GitHub 帳號
+2. 登入 [Cloudflare Dashboard](https://dash.cloudflare.com/) → **Workers & Pages** → **Create** → **Import an existing Git repository**
+3. 選擇你剛剛 Fork 的 repo，其餘設定保持預設即可，直接部署
+4. 部署完成後，到這個 Worker 的設定頁：**Settings → Variables and Secrets** → 新增一個 Secret
+   - 名稱填 `CWA_API_KEY`
+   - 值填入你在前置需求申請到的授權碼
+   - **絕對不要**把這組金鑰寫在程式碼或 GitHub 上，一律用 Secret 的方式設定
+5. 之後只要你 push 更新到 `main` 分支，Cloudflare 就會自動重新部署，不需要手動操作
 
-**絕對不要**把金鑰寫進 repo。改用 Cloudflare 的 secret 機制：
+### 把自己的服務接進 Claude
 
-```bash
-npx wrangler login
-npx wrangler secret put CWA_API_KEY
-# 依提示貼上你申請到的金鑰
-```
-
-或在 Cloudflare Dashboard 的 Worker 設定頁 → **Settings → Variables and Secrets** 新增 `CWA_API_KEY`（類型選 Secret）。
-
-### 4. （可選）手動部署
-
-若不想透過 Git 整合，也可以本機手動部署：
-
-```bash
-npm install
-npx wrangler login
-npx wrangler secret put CWA_API_KEY
-npm run deploy
-```
-
-部署完成後，MCP endpoint 會是：
+部署完成後，你會拿到一個類似這樣的網址：
 
 ```
 https://<你的-worker-名稱>.<你的-account>.workers.dev/mcp
 ```
 
-## 本機開發
+接著照著上面「直接使用」章節的步驟 1–4，把這個網址加進 Claude 的 Connectors 即可，之後就是使用你自己架設的服務。
 
-```bash
-npm install
-cp .dev.vars.example .dev.vars   # 填入你的 CWA_API_KEY（.dev.vars 已被 .gitignore 排除）
-npm run dev                      # 啟動本機 wrangler dev server
-```
+---
 
-### 執行測試
+## 已支援的工具
 
-單元測試使用依照 CWA 官方文件回應格式建立的 fixtures，**不需要真實 API 金鑰**即可執行：
+| 工具 | 用途 | 對應資料集 | 參數 |
+| --- | --- | --- | --- |
+| `tw_weather_forecast` | 查詢指定縣市未來 36 小時的天氣狀況、降雨機率、氣溫、舒適度 | [F-C0032-001](https://opendata.cwa.gov.tw/dataset/forecast/F-C0032-001) 三十六小時天氣預報 | `city`：台灣 22 縣市之一（需用「臺」而非「台」，例如「臺北市」） |
+| `tw_recent_earthquakes` | 查詢近期顯著有感地震報告（規模、深度、震央、各地最大震度） | [E-A0015-001](https://opendata.cwa.gov.tw/dataset/earthquake/E-A0015-001) 顯著有感地震報告 | `limit`：要回傳幾筆地震報告，1–10 筆，預設 3 筆 |
 
-```bash
-npm test          # 執行一次
-npm run test:watch
-npm run typecheck  # TypeScript 型別檢查
-```
+> 💡 `tw_recent_earthquakes` 只會回傳中央氣象署認定為「顯著有感」等級以上的地震。規模太小或有感範圍太小的地震不會出現在這個資料集裡，這不代表台灣完全沒有地震活動。
 
-## 在 Claude 中加入這個 Connector
+---
 
-部署完成後，把它加到 Claude 作為一個 remote MCP connector：
+## 資料來源與授權
 
-### Claude.ai（網頁版 / 桌面版）
+本專案所提供的天氣與地震資料，來源皆為 [中央氣象署開放資料平臺](https://opendata.cwa.gov.tw/)，依[政府資料開放授權條款第 1 版](https://data.gov.tw/license)釋出。
 
-1. 前往 **設定 → Connectors → Add custom connector**
-2. 貼上你的 Worker URL，記得加上 `/mcp` 路徑：`https://<your-worker>.workers.dev/mcp`
-3. 儲存後即可在對話中啟用「台灣開放資料」工具
+**免責聲明**：本專案僅為官方開放資料的轉載與整理工具，**不保證資料的即時性與準確性**。防災、颱風、地震等相關警特報訊息，請務必以中央氣象署官方網站、官方 App 或其他官方管道公布之內容為準；本專案不提供任何形式的氣象預報或警特報發布服務，亦不承擔因使用本專案資料所產生之任何損失或責任。
 
-### Claude Code
+---
 
-在專案根目錄的 MCP 設定中加入（或用 `claude mcp add` 指令）：
+## License
 
-```json
-{
-  "mcpServers": {
-    "taiwan-opendata": {
-      "type": "http",
-      "url": "https://<your-worker>.workers.dev/mcp"
-    }
-  }
-}
-```
-
-加入後即可在對話中直接問「臺北市今明兩天天氣如何？」或「最近台灣有地震嗎？」。 
-
-## 技術細節
-
-- **為什麼是 stateless？** 這個 server 對每個 HTTP 請求建立一個全新的 `McpServer` 與 `WebStandardStreamableHTTPServerTransport`（`sessionIdGenerator: undefined`），不保留任何跨請求的 session 狀態，符合 serverless / 多節點部署的最佳實務。
-- **為什麼用 `WebStandardStreamableHTTPServerTransport`？** 這是 MCP TypeScript SDK 中基於 Web Standards（`Request`/`Response`）實作的 transport，可直接對應 Cloudflare Workers 的 `fetch(request, env)` handler，不需要 Express 或任何 Node.js-only 的相容層。
-- **JSON Schema 驗證**：改用 `CfWorkerJsonSchemaValidator`（`@cfworker/json-schema`）取代預設的 AJV，因為 AJV 在驗證時會用 `new Function()` 產生程式碼，這在 Cloudflare Workers 的執行環境中可能受限；`@cfworker/json-schema` 是專為 edge runtime 設計、不需要動態程式碼產生的實作。
-
-## 授權
-
-[MIT](./LICENSE)
+本專案採用 [MIT License](./LICENSE) 授權，歡迎自由使用、修改與散布。
