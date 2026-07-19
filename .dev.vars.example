@@ -1,0 +1,3 @@
+## Copy this file to `.dev.vars` (git-ignored) for local `wrangler dev` testing.
+## Get a free key at https://opendata.cwa.gov.tw/user/authkey
+CWA_API_KEY=your-cwa-api-key-here

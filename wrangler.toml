@@ -1,0 +1,13 @@
+name = "taiwan-opendata-mcp-server"
+main = "src/index.ts"
+compatibility_date = "2026-07-19"
+compatibility_flags = ["nodejs_compat"]
+
+# API key for the CWA (Central Weather Administration) Open Data Platform.
+# Never put the real value here. Set it as a Workers secret instead:
+#   wrangler secret put CWA_API_KEY
+# For local development, put it in a git-ignored `.dev.vars` file:
+#   CWA_API_KEY=your-key-here
+
+[observability]
+enabled = true

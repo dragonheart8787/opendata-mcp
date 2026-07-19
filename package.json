@@ -1,0 +1,30 @@
+{
+  "name": "taiwan-opendata-mcp-server",
+  "version": "1.0.0",
+  "description": "Remote MCP server exposing Taiwan CWA open data (weather forecasts, earthquake reports) over stateless Streamable HTTP, deployed to Cloudflare Workers.",
+  "type": "module",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p test/tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@cfworker/json-schema": "^4.1.1",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260719.1",
+    "@types/node": "^22.10.0",
+    "typescript": "^5.9.2",
+    "vitest": "^4.1.10",
+    "wrangler": "^4.112.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
