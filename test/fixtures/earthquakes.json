@@ -1,0 +1,93 @@
+{
+  "success": "true",
+  "result": {
+    "resource_id": "E-A0015-001",
+    "fields": [
+      { "id": "EarthquakeNo", "type": "Integer" },
+      { "id": "ReportContent", "type": "String" }
+    ]
+  },
+  "records": {
+    "datasetDescription": "顯著有感地震報告",
+    "Earthquake": [
+      {
+        "EarthquakeNo": 114078,
+        "ReportType": "地震報告",
+        "ReportColor": "綠色",
+        "ReportContent": "07/19 14:32 花蓮縣近海 芮氏規模 4.8 地震，最大震度 4級 花蓮縣。",
+        "ReportRemark": "本報告係中央氣象署地震觀測網即時地震資料地震速報，非最終地震報告，正確參數以中央氣象署地震測報中心發佈之地震報告為準。",
+        "Web": "https://scweb.cwa.gov.tw/zh-tw/earthquake/details/114078",
+        "ShakemapImageURI": "https://scweb.cwa.gov.tw/webdata/drawTrace/plotContour/2026/2026071914323201.png",
+        "EarthquakeInfo": {
+          "OriginTime": "2026-07-19 14:32:10",
+          "Source": "中央氣象署地震測報中心",
+          "FocalDepth": 15.0,
+          "Epicenter": {
+            "Location": "花蓮縣政府東北東方 25.6 公里 (位於花蓮縣近海)",
+            "EpicenterLatitude": 24.05,
+            "EpicenterLongitude": 121.75
+          },
+          "EarthquakeMagnitude": {
+            "MagnitudeType": "芮氏規模",
+            "MagnitudeValue": 4.8
+          }
+        },
+        "Intensity": {
+          "ShakingArea": [
+            {
+              "AreaDesc": "花蓮縣地區",
+              "CountyName": "花蓮縣",
+              "InfoStatus": "01",
+              "AreaIntensity": "4級"
+            },
+            {
+              "AreaDesc": "宜蘭縣地區",
+              "CountyName": "宜蘭縣",
+              "InfoStatus": "01",
+              "AreaIntensity": "2級"
+            },
+            {
+              "AreaDesc": "臺北市地區",
+              "CountyName": "臺北市",
+              "InfoStatus": "01",
+              "AreaIntensity": "1級"
+            }
+          ]
+        }
+      },
+      {
+        "EarthquakeNo": 114077,
+        "ReportType": "地震報告",
+        "ReportColor": "綠色",
+        "ReportContent": "07/18 09:05 臺東縣近海 芮氏規模 4.2 地震，最大震度 3級 臺東縣。",
+        "ReportRemark": "本報告係中央氣象署地震觀測網即時地震資料地震速報，非最終地震報告，正確參數以中央氣象署地震測報中心發佈之地震報告為準。",
+        "Web": "https://scweb.cwa.gov.tw/zh-tw/earthquake/details/114077",
+        "ShakemapImageURI": "https://scweb.cwa.gov.tw/webdata/drawTrace/plotContour/2026/2026071809053201.png",
+        "EarthquakeInfo": {
+          "OriginTime": "2026-07-18 09:05:33",
+          "Source": "中央氣象署地震測報中心",
+          "FocalDepth": 22.3,
+          "Epicenter": {
+            "Location": "臺東縣政府東方 40.2 公里 (位於臺東縣近海)",
+            "EpicenterLatitude": 22.85,
+            "EpicenterLongitude": 121.42
+          },
+          "EarthquakeMagnitude": {
+            "MagnitudeType": "芮氏規模",
+            "MagnitudeValue": 4.2
+          }
+        },
+        "Intensity": {
+          "ShakingArea": [
+            {
+              "AreaDesc": "臺東縣地區",
+              "CountyName": "臺東縣",
+              "InfoStatus": "01",
+              "AreaIntensity": "3級"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
