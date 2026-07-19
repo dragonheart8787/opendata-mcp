@@ -1,8 +1,9 @@
 import { CWA_API_BASE_URL, CWA_AUTH_KEY_URL } from "../constants.js";
+import { OpenDataApiError } from "./errors.js";
 import type { CwaApiEnvelope } from "../types.js";
 
 /** Raised for any CWA request failure; `.message` is safe to show directly to an LLM/user. */
-export class CwaApiError extends Error {
+export class CwaApiError extends OpenDataApiError {
   constructor(message: string) {
     super(message);
     this.name = "CwaApiError";

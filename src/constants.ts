@@ -6,6 +6,22 @@ export const CWA_AUTH_KEY_URL = "https://opendata.cwa.gov.tw/user/authkey";
 export const F_C0032_001_DATASET_ID = "F-C0032-001";
 export const E_A0015_001_DATASET_ID = "E-A0015-001";
 
+export const MOENV_API_BASE_URL = "https://data.moenv.gov.tw/api/v2";
+
+/** MOENV open data platform home — register here, then copy the API key from the member area. */
+export const MOENV_SIGNUP_URL = "https://data.moenv.gov.tw/";
+
+export const AQX_P_432_DATASET_ID = "aqx_p_432";
+
+/**
+ * Cache TTLs (seconds), matched to each dataset's own update cadence:
+ * F-C0032-001 updates a few times per day, E-A0015-001 on each significant
+ * quake, aqx_p_432 hourly.
+ */
+export const WEATHER_CACHE_TTL_SECONDS = 30 * 60;
+export const EARTHQUAKE_CACHE_TTL_SECONDS = 5 * 60;
+export const AIR_QUALITY_CACHE_TTL_SECONDS = 10 * 60;
+
 /**
  * Taiwan's 22 counties/cities as used by CWA's `locationName` parameter.
  * CWA uses the traditional character "臺" (not the common variant "台") in

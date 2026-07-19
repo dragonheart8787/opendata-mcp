@@ -1,6 +1,6 @@
 {
   "name": "taiwan-opendata-mcp-server",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Remote MCP server exposing Taiwan CWA open data (weather forecasts, earthquake reports) over stateless Streamable HTTP, deployed to Cloudflare Workers.",
   "type": "module",
   "private": true,

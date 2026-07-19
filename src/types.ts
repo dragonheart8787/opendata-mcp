@@ -89,3 +89,45 @@ export interface CwaEarthquakeRecords {
   datasetDescription: string;
   Earthquake: CwaEarthquake[];
 }
+
+// --- MOENV aqx_p_432: hourly air quality index per monitoring station ---
+// The v2 API (data.moenv.gov.tw/api/v2) uses all-lowercase field names and
+// string-typed values; missing measurements come back as "", "-" or "ND".
+
+export interface MoenvApiEnvelope<TRecord> {
+  fields?: Array<{ id: string; type: string; info?: { label?: string } }>;
+  resource_id?: string;
+  total?: number | string;
+  limit?: number | string;
+  offset?: number | string;
+  records?: TRecord[];
+  /** Present on error responses (e.g. invalid api_key). */
+  message?: string;
+}
+
+export interface MoenvAqiRecord {
+  sitename: string;
+  county: string;
+  aqi: string;
+  pollutant: string;
+  status: string;
+  so2: string;
+  co: string;
+  o3: string;
+  o3_8hr: string;
+  pm10: string;
+  "pm2.5": string;
+  no2: string;
+  nox: string;
+  no: string;
+  wind_speed: string;
+  wind_direc: string;
+  publishtime: string;
+  co_8hr: string;
+  "pm2.5_avg": string;
+  pm10_avg: string;
+  so2_avg: string;
+  longitude: string;
+  latitude: string;
+  siteid: string;
+}

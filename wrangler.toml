@@ -3,11 +3,21 @@ main = "src/index.ts"
 compatibility_date = "2026-07-19"
 compatibility_flags = ["nodejs_compat"]
 
-# API key for the CWA (Central Weather Administration) Open Data Platform.
-# Never put the real value here. Set it as a Workers secret instead:
-#   wrangler secret put CWA_API_KEY
-# For local development, put it in a git-ignored `.dev.vars` file:
+# API keys for the upstream open-data platforms. Never put real values here.
+# Set them as Workers secrets instead:
+#   wrangler secret put CWA_API_KEY     (中央氣象署 opendata.cwa.gov.tw)
+#   wrangler secret put MOENV_API_KEY   (環境部 data.moenv.gov.tw)
+# For local development, put them in a git-ignored `.dev.vars` file:
 #   CWA_API_KEY=your-key-here
+#   MOENV_API_KEY=your-key-here
+
+# Short-TTL response cache. Create your own namespace and paste its id below:
+#   wrangler kv namespace create CACHE
+# The binding is optional — if you remove this block, the server still works,
+# every tool call just hits the upstream API directly.
+[[kv_namespaces]]
+binding = "CACHE"
+id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
 
 [observability]
 enabled = true
