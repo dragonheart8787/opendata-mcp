@@ -1,10 +1,22 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import { AQX_P_432_FETCH_LIMIT } from "../src/constants.js";
 import { OpenDataApiError } from "../src/services/errors.js";
 import { formatAirQualityText, runAirQuality } from "../src/tools/air-quality.js";
 import { jsonFetch } from "./helpers.js";
 
+// Bare JSON array — confirmed from production Cloudflare Logs that MOENV's
+// v2 API returns records unwrapped for this dataset, not `{ records: [...] }`.
+//
+// The 士林/臺北市 record's fields through `pm2.5_avg` are copied verbatim from
+// a real captured response (Cloudflare Logs, 2026-07-20 11:00 data). The
+// trailing fields on that record (pm10_avg onward) were cut off by the
+// debug log's 500-char truncation, and the 板橋/新莊 records are still
+// reconstructed placeholders — none of these are read by the tool's own
+// logic (see `summarizeStation` in src/tools/air-quality.ts), so they don't
+// affect what's actually under test, but replace them if you get a fuller
+// capture.
 const fixture = JSON.parse(
   readFileSync(fileURLToPath(new URL("./fixtures/air-quality.json", import.meta.url)), "utf-8")
 );
@@ -38,7 +50,38 @@ describe("runAirQuality", () => {
     expect(xinzhuang.mainPollutant).toBeNull();
   });
 
-  it("passes the MOENV filters syntax and api_key as query parameters", async () => {
+  it("re-filters client-side even when the upstream ignores the filters param entirely", async () => {
+    // Regression test for the production bug: MOENV returned the full,
+    // unfiltered nationwide station list (all 3 counties mixed) regardless
+    // of the `filters` query param sent. The fixture always returns all 3
+    // records — the tool must still only return the requested county.
+    const result = await runAirQuality({ county: "臺北市" }, "test-key", jsonFetch(fixture));
+
+    expect(result.stations).toHaveLength(1);
+    expect(result.stations[0].siteName).toBe("士林");
+    expect(result.stations.every(s => s.county === "臺北市")).toBe(true);
+  });
+
+  it("builds a filters=county,EQ,{county} query param with the county actually requested", async () => {
+    let requestedUrl = "";
+    const capturingFetch = (async (url: string) => {
+      requestedUrl = url;
+      return new Response(JSON.stringify(fixture), {
+        status: 200,
+        headers: { "content-type": "application/json" }
+      });
+    }) as unknown as typeof fetch;
+
+    await runAirQuality({ county: "臺北市" }, "test-key", capturingFetch);
+
+    // Compare against the exact percent-encoding the runtime would produce
+    // (URLSearchParams), not a hand-rolled encodeURIComponent guess.
+    const expectedQueryFragment = new URLSearchParams({ filters: "county,EQ,臺北市" }).toString();
+    expect(requestedUrl).toContain(expectedQueryFragment);
+    expect(new URL(requestedUrl).searchParams.get("filters")).toBe("county,EQ,臺北市");
+  });
+
+  it("passes the MOENV filters syntax and api_key as query parameters for a county query", async () => {
     let requestedUrl = "";
     const capturingFetch = (async (url: string) => {
       requestedUrl = url;
@@ -55,6 +98,43 @@ describe("runAirQuality", () => {
     expect(url.searchParams.get("filters")).toBe("county,EQ,新北市");
   });
 
+  it("builds a filters=sitename,EQ,{siteName} query param for a station query", async () => {
+    let requestedUrl = "";
+    const capturingFetch = (async (url: string) => {
+      requestedUrl = url;
+      return new Response(JSON.stringify(fixture), {
+        status: 200,
+        headers: { "content-type": "application/json" }
+      });
+    }) as unknown as typeof fetch;
+
+    await runAirQuality({ siteName: "板橋" }, "test-key", capturingFetch);
+
+    const url = new URL(requestedUrl);
+    expect(url.searchParams.get("filters")).toBe("sitename,EQ,板橋");
+  });
+
+  it("warns when the fetched record count meets the configured limit (possible truncation)", async () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const fullPage = Array.from({ length: AQX_P_432_FETCH_LIMIT }, (_, i) => ({
+      ...fixture[0],
+      sitename: `站${i}`,
+      county: "臺北市"
+    }));
+
+    await runAirQuality({ county: "臺北市" }, "test-key", jsonFetch(fullPage));
+
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("[air-quality]"));
+    warnSpy.mockRestore();
+  });
+
+  it("does not warn on a normal, well-under-the-limit response", async () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    await runAirQuality({ county: "新北市" }, "test-key", jsonFetch(fixture));
+    expect(warnSpy).not.toHaveBeenCalled();
+    warnSpy.mockRestore();
+  });
+
   it("rejects a call with neither county nor siteName, with guidance", async () => {
     await expect(runAirQuality({}, "test-key", jsonFetch(fixture))).rejects.toThrow(OpenDataApiError);
     await expect(runAirQuality({}, "test-key", jsonFetch(fixture))).rejects.toThrow(/擇一|其中一個/);
@@ -67,8 +147,9 @@ describe("runAirQuality", () => {
   });
 
   it("gives an actionable error for an unknown siteName", async () => {
-    const emptyFetch = jsonFetch({ ...fixture, records: [] });
-    await expect(runAirQuality({ siteName: "不存在站" }, "test-key", emptyFetch)).rejects.toThrow(/不存在站/);
+    await expect(runAirQuality({ siteName: "不存在站" }, "test-key", jsonFetch(fixture))).rejects.toThrow(
+      /不存在站/
+    );
   });
 
   it("propagates the missing-API-key error with the signup URL", async () => {

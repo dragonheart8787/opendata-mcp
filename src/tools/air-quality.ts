@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { AQX_P_432_DATASET_ID, TAIWAN_CITIES } from "../constants.js";
+import { AQX_P_432_DATASET_ID, AQX_P_432_FETCH_LIMIT, TAIWAN_CITIES } from "../constants.js";
 import { OpenDataApiError } from "../services/errors.js";
 import { fetchMoenvRecords } from "../services/moenv-client.js";
 import type { MoenvAqiRecord } from "../types.js";
@@ -86,11 +86,32 @@ export async function runAirQuality(
   const records = await fetchMoenvRecords<MoenvAqiRecord>(
     AQX_P_432_DATASET_ID,
     apiKey,
-    { filters: filter, limit: "100" },
+    { filters: filter, limit: String(AQX_P_432_FETCH_LIMIT) },
     fetchImpl
   );
 
-  if (records.length === 0) {
+  // Defensive check: if we got back exactly `limit` records, the upstream
+  // may have truncated the nationwide list rather than returning everything
+  // (e.g. the station network grew past our fetch limit). Client-side
+  // filtering below would then silently miss stations instead of failing
+  // loudly, so flag it — this should never fire in practice (~83-90
+  // stations vs. a limit of 1000) but costs nothing to check.
+  if (records.length >= AQX_P_432_FETCH_LIMIT) {
+    console.warn(
+      `[air-quality] fetched ${records.length} records, which meets or exceeds the ` +
+        `configured limit (${AQX_P_432_FETCH_LIMIT}) — the nationwide station list may have been ` +
+        `truncated, and client-side filtering below could miss matching stations.`
+    );
+  }
+
+  // Defense in depth: the `filters` query param above is not reliably
+  // honored by MOENV for this dataset — production traffic showed a
+  // `filters=sitename,EQ,...` request come back with the full, unfiltered
+  // nationwide station list. Always re-filter client-side so the returned
+  // stations are correct regardless of whether upstream actually applied it.
+  const matched = county ? records.filter(r => r.county === county) : records.filter(r => r.sitename === siteName);
+
+  if (matched.length === 0) {
     if (siteName) {
       throw new OpenDataApiError(
         `找不到名為「${siteName}」的空氣品質測站。請確認測站名稱（例如「板橋」「西屯」「美濃」，不含「站」字），` +
@@ -104,7 +125,7 @@ export async function runAirQuality(
 
   return {
     query: county ? { county } : { siteName },
-    stations: records.map(summarizeStation)
+    stations: matched.map(summarizeStation)
   };
 }
 

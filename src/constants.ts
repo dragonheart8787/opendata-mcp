@@ -14,6 +14,17 @@ export const MOENV_SIGNUP_URL = "https://data.moenv.gov.tw/";
 export const AQX_P_432_DATASET_ID = "aqx_p_432";
 
 /**
+ * Records requested per aqx_p_432 call so client-side filtering (see
+ * air-quality.ts) sees the whole nationwide station list, not a partial
+ * page. Taiwan's general ambient network has ~83-90 stations as of 2021-
+ * 2026 (source: MOENV dataset docs and observed API traffic), so this
+ * leaves well over 10x headroom for network growth. It's also, per MOENV's
+ * own API documentation, the maximum `limit` the v2 API accepts in a single
+ * request — so this is already the most we could ask for either way.
+ */
+export const AQX_P_432_FETCH_LIMIT = 1000;
+
+/**
  * Cache TTLs (seconds), matched to each dataset's own update cadence:
  * F-C0032-001 updates a few times per day, E-A0015-001 on each significant
  * quake, aqx_p_432 hourly.

@@ -93,6 +93,11 @@ export interface CwaEarthquakeRecords {
 // --- MOENV aqx_p_432: hourly air quality index per monitoring station ---
 // The v2 API (data.moenv.gov.tw/api/v2) uses all-lowercase field names and
 // string-typed values; missing measurements come back as "", "-" or "ND".
+// Confirmed against production traffic: a successful response body is a
+// *bare* JSON array of records, not wrapped in `{ records: [...] }`. This
+// envelope type only describes the object-shaped responses MOENV sends for
+// errors (e.g. an invalid api_key) — see `extractRecordsArray` in
+// moenv-client.ts for how both shapes are handled.
 
 export interface MoenvApiEnvelope<TRecord> {
   fields?: Array<{ id: string; type: string; info?: { label?: string } }>;
