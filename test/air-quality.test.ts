@@ -5,6 +5,10 @@ import { OpenDataApiError } from "../src/services/errors.js";
 import { formatAirQualityText, runAirQuality } from "../src/tools/air-quality.js";
 import { jsonFetch } from "./helpers.js";
 
+// Bare JSON array — confirmed from production Cloudflare Logs that MOENV's
+// v2 API returns records unwrapped for this dataset, not `{ records: [...] }`.
+// Field *values* below are still best-effort (not captured verbatim from the
+// real response); if you have the actual payload, please replace them.
 const fixture = JSON.parse(
   readFileSync(fileURLToPath(new URL("./fixtures/air-quality.json", import.meta.url)), "utf-8")
 );
@@ -38,7 +42,38 @@ describe("runAirQuality", () => {
     expect(xinzhuang.mainPollutant).toBeNull();
   });
 
-  it("passes the MOENV filters syntax and api_key as query parameters", async () => {
+  it("re-filters client-side even when the upstream ignores the filters param entirely", async () => {
+    // Regression test for the production bug: MOENV returned the full,
+    // unfiltered nationwide station list (all 3 counties mixed) regardless
+    // of the `filters` query param sent. The fixture always returns all 3
+    // records — the tool must still only return the requested county.
+    const result = await runAirQuality({ county: "臺北市" }, "test-key", jsonFetch(fixture));
+
+    expect(result.stations).toHaveLength(1);
+    expect(result.stations[0].siteName).toBe("士林");
+    expect(result.stations.every(s => s.county === "臺北市")).toBe(true);
+  });
+
+  it("builds a filters=county,EQ,{county} query param with the county actually requested", async () => {
+    let requestedUrl = "";
+    const capturingFetch = (async (url: string) => {
+      requestedUrl = url;
+      return new Response(JSON.stringify(fixture), {
+        status: 200,
+        headers: { "content-type": "application/json" }
+      });
+    }) as unknown as typeof fetch;
+
+    await runAirQuality({ county: "臺北市" }, "test-key", capturingFetch);
+
+    // Compare against the exact percent-encoding the runtime would produce
+    // (URLSearchParams), not a hand-rolled encodeURIComponent guess.
+    const expectedQueryFragment = new URLSearchParams({ filters: "county,EQ,臺北市" }).toString();
+    expect(requestedUrl).toContain(expectedQueryFragment);
+    expect(new URL(requestedUrl).searchParams.get("filters")).toBe("county,EQ,臺北市");
+  });
+
+  it("passes the MOENV filters syntax and api_key as query parameters for a county query", async () => {
     let requestedUrl = "";
     const capturingFetch = (async (url: string) => {
       requestedUrl = url;
@@ -55,6 +90,22 @@ describe("runAirQuality", () => {
     expect(url.searchParams.get("filters")).toBe("county,EQ,新北市");
   });
 
+  it("builds a filters=sitename,EQ,{siteName} query param for a station query", async () => {
+    let requestedUrl = "";
+    const capturingFetch = (async (url: string) => {
+      requestedUrl = url;
+      return new Response(JSON.stringify(fixture), {
+        status: 200,
+        headers: { "content-type": "application/json" }
+      });
+    }) as unknown as typeof fetch;
+
+    await runAirQuality({ siteName: "板橋" }, "test-key", capturingFetch);
+
+    const url = new URL(requestedUrl);
+    expect(url.searchParams.get("filters")).toBe("sitename,EQ,板橋");
+  });
+
   it("rejects a call with neither county nor siteName, with guidance", async () => {
     await expect(runAirQuality({}, "test-key", jsonFetch(fixture))).rejects.toThrow(OpenDataApiError);
     await expect(runAirQuality({}, "test-key", jsonFetch(fixture))).rejects.toThrow(/擇一|其中一個/);
@@ -67,8 +118,9 @@ describe("runAirQuality", () => {
   });
 
   it("gives an actionable error for an unknown siteName", async () => {
-    const emptyFetch = jsonFetch({ ...fixture, records: [] });
-    await expect(runAirQuality({ siteName: "不存在站" }, "test-key", emptyFetch)).rejects.toThrow(/不存在站/);
+    await expect(runAirQuality({ siteName: "不存在站" }, "test-key", jsonFetch(fixture))).rejects.toThrow(
+      /不存在站/
+    );
   });
 
   it("propagates the missing-API-key error with the signup URL", async () => {

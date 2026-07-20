@@ -86,11 +86,18 @@ export async function runAirQuality(
   const records = await fetchMoenvRecords<MoenvAqiRecord>(
     AQX_P_432_DATASET_ID,
     apiKey,
-    { filters: filter, limit: "100" },
+    { filters: filter, limit: "1000" },
     fetchImpl
   );
 
-  if (records.length === 0) {
+  // Defense in depth: the `filters` query param above is not reliably
+  // honored by MOENV for this dataset — production traffic showed a
+  // `filters=sitename,EQ,...` request come back with the full, unfiltered
+  // nationwide station list. Always re-filter client-side so the returned
+  // stations are correct regardless of whether upstream actually applied it.
+  const matched = county ? records.filter(r => r.county === county) : records.filter(r => r.sitename === siteName);
+
+  if (matched.length === 0) {
     if (siteName) {
       throw new OpenDataApiError(
         `找不到名為「${siteName}」的空氣品質測站。請確認測站名稱（例如「板橋」「西屯」「美濃」，不含「站」字），` +
@@ -104,7 +111,7 @@ export async function runAirQuality(
 
   return {
     query: county ? { county } : { siteName },
-    stations: records.map(summarizeStation)
+    stations: matched.map(summarizeStation)
   };
 }
 

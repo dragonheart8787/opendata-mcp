@@ -14,6 +14,52 @@ function invalidKeyMessage(detail?: string): string {
   );
 }
 
+function maskApiKey(url: URL): string {
+  const masked = new URL(url.toString());
+  const rawKey = masked.searchParams.get("api_key") ?? "";
+  masked.searchParams.set("api_key", rawKey.length > 4 ? `${rawKey.slice(0, 4)}***` : "***");
+  return masked.toString();
+}
+
+/**
+ * Logs request/response context to help diagnose upstream failures, without
+ * spamming Cloudflare Logs (or leaking response bodies) on the normal,
+ * successful path — only called right before this module throws.
+ */
+function logFailureContext(url: URL, status: number | "n/a", rawBody: string): void {
+  console.error(
+    `[moenv-client] request failed — url: ${maskApiKey(url)} | status: ${status} | ` +
+      `body (first 500 chars): ${rawBody.slice(0, 500)}`
+  );
+}
+
+/**
+ * MOENV's v2 API (data.moenv.gov.tw/api/v2) returns a bare JSON array of
+ * records for this dataset — there is no `{ records: [...] }` wrapper like
+ * CWA uses. Some other MOENV datasets/error responses *are* wrapped objects
+ * (e.g. `{ message: "..." }` on an invalid key), so this accepts either
+ * shape: a top-level array, an object with a `records` array, or — as a
+ * last resort — an object whose first array-of-objects property looks like
+ * a record list.
+ */
+function extractRecordsArray<TRecord>(parsed: unknown): TRecord[] | undefined {
+  if (Array.isArray(parsed)) {
+    return parsed as TRecord[];
+  }
+  if (parsed && typeof parsed === "object") {
+    const obj = parsed as Record<string, unknown>;
+    if (Array.isArray(obj.records)) {
+      return obj.records as TRecord[];
+    }
+    for (const value of Object.values(obj)) {
+      if (Array.isArray(value) && value.length > 0 && typeof value[0] === "object" && value[0] !== null) {
+        return value as TRecord[];
+      }
+    }
+  }
+  return undefined;
+}
+
 /**
  * Fetches records from the MOENV open data platform (data.moenv.gov.tw).
  * Unlike CWA, MOENV authenticates via an `api_key` URL query parameter.
@@ -38,14 +84,6 @@ export async function fetchMoenvRecords<TRecord>(
     }
   }
 
-  // TEMPORARY DEBUG LOGGING — remove once the "回應中缺少 records 欄位" issue
-  // reported against tw_air_quality is root-caused. api_key is masked to its
-  // first 4 characters before logging.
-  const maskedUrl = new URL(url.toString());
-  const rawKey = maskedUrl.searchParams.get("api_key") ?? "";
-  maskedUrl.searchParams.set("api_key", rawKey.length > 4 ? `${rawKey.slice(0, 4)}***` : "***");
-  console.log(`[moenv-client] request url: ${maskedUrl.toString()}`);
-
   let response: Response;
   try {
     response = await fetchImpl(url.toString(), {
@@ -57,32 +95,35 @@ export async function fetchMoenvRecords<TRecord>(
     );
   }
 
-  console.log(`[moenv-client] response status: ${response.status}`);
-
-  const rawBody = await response.text();
-  console.log(`[moenv-client] response body (first 500 chars): ${rawBody.slice(0, 500)}`);
-
   if (response.status === 401 || response.status === 403) {
+    logFailureContext(url, response.status, await response.text());
     throw new OpenDataApiError(invalidKeyMessage(`HTTP ${response.status}`));
   }
   if (!response.ok) {
+    logFailureContext(url, response.status, await response.text());
     throw new OpenDataApiError(`環境部開放資料平臺回應錯誤（HTTP ${response.status}）。請稍後再試。`);
   }
 
-  let payload: MoenvApiEnvelope<TRecord>;
+  const rawBody = await response.text();
+
+  let parsed: unknown;
   try {
-    payload = JSON.parse(rawBody) as MoenvApiEnvelope<TRecord>;
+    parsed = JSON.parse(rawBody);
   } catch {
+    logFailureContext(url, response.status, rawBody);
     throw new OpenDataApiError("環境部開放資料平臺回傳了無法解析的內容，可能是暫時性服務異常，請稍後再試。");
   }
 
-  if (!payload.records) {
-    const message = payload.message ?? "";
-    if (/api[_-]?key|not valid|invalid|授權|金鑰/i.test(message)) {
-      throw new OpenDataApiError(invalidKeyMessage(message));
-    }
-    throw new OpenDataApiError(`環境部開放資料平臺回傳失敗：${message || "回應中缺少 records 欄位"}。`);
+  const records = extractRecordsArray<TRecord>(parsed);
+  if (records) {
+    return records;
   }
 
-  return payload.records;
+  logFailureContext(url, response.status, rawBody);
+  const envelope = parsed as MoenvApiEnvelope<TRecord>;
+  const message = envelope?.message ?? "";
+  if (/api[_-]?key|not valid|invalid|授權|金鑰/i.test(message)) {
+    throw new OpenDataApiError(invalidKeyMessage(message));
+  }
+  throw new OpenDataApiError(`環境部開放資料平臺回傳失敗：${message || "回應格式不符，找不到記錄陣列"}。`);
 }
