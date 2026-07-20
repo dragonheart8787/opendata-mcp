@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { withCache, type CacheStore } from "../src/services/cache.js";
+import { withCache, withCacheTracked, type CacheStore } from "../../src/infra/cache.js";
 
 function makeFakeStore(): CacheStore & { data: Map<string, string>; ttls: Map<string, number | undefined> } {
   const data = new Map<string, string>();
@@ -91,5 +91,22 @@ describe("withCache", () => {
 
     const result = await withCache(store, "quakes:3", 300, async () => "recovered");
     expect(result).toBe("recovered");
+  });
+});
+
+describe("withCacheTracked", () => {
+  it("reports cached: false on a miss and cached: true on a hit", async () => {
+    const store = makeFakeStore();
+
+    const miss = await withCacheTracked(store, "weather:臺北市", 1800, async () => ({ city: "臺北市" }));
+    expect(miss).toEqual({ value: { city: "臺北市" }, cached: false });
+
+    const hit = await withCacheTracked(store, "weather:臺北市", 1800, async () => ({ city: "wrong" }));
+    expect(hit).toEqual({ value: { city: "臺北市" }, cached: true });
+  });
+
+  it("reports cached: false when there is no store at all", async () => {
+    const result = await withCacheTracked(undefined, "k", 60, async () => "fresh");
+    expect(result).toEqual({ value: "fresh", cached: false });
   });
 });

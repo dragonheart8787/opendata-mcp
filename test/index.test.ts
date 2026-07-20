@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import worker from "../src/index.js";
 
@@ -91,5 +93,67 @@ describe("worker fetch routing", () => {
     const body = (await res.json()) as { result?: { isError?: boolean; content?: Array<{ text?: string }> } };
     expect(body.result?.isError).toBe(true);
     expect(body.result?.content?.[0]?.text).toContain("data.moenv.gov.tw");
+  });
+
+  it("returns a failure envelope with code/message/hint in structuredContent on error", async () => {
+    const res = await worker.fetch(
+      mcpRequest({
+        jsonrpc: "2.0",
+        id: 5,
+        method: "tools/call",
+        params: { name: "tw_weather_forecast", arguments: { city: "臺北市" } }
+      }),
+      env as never
+    );
+    const body = (await res.json()) as {
+      result?: { structuredContent?: { ok?: boolean; error?: { code?: string; message?: string; hint?: string } } };
+    };
+    expect(body.result?.structuredContent?.ok).toBe(false);
+    expect(body.result?.structuredContent?.error?.code).toBe("AUTH_MISSING");
+    expect(body.result?.structuredContent?.error?.message).toContain("opendata.cwa.gov.tw/user/authkey");
+    expect(body.result?.structuredContent?.error?.hint).toBeTruthy();
+  });
+
+  it("returns a success envelope (ok/source/dataset/cached/updateFrequency/data) on a real call", async () => {
+    const fixture = JSON.parse(
+      readFileSync(fileURLToPath(new URL("./fixtures/weather-forecast.json", import.meta.url)), "utf-8")
+    );
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = (async () =>
+      new Response(JSON.stringify(fixture), { status: 200, headers: { "content-type": "application/json" } })) as unknown as typeof fetch;
+
+    try {
+      const res = await worker.fetch(
+        mcpRequest({
+          jsonrpc: "2.0",
+          id: 6,
+          method: "tools/call",
+          params: { name: "tw_weather_forecast", arguments: { city: "臺北市" } }
+        }),
+        { CWA_API_KEY: "test-key" } as never
+      );
+      const body = (await res.json()) as {
+        result?: {
+          isError?: boolean;
+          structuredContent?: {
+            ok?: boolean;
+            source?: string;
+            dataset?: string;
+            cached?: boolean;
+            updateFrequency?: string;
+            data?: { city?: string };
+          };
+        };
+      };
+      expect(body.result?.isError).toBeUndefined();
+      expect(body.result?.structuredContent?.ok).toBe(true);
+      expect(body.result?.structuredContent?.source).toBe("中央氣象署");
+      expect(body.result?.structuredContent?.dataset).toBe("F-C0032-001");
+      expect(body.result?.structuredContent?.cached).toBe(false);
+      expect(body.result?.structuredContent?.updateFrequency).toBe("每日數次");
+      expect(body.result?.structuredContent?.data?.city).toBe("臺北市");
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
   });
 });

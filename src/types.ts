@@ -136,3 +136,10 @@ export interface MoenvAqiRecord {
   latitude: string;
   siteid: string;
 }
+
+/**
+ * A `MoenvAqiRecord` after the adapter's missing-value normalization:
+ * "", "-", and "ND" have already been replaced with `null` on every field.
+ * See `normalizeMoenvRecord` in adapters/moenv.ts.
+ */
+export type MoenvAqiRecordNormalized = { [K in keyof MoenvAqiRecord]: string | null };

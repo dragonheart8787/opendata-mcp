@@ -1,12 +1,12 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { CwaApiError } from "../src/services/cwa-client.js";
-import { formatWeatherForecastText, runWeatherForecast } from "../src/tools/weather-forecast.js";
-import { jsonFetch } from "./helpers.js";
+import { ToolError } from "../../src/infra/errors.js";
+import { formatWeatherForecastText, runWeatherForecast } from "../../src/tools/weather.js";
+import { jsonFetch } from "../helpers.js";
 
 const fixture = JSON.parse(
-  readFileSync(fileURLToPath(new URL("./fixtures/weather-forecast.json", import.meta.url)), "utf-8")
+  readFileSync(fileURLToPath(new URL("../fixtures/weather-forecast.json", import.meta.url)), "utf-8")
 );
 
 describe("runWeatherForecast", () => {
@@ -29,7 +29,7 @@ describe("runWeatherForecast", () => {
   });
 
   it("throws an actionable error when the requested city is not in the response", async () => {
-    await expect(runWeatherForecast("高雄市", "test-key", jsonFetch(fixture))).rejects.toThrow(CwaApiError);
+    await expect(runWeatherForecast("高雄市", "test-key", jsonFetch(fixture))).rejects.toThrow(ToolError);
     await expect(runWeatherForecast("高雄市", "test-key", jsonFetch(fixture))).rejects.toThrow(/高雄市/);
   });
 
