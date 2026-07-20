@@ -102,6 +102,20 @@ https://<你的-worker-名稱>.<你的-account>.workers.dev/mcp
 
 ---
 
+## 給貢獻者：自動化品質保證
+
+這個專案用三個 GitHub Actions workflow 做持續性的品質把關，設計成不依賴人工手動驗證：
+
+| Workflow | 觸發時機 | 做什麼 |
+| --- | --- | --- |
+| `.github/workflows/ci.yml` | 每個 PR | typecheck、跑全部單元測試、`wrangler deploy --dry-run` 確認建置成功。任一步驟失敗，PR 會顯示紅叉、不可合併。 |
+| `.github/workflows/fixtures-refresh.yml` | 每週一次（也可手動觸發） | 對每個已註冊的資料集打一次真實 API，跟 `test/fixtures/` 裡現有的樣本做結構性比對（欄位、型別，不比對實際數值）。發現上游改格式，會自動開一個標記 `[schema-drift]` 的 PR 更新 fixture，並開一個 issue 通知。這是為了在「盲寫 fixture 猜錯格式」造成正式環境出問題之前，先在自動化流程裡抓到。 |
+| `.github/workflows/post-deploy-smoke-test.yml` | push 到 `main` 後（也可手動觸發） | 對正式部署的網址發送真實 MCP 請求：`initialize` → `tools/list`（確認三個工具都正確曝光）→ 依序真實呼叫三個工具，確認每個回應的信封格式（`ok`、`source`、`dataset` 等欄位）正確。失敗會自動開一個標記 `[smoke-test-failed]` 的 issue。 |
+
+三個 workflow 都能用 GitHub 網頁上的 **Actions** 分頁手動觸發（`workflow_dispatch`），不需要等排程或等下次部署。詳細設計考量見 `docs/adr/`。
+
+---
+
 ## License
 
 本專案採用 [MIT License](./LICENSE) 授權，歡迎自由使用、修改與散布。

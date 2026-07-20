@@ -1,0 +1,75 @@
+name: Refresh fixtures
+
+# Scheduled + on-demand pipeline that pulls real responses from CWA/MOENV and
+# diffs their *structure* against test/fixtures/. Exists to catch upstream
+# schema drift (e.g. the MOENV bare-array format) before it reaches
+# production, instead of via a live incident and a blind-written fixture.
+# See docs/adr/ADR-001-layered-architecture.md and docs/sessions/SESSION-B.md.
+
+on:
+  schedule:
+    - cron: "0 3 * * 1" # every Monday 03:00 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - run: npm ci
+
+      - name: Fetch real responses and diff against fixtures
+        id: refresh
+        env:
+          CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
+          MOENV_API_KEY: ${{ secrets.MOENV_API_KEY }}
+        run: npm run refresh-fixtures
+
+      - name: Typecheck and run the test suite against any updated fixtures
+        if: steps.refresh.outputs.changed == 'true'
+        run: |
+          npm run typecheck
+          npm test
+
+      - name: Ensure the schema-drift label exists
+        if: steps.refresh.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh label create schema-drift \
+            --color B60205 \
+            --description "Upstream API response structure changed" \
+            --repo "${{ github.repository }}" || true
+
+      - name: Open a PR with the updated fixtures
+        if: steps.refresh.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "[schema-drift] Update fixtures from live API responses"
+          title: "[schema-drift] Fixture structure changed: ${{ steps.refresh.outputs.changed-datasets }}"
+          body-path: ${{ steps.refresh.outputs.summary-file }}
+          branch: fixtures-refresh/schema-drift
+          labels: schema-drift
+          add-paths: test/fixtures/*.json
+
+      - name: Open an issue flagging the drift
+        if: steps.refresh.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue create \
+            --repo "${{ github.repository }}" \
+            --title "[schema-drift] Fixture structure changed: ${{ steps.refresh.outputs.changed-datasets }}" \
+            --label schema-drift \
+            --body-file "${{ steps.refresh.outputs.summary-file }}"

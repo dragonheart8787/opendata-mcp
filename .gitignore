@@ -4,3 +4,6 @@ dist/
 .dev.vars
 *.log
 .DS_Store
+smoke-test-result.json
+smoke-test-summary.md
+fixtures-diff-summary.md
