@@ -17,7 +17,7 @@ compatibility_flags = ["nodejs_compat"]
 # every tool call just hits the upstream API directly.
 [[kv_namespaces]]
 binding = "CACHE"
-id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+id = "f9ad969ae389420cb6512f8a55e8177f"
 
 [observability]
 enabled = true
