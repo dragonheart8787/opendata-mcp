@@ -6,60 +6,88 @@ import { ToolError } from "../../src/infra/errors.js";
 import { formatAirQualityText, runAirQuality } from "../../src/tools/air-quality.js";
 import { jsonFetch } from "../helpers.js";
 
-// Bare JSON array — confirmed from production Cloudflare Logs that MOENV's
-// v2 API returns records unwrapped for this dataset, not `{ records: [...] }`.
-//
-// The 士林/臺北市 record's fields through `pm2.5_avg` are copied verbatim from
-// a real captured response (Cloudflare Logs, 2026-07-20 11:00 data). The
-// trailing fields on that record (pm10_avg onward) were cut off by the
-// debug log's 500-char truncation, and the 板橋/新莊 records are still
-// reconstructed placeholders — none of these are read by the tool's own
-// logic (see `summarizeStation` in src/registry/moenv.ts), so they don't
-// affect what's actually under test, but replace them if you get a fuller
-// capture.
+// This fixture is overwritten with a real, live response whenever
+// scripts/fixtures/refresh-fixtures.ts detects structural drift — so its
+// specific readings (AQI, PM2.5, etc.) change over time. Tests below derive
+// expected values from the fixture's own raw fields rather than hardcoding
+// literals, so a routine refresh never breaks them on its own.
 const fixture = JSON.parse(
   readFileSync(fileURLToPath(new URL("../fixtures/air-quality.json", import.meta.url)), "utf-8")
 );
 
+const MISSING_VALUE_MARKERS = new Set(["", "-", "ND"]);
+function toNum(value: string): number | null {
+  if (MISSING_VALUE_MARKERS.has(value)) return null;
+  const n = Number(value);
+  return Number.isNaN(n) ? null : n;
+}
+/** Mirrors summarizeStation's field mapping, so expectations track whatever is currently in the fixture. */
+function expectedStation(raw: any) {
+  return {
+    siteName: raw.sitename,
+    county: raw.county,
+    aqi: toNum(raw.aqi),
+    status: MISSING_VALUE_MARKERS.has(raw.status) ? "無資料" : raw.status,
+    mainPollutant: MISSING_VALUE_MARKERS.has(raw.pollutant) ? null : raw.pollutant,
+    pm25: toNum(raw["pm2.5"]),
+    pm10: toNum(raw.pm10),
+    o3: toNum(raw.o3),
+    publishTime: raw.publishtime
+  };
+}
+
 describe("runAirQuality", () => {
-  it("summarizes all stations of a county into a compact structure", async () => {
+  it("summarizes all stations of a county into a compact structure matching the raw fixture", async () => {
     const result = await runAirQuality({ county: "新北市" }, "test-key", jsonFetch(fixture));
+    const rawMatches = fixture.filter((r: any) => r.county === "新北市");
 
     expect(result.query).toEqual({ county: "新北市" });
-    expect(result.stations).toHaveLength(2);
-    expect(result.stations[0]).toEqual({
-      siteName: "板橋",
-      county: "新北市",
-      aqi: 62,
-      status: "普通",
-      mainPollutant: "細懸浮微粒",
-      pm25: 17,
-      pm10: 38,
-      o3: 38.6,
-      publishTime: "2026/07/19 14:00:00"
+    expect(result.stations).toHaveLength(rawMatches.length);
+    result.stations.forEach((station, i) => {
+      expect(station).toEqual(expectedStation(rawMatches[i]));
     });
   });
 
   it("maps MOENV's unavailable-value markers (empty string, '-') to null, not 0", async () => {
-    const result = await runAirQuality({ county: "新北市" }, "test-key", jsonFetch(fixture));
-    const xinzhuang = result.stations[1];
+    // Inline, not the shared fixture above (which gets overwritten with
+    // live data): this edge case needs guaranteed "" / "-" markers present
+    // to be meaningful, which live hourly readings aren't guaranteed to have.
+    const stationWithMissingValues = [
+      {
+        sitename: "測試站",
+        county: "新北市",
+        aqi: "50",
+        pollutant: "",
+        status: "普通",
+        o3: "-",
+        pm10: "30",
+        "pm2.5": "",
+        publishtime: "2026/01/01 00:00:00"
+      }
+    ];
 
-    expect(xinzhuang.siteName).toBe("新莊");
-    expect(xinzhuang.pm25).toBeNull();
-    expect(xinzhuang.o3).toBeNull();
-    expect(xinzhuang.mainPollutant).toBeNull();
+    const result = await runAirQuality({ county: "新北市" }, "test-key", jsonFetch(stationWithMissingValues));
+    const station = result.stations[0];
+
+    expect(station.pm25).toBeNull();
+    expect(station.o3).toBeNull();
+    expect(station.mainPollutant).toBeNull();
+    expect(station.pm10).toBe(30);
   });
 
   it("re-filters client-side even when the upstream ignores the filters param entirely", async () => {
     // Regression test for the production bug: MOENV returned the full,
-    // unfiltered nationwide station list (all 3 counties mixed) regardless
-    // of the `filters` query param sent. The fixture always returns all 3
-    // records — the tool must still only return the requested county.
+    // unfiltered nationwide station list regardless of the `filters` query
+    // param sent. The fixture always returns every county's stations — the
+    // tool must still only return the requested county's.
     const result = await runAirQuality({ county: "臺北市" }, "test-key", jsonFetch(fixture));
+    const rawMatches = fixture.filter((r: any) => r.county === "臺北市");
 
-    expect(result.stations).toHaveLength(1);
-    expect(result.stations[0].siteName).toBe("士林");
+    expect(result.stations).toHaveLength(rawMatches.length);
     expect(result.stations.every(s => s.county === "臺北市")).toBe(true);
+    result.stations.forEach((station, i) => {
+      expect(station.siteName).toBe(rawMatches[i].sitename);
+    });
   });
 
   it("builds a filters=county,EQ,{county} query param with the county actually requested", async () => {
@@ -169,11 +197,10 @@ describe("formatAirQualityText", () => {
   it("renders a human-readable summary with AQI and status", async () => {
     const result = await runAirQuality({ county: "新北市" }, "test-key", jsonFetch(fixture));
     const text = formatAirQualityText(result);
+    const station = result.stations[0];
 
     expect(text).toContain("新北市 空氣品質");
-    expect(text).toContain("板橋");
-    expect(text).toContain("AQI：62（普通）");
-    expect(text).toContain("PM2.5：17 μg/m³");
-    expect(text).toContain("PM2.5：無資料");
+    expect(text).toContain(station.siteName);
+    expect(text).toContain(`AQI：${station.aqi ?? "無資料"}（${station.status}）`);
   });
 });

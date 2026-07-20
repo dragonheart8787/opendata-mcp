@@ -7,6 +7,11 @@ import { normalizeMoenvRecord } from "../../src/adapters/moenv.js";
 import { airQualityEntry } from "../../src/registry/moenv.js";
 import { getDatasetEntry } from "../../src/registry/index.js";
 
+// This fixture is overwritten with a real, live response whenever
+// scripts/fixtures/refresh-fixtures.ts detects structural drift — so its
+// specific readings change over time. Tests below derive expected values
+// from the fixture's own raw fields rather than hardcoding literals, so a
+// routine refresh never breaks them on its own.
 const rawFixture = JSON.parse(
   readFileSync(fileURLToPath(new URL("../fixtures/air-quality.json", import.meta.url)), "utf-8")
 );
@@ -34,16 +39,20 @@ describe("airQualityEntry", () => {
   });
 
   it("transform summarizes all stations matching a county", () => {
+    const rawMatches = rawFixture.filter((r: any) => r.county === "新北市");
     const result = airQualityEntry.transform(fixture, { county: "新北市" });
+
     expect(result.query).toEqual({ county: "新北市" });
-    expect(result.stations).toHaveLength(2);
-    expect(result.stations[0].siteName).toBe("板橋");
+    expect(result.stations).toHaveLength(rawMatches.length);
+    expect(result.stations[0].siteName).toBe(rawMatches[0].sitename);
   });
 
   it("transform re-filters client-side even though the fixture (like real MOENV traffic) returns all stations regardless of the requested filter", () => {
+    const rawMatches = rawFixture.filter((r: any) => r.county === "臺北市");
     const result = airQualityEntry.transform(fixture, { county: "臺北市" });
-    expect(result.stations).toHaveLength(1);
-    expect(result.stations[0].siteName).toBe("士林");
+
+    expect(result.stations).toHaveLength(rawMatches.length);
+    expect(result.stations[0].siteName).toBe(rawMatches[0].sitename);
     expect(result.stations.every(s => s.county === "臺北市")).toBe(true);
   });
 
@@ -90,10 +99,42 @@ describe("airQualityEntry", () => {
   });
 
   it("maps MOENV's null-normalized missing values through to null, not 0, in the final shape", () => {
-    const result = airQualityEntry.transform(fixture, { county: "新北市" });
-    const xinzhuang = result.stations.find(s => s.siteName === "新莊")!;
-    expect(xinzhuang.pm25).toBeNull();
-    expect(xinzhuang.o3).toBeNull();
-    expect(xinzhuang.mainPollutant).toBeNull();
+    // Inline, not the shared fixture above (which gets overwritten with
+    // live data): this edge case needs guaranteed "" / "-" markers present
+    // to be meaningful, which live hourly readings aren't guaranteed to have.
+    const rawStationWithMissingValues = normalizeMoenvRecord({
+      sitename: "測試站",
+      county: "新北市",
+      aqi: "50",
+      pollutant: "",
+      status: "普通",
+      so2: "1",
+      co: "0.1",
+      o3: "-",
+      o3_8hr: "10",
+      pm10: "30",
+      "pm2.5": "",
+      no2: "5",
+      nox: "6",
+      no: "1",
+      wind_speed: "1",
+      wind_direc: "100",
+      publishtime: "2026/01/01 00:00:00",
+      co_8hr: "0.1",
+      "pm2.5_avg": "10",
+      pm10_avg: "25",
+      so2_avg: "1",
+      longitude: "121.5",
+      latitude: "25.0",
+      siteid: "999"
+    });
+
+    const result = airQualityEntry.transform([rawStationWithMissingValues], { county: "新北市" });
+    const station = result.stations[0];
+
+    expect(station.pm25).toBeNull();
+    expect(station.o3).toBeNull();
+    expect(station.mainPollutant).toBeNull();
+    expect(station.pm10).toBe(30);
   });
 });
