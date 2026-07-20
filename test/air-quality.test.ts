@@ -8,8 +8,15 @@ import { jsonFetch } from "./helpers.js";
 
 // Bare JSON array — confirmed from production Cloudflare Logs that MOENV's
 // v2 API returns records unwrapped for this dataset, not `{ records: [...] }`.
-// Field *values* below are still best-effort (not captured verbatim from the
-// real response); if you have the actual payload, please replace them.
+//
+// The 士林/臺北市 record's fields through `pm2.5_avg` are copied verbatim from
+// a real captured response (Cloudflare Logs, 2026-07-20 11:00 data). The
+// trailing fields on that record (pm10_avg onward) were cut off by the
+// debug log's 500-char truncation, and the 板橋/新莊 records are still
+// reconstructed placeholders — none of these are read by the tool's own
+// logic (see `summarizeStation` in src/tools/air-quality.ts), so they don't
+// affect what's actually under test, but replace them if you get a fuller
+// capture.
 const fixture = JSON.parse(
   readFileSync(fileURLToPath(new URL("./fixtures/air-quality.json", import.meta.url)), "utf-8")
 );
