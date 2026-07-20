@@ -1,10 +1,10 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
-import { AQX_P_432_FETCH_LIMIT } from "../src/constants.js";
-import { OpenDataApiError } from "../src/services/errors.js";
-import { formatAirQualityText, runAirQuality } from "../src/tools/air-quality.js";
-import { jsonFetch } from "./helpers.js";
+import { AQX_P_432_FETCH_LIMIT } from "../../src/constants.js";
+import { ToolError } from "../../src/infra/errors.js";
+import { formatAirQualityText, runAirQuality } from "../../src/tools/air-quality.js";
+import { jsonFetch } from "../helpers.js";
 
 // Bare JSON array — confirmed from production Cloudflare Logs that MOENV's
 // v2 API returns records unwrapped for this dataset, not `{ records: [...] }`.
@@ -14,11 +14,11 @@ import { jsonFetch } from "./helpers.js";
 // trailing fields on that record (pm10_avg onward) were cut off by the
 // debug log's 500-char truncation, and the 板橋/新莊 records are still
 // reconstructed placeholders — none of these are read by the tool's own
-// logic (see `summarizeStation` in src/tools/air-quality.ts), so they don't
+// logic (see `summarizeStation` in src/registry/moenv.ts), so they don't
 // affect what's actually under test, but replace them if you get a fuller
 // capture.
 const fixture = JSON.parse(
-  readFileSync(fileURLToPath(new URL("./fixtures/air-quality.json", import.meta.url)), "utf-8")
+  readFileSync(fileURLToPath(new URL("../fixtures/air-quality.json", import.meta.url)), "utf-8")
 );
 
 describe("runAirQuality", () => {
@@ -136,7 +136,7 @@ describe("runAirQuality", () => {
   });
 
   it("rejects a call with neither county nor siteName, with guidance", async () => {
-    await expect(runAirQuality({}, "test-key", jsonFetch(fixture))).rejects.toThrow(OpenDataApiError);
+    await expect(runAirQuality({}, "test-key", jsonFetch(fixture))).rejects.toThrow(ToolError);
     await expect(runAirQuality({}, "test-key", jsonFetch(fixture))).rejects.toThrow(/擇一|其中一個/);
   });
 

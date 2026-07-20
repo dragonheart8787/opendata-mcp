@@ -2,16 +2,10 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { CfWorkerJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/cfworker";
 
-import { airQualityInputShape, runAirQuality, formatAirQualityText } from "./tools/air-quality.js";
-import { recentEarthquakesInputShape, runRecentEarthquakes, formatRecentEarthquakesText } from "./tools/recent-earthquakes.js";
-import { weatherForecastInputShape, runWeatherForecast, formatWeatherForecastText } from "./tools/weather-forecast.js";
-import { withCache, type CacheStore } from "./services/cache.js";
-import { OpenDataApiError } from "./services/errors.js";
-import {
-  AIR_QUALITY_CACHE_TTL_SECONDS,
-  EARTHQUAKE_CACHE_TTL_SECONDS,
-  WEATHER_CACHE_TTL_SECONDS
-} from "./constants.js";
+import type { CacheStore } from "./infra/cache.js";
+import { airQualityInputShape, handleAirQualityTool } from "./tools/air-quality.js";
+import { handleRecentEarthquakesTool, recentEarthquakesInputShape } from "./tools/earthquake.js";
+import { handleWeatherForecastTool, weatherForecastInputShape } from "./tools/weather.js";
 
 export interface Env {
   /** CWA Open Data Platform API key. Set via `wrangler secret put CWA_API_KEY`, never committed. */
@@ -26,16 +20,9 @@ export interface Env {
   CACHE?: CacheStore;
 }
 
-function errorText(error: unknown): string {
-  if (error instanceof OpenDataApiError) {
-    return error.message;
-  }
-  return `發生未預期的錯誤：${error instanceof Error ? error.message : String(error)}`;
-}
-
 function createServer(env: Env): McpServer {
   const server = new McpServer(
-    { name: "taiwan-opendata-mcp-server", version: "1.1.0" },
+    { name: "taiwan-opendata-mcp-server", version: "1.2.0" },
     { jsonSchemaValidator: new CfWorkerJsonSchemaValidator() }
   );
 
@@ -58,19 +45,7 @@ function createServer(env: Env): McpServer {
         openWorldHint: true
       }
     },
-    async ({ city }) => {
-      try {
-        const result = await withCache(env.CACHE, `weather:${city}`, WEATHER_CACHE_TTL_SECONDS, () =>
-          runWeatherForecast(city, env.CWA_API_KEY)
-        );
-        return {
-          content: [{ type: "text", text: formatWeatherForecastText(result) }],
-          structuredContent: result
-        };
-      } catch (error) {
-        return { content: [{ type: "text", text: errorText(error) }], isError: true };
-      }
-    }
+    ({ city }) => handleWeatherForecastTool({ city }, env)
   );
 
   server.registerTool(
@@ -95,19 +70,7 @@ function createServer(env: Env): McpServer {
         openWorldHint: true
       }
     },
-    async ({ limit }) => {
-      try {
-        const result = await withCache(env.CACHE, `quakes:${limit}`, EARTHQUAKE_CACHE_TTL_SECONDS, () =>
-          runRecentEarthquakes(limit, env.CWA_API_KEY)
-        );
-        return {
-          content: [{ type: "text", text: formatRecentEarthquakesText(result) }],
-          structuredContent: result
-        };
-      } catch (error) {
-        return { content: [{ type: "text", text: errorText(error) }], isError: true };
-      }
-    }
+    ({ limit }) => handleRecentEarthquakesTool({ limit }, env)
   );
 
   server.registerTool(
@@ -132,20 +95,7 @@ function createServer(env: Env): McpServer {
         openWorldHint: true
       }
     },
-    async ({ county, siteName }) => {
-      try {
-        const cacheKey = county ? `aqi:county:${county}` : `aqi:site:${siteName}`;
-        const result = await withCache(env.CACHE, cacheKey, AIR_QUALITY_CACHE_TTL_SECONDS, () =>
-          runAirQuality({ county, siteName }, env.MOENV_API_KEY)
-        );
-        return {
-          content: [{ type: "text", text: formatAirQualityText(result) }],
-          structuredContent: result
-        };
-      } catch (error) {
-        return { content: [{ type: "text", text: errorText(error) }], isError: true };
-      }
-    }
+    ({ county, siteName }) => handleAirQualityTool({ county, siteName }, env)
   );
 
   return server;

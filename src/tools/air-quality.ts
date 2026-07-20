@@ -1,70 +1,20 @@
-import { z } from "zod";
-import { AQX_P_432_DATASET_ID, AQX_P_432_FETCH_LIMIT, TAIWAN_CITIES } from "../constants.js";
-import { OpenDataApiError } from "../services/errors.js";
-import { fetchMoenvRecords } from "../services/moenv-client.js";
-import type { MoenvAqiRecord } from "../types.js";
+import { moenvAdapter } from "../adapters/moenv.js";
+import { withCacheTracked } from "../infra/cache.js";
+import { buildFailureEnvelope, buildSuccessEnvelope } from "../infra/envelope.js";
+import { ToolError, toToolError } from "../infra/errors.js";
+import { airQualityEntry, airQualityInputShape, type AirQualityResult } from "../registry/moenv.js";
+import type { Env } from "../index.js";
+import type { McpToolResult } from "./types.js";
 
-export const airQualityInputShape = {
-  county: z
-    .enum(TAIWAN_CITIES)
-    .optional()
-    .describe(
-      "縣市名稱（台灣 22 縣市之一），回傳該縣市所有測站的空氣品質。" +
-        "須用「臺」而非「台」（例如「臺北市」）。county 與 siteName 擇一必填。"
-    ),
-  siteName: z
-    .string()
-    .min(1)
-    .max(20)
-    .optional()
-    .describe(
-      "空氣品質測站名稱（例如「板橋」「西屯」「美濃」），只回傳該單一測站的資料。" +
-        "county 與 siteName 擇一必填。"
-    )
-};
+export { airQualityInputShape };
+export type { AirQualityResult };
 
-const AirQualityInput = z.object(airQualityInputShape);
-export type AirQualityInput = z.infer<typeof AirQualityInput>;
-
-export interface AirQualityStation {
-  siteName: string;
-  county: string;
-  aqi: number | null;
-  status: string;
-  mainPollutant: string | null;
-  pm25: number | null;
-  pm10: number | null;
-  o3: number | null;
-  publishTime: string;
-}
-
-export interface AirQualityResult {
-  [key: string]: unknown;
-  query: { county?: string; siteName?: string };
-  stations: AirQualityStation[];
-}
-
-/** MOENV uses "", "-" and "ND" for unavailable measurements; Number("") is 0, so guard first. */
-function toNumberOrNull(value: string | undefined): number | null {
-  if (value === undefined || value === "" || value === "-" || value === "ND") return null;
-  const n = Number(value);
-  return Number.isNaN(n) ? null : n;
-}
-
-function summarizeStation(record: MoenvAqiRecord): AirQualityStation {
-  return {
-    siteName: record.sitename,
-    county: record.county,
-    aqi: toNumberOrNull(record.aqi),
-    status: record.status || "無資料",
-    mainPollutant: record.pollutant || null,
-    pm25: toNumberOrNull(record["pm2.5"]),
-    pm10: toNumberOrNull(record.pm10),
-    o3: toNumberOrNull(record.o3),
-    publishTime: record.publishtime
-  };
-}
-
+/**
+ * Fetch + transform, no cache. Preserved as its own function (rather than
+ * inlined into the tool handler below) so it keeps the same signature it
+ * had before the layered refactor and can be unit-tested directly against
+ * a mocked `fetchImpl`, same as before.
+ */
 export async function runAirQuality(
   input: { county?: string; siteName?: string },
   apiKey: string | undefined,
@@ -72,61 +22,20 @@ export async function runAirQuality(
 ): Promise<AirQualityResult> {
   const { county, siteName } = input;
   if (!county && !siteName) {
-    throw new OpenDataApiError(
-      "請提供 county（縣市）或 siteName（測站名稱）其中一個參數，例如 county=\"臺北市\" 或 siteName=\"板橋\"。"
-    );
+    throw new ToolError({
+      code: "INVALID_PARAMS",
+      message: "請提供 county（縣市）或 siteName（測站名稱）其中一個參數，例如 county=\"臺北市\" 或 siteName=\"板橋\"。"
+    });
   }
   if (county && siteName) {
-    throw new OpenDataApiError(
-      "county 與 siteName 只能擇一提供：查整個縣市請只給 county，查單一測站請只給 siteName。"
-    );
+    throw new ToolError({
+      code: "INVALID_PARAMS",
+      message: "county 與 siteName 只能擇一提供：查整個縣市請只給 county，查單一測站請只給 siteName。"
+    });
   }
 
-  const filter = county ? `county,EQ,${county}` : `sitename,EQ,${siteName}`;
-  const records = await fetchMoenvRecords<MoenvAqiRecord>(
-    AQX_P_432_DATASET_ID,
-    apiKey,
-    { filters: filter, limit: String(AQX_P_432_FETCH_LIMIT) },
-    fetchImpl
-  );
-
-  // Defensive check: if we got back exactly `limit` records, the upstream
-  // may have truncated the nationwide list rather than returning everything
-  // (e.g. the station network grew past our fetch limit). Client-side
-  // filtering below would then silently miss stations instead of failing
-  // loudly, so flag it — this should never fire in practice (~83-90
-  // stations vs. a limit of 1000) but costs nothing to check.
-  if (records.length >= AQX_P_432_FETCH_LIMIT) {
-    console.warn(
-      `[air-quality] fetched ${records.length} records, which meets or exceeds the ` +
-        `configured limit (${AQX_P_432_FETCH_LIMIT}) — the nationwide station list may have been ` +
-        `truncated, and client-side filtering below could miss matching stations.`
-    );
-  }
-
-  // Defense in depth: the `filters` query param above is not reliably
-  // honored by MOENV for this dataset — production traffic showed a
-  // `filters=sitename,EQ,...` request come back with the full, unfiltered
-  // nationwide station list. Always re-filter client-side so the returned
-  // stations are correct regardless of whether upstream actually applied it.
-  const matched = county ? records.filter(r => r.county === county) : records.filter(r => r.sitename === siteName);
-
-  if (matched.length === 0) {
-    if (siteName) {
-      throw new OpenDataApiError(
-        `找不到名為「${siteName}」的空氣品質測站。請確認測站名稱（例如「板橋」「西屯」「美濃」，不含「站」字），` +
-          `或改用 county 參數查詢整個縣市。`
-      );
-    }
-    throw new OpenDataApiError(
-      `環境部平臺沒有回傳「${county}」的測站資料。請確認縣市名稱使用「臺」而非「台」（例如「臺北市」）。`
-    );
-  }
-
-  return {
-    query: county ? { county } : { siteName },
-    stations: matched.map(summarizeStation)
-  };
+  const raw = await moenvAdapter.fetchDataset(airQualityEntry, input, { MOENV_API_KEY: apiKey }, fetchImpl);
+  return airQualityEntry.transform(raw, input);
 }
 
 export function formatAirQualityText(result: AirQualityResult): string {
@@ -145,4 +54,33 @@ export function formatAirQualityText(result: AirQualityResult): string {
     lines.push("");
   }
   return lines.join("\n");
+}
+
+/** Composes cache + envelope on top of `runAirQuality`, for the MCP tool registration in index.ts. */
+export async function handleAirQualityTool(
+  params: { county?: string; siteName?: string },
+  env: Env,
+  fetchImpl?: typeof fetch
+): Promise<McpToolResult> {
+  try {
+    const cacheKey = params.county ? `aqi:county:${params.county}` : `aqi:site:${params.siteName}`;
+    const { value: data, cached } = await withCacheTracked(env.CACHE, cacheKey, airQualityEntry.cacheTtlSeconds, () =>
+      runAirQuality(params, env.MOENV_API_KEY, fetchImpl)
+    );
+    const envelope = buildSuccessEnvelope({
+      source: "環境部",
+      dataset: airQualityEntry.path,
+      cached,
+      updateFrequency: airQualityEntry.updateFrequency,
+      data
+    });
+    return { content: [{ type: "text", text: formatAirQualityText(data) }], structuredContent: envelope };
+  } catch (error) {
+    const toolError = toToolError(error);
+    return {
+      content: [{ type: "text", text: toolError.message }],
+      structuredContent: buildFailureEnvelope(toolError),
+      isError: true
+    };
+  }
 }

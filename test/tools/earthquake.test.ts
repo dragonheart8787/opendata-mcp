@@ -1,11 +1,11 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { formatRecentEarthquakesText, runRecentEarthquakes } from "../src/tools/recent-earthquakes.js";
-import { jsonFetch } from "./helpers.js";
+import { formatRecentEarthquakesText, runRecentEarthquakes } from "../../src/tools/earthquake.js";
+import { jsonFetch } from "../helpers.js";
 
 const fixture = JSON.parse(
-  readFileSync(fileURLToPath(new URL("./fixtures/earthquakes.json", import.meta.url)), "utf-8")
+  readFileSync(fileURLToPath(new URL("../fixtures/earthquakes.json", import.meta.url)), "utf-8")
 );
 
 describe("runRecentEarthquakes", () => {
