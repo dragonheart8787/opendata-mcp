@@ -38,6 +38,14 @@ export async function fetchMoenvRecords<TRecord>(
     }
   }
 
+  // TEMPORARY DEBUG LOGGING — remove once the "回應中缺少 records 欄位" issue
+  // reported against tw_air_quality is root-caused. api_key is masked to its
+  // first 4 characters before logging.
+  const maskedUrl = new URL(url.toString());
+  const rawKey = maskedUrl.searchParams.get("api_key") ?? "";
+  maskedUrl.searchParams.set("api_key", rawKey.length > 4 ? `${rawKey.slice(0, 4)}***` : "***");
+  console.log(`[moenv-client] request url: ${maskedUrl.toString()}`);
+
   let response: Response;
   try {
     response = await fetchImpl(url.toString(), {
@@ -49,6 +57,11 @@ export async function fetchMoenvRecords<TRecord>(
     );
   }
 
+  console.log(`[moenv-client] response status: ${response.status}`);
+
+  const rawBody = await response.text();
+  console.log(`[moenv-client] response body (first 500 chars): ${rawBody.slice(0, 500)}`);
+
   if (response.status === 401 || response.status === 403) {
     throw new OpenDataApiError(invalidKeyMessage(`HTTP ${response.status}`));
   }
@@ -58,7 +71,7 @@ export async function fetchMoenvRecords<TRecord>(
 
   let payload: MoenvApiEnvelope<TRecord>;
   try {
-    payload = (await response.json()) as MoenvApiEnvelope<TRecord>;
+    payload = JSON.parse(rawBody) as MoenvApiEnvelope<TRecord>;
   } catch {
     throw new OpenDataApiError("環境部開放資料平臺回傳了無法解析的內容，可能是暫時性服務異常，請稍後再試。");
   }
