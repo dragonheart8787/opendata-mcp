@@ -85,6 +85,24 @@ export function normalizeMoenvRecord<T extends Record<string, unknown>>(
   return normalized as { [K in keyof T]: T[K] extends string ? string | null : T[K] };
 }
 
+/**
+ * Builds the exact request URL the adapter sends upstream (auth + format +
+ * dataset-specific query params). Exported so the fixtures-refresh script
+ * (scripts/fixtures/refresh-fixtures.ts) can fetch the same raw response a
+ * production request would get, without duplicating auth-injection logic.
+ */
+export function buildMoenvUrl<TParams, TRaw>(entry: DatasetEntry<TParams, TRaw, unknown>, params: TParams, apiKey: string): URL {
+  const url = new URL(`${MOENV_API_BASE_URL}/${entry.path}`);
+  url.searchParams.set("api_key", apiKey);
+  url.searchParams.set("format", "JSON");
+  for (const [key, value] of Object.entries(entry.buildQueryParams(params))) {
+    if (value !== undefined) {
+      url.searchParams.set(key, value);
+    }
+  }
+  return url;
+}
+
 async function fetchDataset<TParams, TRaw>(
   entry: DatasetEntry<TParams, TRaw, unknown>,
   params: TParams,
@@ -96,14 +114,7 @@ async function fetchDataset<TParams, TRaw>(
     throw new ToolError({ code: "AUTH_MISSING", message: MISSING_KEY_MESSAGE });
   }
 
-  const url = new URL(`${MOENV_API_BASE_URL}/${entry.path}`);
-  url.searchParams.set("api_key", apiKey);
-  url.searchParams.set("format", "JSON");
-  for (const [key, value] of Object.entries(entry.buildQueryParams(params))) {
-    if (value !== undefined) {
-      url.searchParams.set(key, value);
-    }
-  }
+  const url = buildMoenvUrl(entry, params, apiKey);
 
   let response: Response;
   try {

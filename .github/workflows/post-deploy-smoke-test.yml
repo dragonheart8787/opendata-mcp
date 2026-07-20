@@ -1,0 +1,94 @@
+name: Post-deploy smoke test
+
+# Verifies the deployed server actually works: initialize -> tools/list ->
+# one real call per tool against production. Runs on GitHub Actions (not
+# the Claude Code sandbox, which can't reliably reach either the upstream
+# APIs or the deployed *.workers.dev URL — see docs/sessions/SESSION-B.md
+# for why this exists).
+#
+# Deploy-completion detection: this repo's Cloudflare Workers deploy is
+# triggered by Cloudflare's own Git integration on push to main, entirely
+# outside this repo's control (no webhook back into GitHub, no build-time
+# commit-SHA injection available without extra Cloudflare-side setup this
+# session can't configure). Rather than build that integration, this
+# workflow uses a fixed post-push delay plus a bounded retry-with-backoff
+# on the smoke test itself — cheaper to build and maintain, and the retry
+# absorbs the case where the fixed delay wasn't quite long enough. See
+# docs/sessions/SESSION-B.md and the PR that introduced this workflow for
+# the fuller tradeoff discussion.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "MCP endpoint to test (defaults to production)"
+        required: false
+        type: string
+
+permissions:
+  issues: write
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Wait for Cloudflare deploy rollout
+        if: github.event_name == 'push'
+        run: sleep 90
+
+      - name: Run smoke test (retry in case the deploy is still rolling out)
+        env:
+          SMOKE_TEST_URL: ${{ inputs.url }}
+        run: |
+          attempts=0
+          max_attempts=3
+          until npm run smoke-test; do
+            attempts=$((attempts + 1))
+            if [ "$attempts" -ge "$max_attempts" ]; then
+              echo "Smoke test failed after $max_attempts attempts."
+              exit 1
+            fi
+            echo "Smoke test failed, retrying in 30s (attempt $attempts/$max_attempts)..."
+            sleep 30
+          done
+
+      - name: Upload smoke test result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-test-result
+          path: |
+            smoke-test-result.json
+            smoke-test-summary.md
+          if-no-files-found: ignore
+
+      - name: Open an issue on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh label create smoke-test-failed \
+            --color B60205 \
+            --description "Post-deploy smoke test failed" \
+            --repo "${{ github.repository }}" || true
+
+          if [ -f smoke-test-summary.md ]; then
+            body_file=smoke-test-summary.md
+          else
+            echo "Smoke test script did not produce a summary — it likely failed to run at all (network error, syntax error, etc). Check the workflow run logs." > /tmp/fallback-summary.md
+            body_file=/tmp/fallback-summary.md
+          fi
+
+          gh issue create \
+            --repo "${{ github.repository }}" \
+            --title "[smoke-test-failed] $(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --label smoke-test-failed \
+            --body-file "$body_file"
