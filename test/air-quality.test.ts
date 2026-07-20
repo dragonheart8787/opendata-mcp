@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import { AQX_P_432_FETCH_LIMIT } from "../src/constants.js";
 import { OpenDataApiError } from "../src/services/errors.js";
 import { formatAirQualityText, runAirQuality } from "../src/tools/air-quality.js";
 import { jsonFetch } from "./helpers.js";
@@ -104,6 +105,27 @@ describe("runAirQuality", () => {
 
     const url = new URL(requestedUrl);
     expect(url.searchParams.get("filters")).toBe("sitename,EQ,板橋");
+  });
+
+  it("warns when the fetched record count meets the configured limit (possible truncation)", async () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const fullPage = Array.from({ length: AQX_P_432_FETCH_LIMIT }, (_, i) => ({
+      ...fixture[0],
+      sitename: `站${i}`,
+      county: "臺北市"
+    }));
+
+    await runAirQuality({ county: "臺北市" }, "test-key", jsonFetch(fullPage));
+
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("[air-quality]"));
+    warnSpy.mockRestore();
+  });
+
+  it("does not warn on a normal, well-under-the-limit response", async () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    await runAirQuality({ county: "新北市" }, "test-key", jsonFetch(fixture));
+    expect(warnSpy).not.toHaveBeenCalled();
+    warnSpy.mockRestore();
   });
 
   it("rejects a call with neither county nor siteName, with guidance", async () => {
