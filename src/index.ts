@@ -2,17 +2,32 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { CfWorkerJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/cfworker";
 
+import { airQualityInputShape, runAirQuality, formatAirQualityText } from "./tools/air-quality.js";
 import { recentEarthquakesInputShape, runRecentEarthquakes, formatRecentEarthquakesText } from "./tools/recent-earthquakes.js";
 import { weatherForecastInputShape, runWeatherForecast, formatWeatherForecastText } from "./tools/weather-forecast.js";
-import { CwaApiError } from "./services/cwa-client.js";
+import { withCache, type CacheStore } from "./services/cache.js";
+import { OpenDataApiError } from "./services/errors.js";
+import {
+  AIR_QUALITY_CACHE_TTL_SECONDS,
+  EARTHQUAKE_CACHE_TTL_SECONDS,
+  WEATHER_CACHE_TTL_SECONDS
+} from "./constants.js";
 
 export interface Env {
   /** CWA Open Data Platform API key. Set via `wrangler secret put CWA_API_KEY`, never committed. */
   CWA_API_KEY?: string;
+  /** MOENV open data platform API key. Set via `wrangler secret put MOENV_API_KEY`, never committed. */
+  MOENV_API_KEY?: string;
+  /**
+   * Cloudflare KV namespace used as a short-TTL response cache (binding name
+   * `CACHE` in wrangler.toml). Optional — tools work without it, every call
+   * just hits the upstream API directly.
+   */
+  CACHE?: CacheStore;
 }
 
 function errorText(error: unknown): string {
-  if (error instanceof CwaApiError) {
+  if (error instanceof OpenDataApiError) {
     return error.message;
   }
   return `發生未預期的錯誤：${error instanceof Error ? error.message : String(error)}`;
@@ -20,7 +35,7 @@ function errorText(error: unknown): string {
 
 function createServer(env: Env): McpServer {
   const server = new McpServer(
-    { name: "taiwan-opendata-mcp-server", version: "1.0.0" },
+    { name: "taiwan-opendata-mcp-server", version: "1.1.0" },
     { jsonSchemaValidator: new CfWorkerJsonSchemaValidator() }
   );
 
@@ -45,7 +60,9 @@ function createServer(env: Env): McpServer {
     },
     async ({ city }) => {
       try {
-        const result = await runWeatherForecast(city, env.CWA_API_KEY);
+        const result = await withCache(env.CACHE, `weather:${city}`, WEATHER_CACHE_TTL_SECONDS, () =>
+          runWeatherForecast(city, env.CWA_API_KEY)
+        );
         return {
           content: [{ type: "text", text: formatWeatherForecastText(result) }],
           structuredContent: result
@@ -80,9 +97,49 @@ function createServer(env: Env): McpServer {
     },
     async ({ limit }) => {
       try {
-        const result = await runRecentEarthquakes(limit, env.CWA_API_KEY);
+        const result = await withCache(env.CACHE, `quakes:${limit}`, EARTHQUAKE_CACHE_TTL_SECONDS, () =>
+          runRecentEarthquakes(limit, env.CWA_API_KEY)
+        );
         return {
           content: [{ type: "text", text: formatRecentEarthquakesText(result) }],
+          structuredContent: result
+        };
+      } catch (error) {
+        return { content: [{ type: "text", text: errorText(error) }], isError: true };
+      }
+    }
+  );
+
+  server.registerTool(
+    "tw_air_quality",
+    {
+      title: "台灣即時空氣品質（AQI）",
+      description:
+        "查詢環境部「空氣品質指標（AQI）」即時測站資料（資料集 aqx_p_432，每小時更新），" +
+        "回傳指定縣市或測站的 AQI 數值、狀態等級（良好／普通／對敏感族群不健康／對所有族群不健康／非常不健康／危害）、" +
+        "主要污染物、PM2.5、PM10、O3 濃度與資料發布時間。\n\n" +
+        "參數（兩者擇一必填）：\n" +
+        "- county：縣市名稱，回傳該縣市所有測站；須用「臺」而非「台」（例如「臺北市」）。\n" +
+        "- siteName：單一測站名稱（例如「板橋」「西屯」「美濃」，不含「站」字）。\n\n" +
+        "適用情境：使用者詢問某地現在空氣品質好不好、AQI 多少、PM2.5 濃度、今天適不適合戶外運動。\n" +
+        "不適用：歷史空品資料查詢、未來空氣品質預報（此資料集僅有當前小時的即時觀測值，" +
+        "不涵蓋歷史紀錄也不涵蓋預報值）。",
+      inputSchema: airQualityInputShape,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true
+      }
+    },
+    async ({ county, siteName }) => {
+      try {
+        const cacheKey = county ? `aqi:county:${county}` : `aqi:site:${siteName}`;
+        const result = await withCache(env.CACHE, cacheKey, AIR_QUALITY_CACHE_TTL_SECONDS, () =>
+          runAirQuality({ county, siteName }, env.MOENV_API_KEY)
+        );
+        return {
+          content: [{ type: "text", text: formatAirQualityText(result) }],
           structuredContent: result
         };
       } catch (error) {

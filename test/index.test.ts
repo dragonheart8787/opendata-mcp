@@ -56,7 +56,9 @@ describe("worker fetch routing", () => {
     expect(listRes.status).toBe(200);
     const listBody = (await listRes.json()) as { result?: { tools?: Array<{ name: string }> } };
     const toolNames = listBody.result?.tools?.map(t => t.name) ?? [];
-    expect(toolNames).toEqual(expect.arrayContaining(["tw_weather_forecast", "tw_recent_earthquakes"]));
+    expect(toolNames).toEqual(
+      expect.arrayContaining(["tw_weather_forecast", "tw_recent_earthquakes", "tw_air_quality"])
+    );
   });
 
   it("returns an actionable tool error (not a transport error) when CWA_API_KEY is missing", async () => {
@@ -73,5 +75,21 @@ describe("worker fetch routing", () => {
     const body = (await res.json()) as { result?: { isError?: boolean; content?: Array<{ text?: string }> } };
     expect(body.result?.isError).toBe(true);
     expect(body.result?.content?.[0]?.text).toContain("opendata.cwa.gov.tw/user/authkey");
+  });
+
+  it("returns an actionable tool error when MOENV_API_KEY is missing", async () => {
+    const res = await worker.fetch(
+      mcpRequest({
+        jsonrpc: "2.0",
+        id: 4,
+        method: "tools/call",
+        params: { name: "tw_air_quality", arguments: { county: "新北市" } }
+      }),
+      env as never
+    );
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { result?: { isError?: boolean; content?: Array<{ text?: string }> } };
+    expect(body.result?.isError).toBe(true);
+    expect(body.result?.content?.[0]?.text).toContain("data.moenv.gov.tw");
   });
 });
