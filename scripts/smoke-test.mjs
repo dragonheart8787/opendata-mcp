@@ -12,7 +12,7 @@
  */
 import { writeFileSync } from "node:fs";
 
-const URL_ARG = process.env.SMOKE_TEST_URL ?? "https://opendata-mcp.dragonheartliu1440.workers.dev/mcp";
+const URL_ARG = process.env.SMOKE_TEST_URL || "https://opendata-mcp.dragonheartliu1440.workers.dev/mcp";
 
 const EXPECTED_TOOLS = ["tw_weather_forecast", "tw_recent_earthquakes", "tw_air_quality"];
 
