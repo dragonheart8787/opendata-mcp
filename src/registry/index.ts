@@ -32,6 +32,17 @@ export interface DatasetEntry<TParams = never, TRaw = unknown, TResult = unknown
   keywords: string[];
   /** Zod raw shape — passed directly as an MCP tool's `inputSchema`. */
   paramsSchema: Record<string, ZodTypeAny>;
+  /**
+   * Optional cross-field validation `paramsSchema` alone can't express —
+   * e.g. air quality's "exactly one of county/siteName", which is a
+   * relationship between two otherwise-independently-optional fields, not
+   * a per-field constraint. Called (if present) after `paramsSchema`
+   * validation succeeds and before `buildQueryParams`/fetch, by both the
+   * curated tool and `tw_query_dataset` (tools/generic.ts) — the single
+   * place this rule needs to live so the two paths can't drift apart.
+   * Should throw a `ToolError` (typically `INVALID_PARAMS`) on violation.
+   */
+  validateParams?: (params: TParams) => void;
   buildQueryParams: (params: TParams) => Record<string, string | undefined>;
   transform: (raw: TRaw, params: TParams) => TResult;
   cacheTtlSeconds: number;

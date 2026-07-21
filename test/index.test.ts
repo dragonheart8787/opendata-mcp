@@ -33,7 +33,7 @@ describe("worker fetch routing", () => {
     expect(res.status).toBe(405);
   });
 
-  it("completes an MCP initialize handshake and lists both tools", async () => {
+  it("completes an MCP initialize handshake and lists all five tools", async () => {
     const initRes = await worker.fetch(
       mcpRequest({
         jsonrpc: "2.0",
@@ -59,8 +59,99 @@ describe("worker fetch routing", () => {
     const listBody = (await listRes.json()) as { result?: { tools?: Array<{ name: string }> } };
     const toolNames = listBody.result?.tools?.map(t => t.name) ?? [];
     expect(toolNames).toEqual(
-      expect.arrayContaining(["tw_weather_forecast", "tw_recent_earthquakes", "tw_air_quality"])
+      expect.arrayContaining([
+        "tw_weather_forecast",
+        "tw_recent_earthquakes",
+        "tw_air_quality",
+        "tw_search_datasets",
+        "tw_query_dataset"
+      ])
     );
+  });
+
+  it("tw_search_datasets finds a registered dataset by keyword, with no upstream call needed", async () => {
+    const res = await worker.fetch(
+      mcpRequest({
+        jsonrpc: "2.0",
+        id: 7,
+        method: "tools/call",
+        params: { name: "tw_search_datasets", arguments: { query: "地震" } }
+      }),
+      env as never
+    );
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      result?: {
+        isError?: boolean;
+        structuredContent?: { ok?: boolean; data?: { results?: Array<{ datasetId?: string }> } };
+      };
+    };
+    expect(body.result?.isError).toBeUndefined();
+    expect(body.result?.structuredContent?.ok).toBe(true);
+    expect(body.result?.structuredContent?.data?.results).toEqual(
+      expect.arrayContaining([expect.objectContaining({ datasetId: "cwa:E-A0015-001" })])
+    );
+  });
+
+  it("tw_query_dataset returns a NOT_FOUND failure envelope for an unregistered datasetId, hinting at tw_search_datasets", async () => {
+    const res = await worker.fetch(
+      mcpRequest({
+        jsonrpc: "2.0",
+        id: 8,
+        method: "tools/call",
+        params: { name: "tw_query_dataset", arguments: { datasetId: "cwa:NOT-A-REAL-ID" } }
+      }),
+      env as never
+    );
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      result?: { isError?: boolean; structuredContent?: { ok?: boolean; error?: { code?: string; message?: string } } };
+    };
+    expect(body.result?.isError).toBe(true);
+    expect(body.result?.structuredContent?.ok).toBe(false);
+    expect(body.result?.structuredContent?.error?.code).toBe("NOT_FOUND");
+    expect(body.result?.structuredContent?.error?.message).toContain("tw_search_datasets");
+  });
+
+  it("tw_query_dataset returns the same success envelope shape as the curated tool for the same dataset", async () => {
+    const fixture = JSON.parse(
+      readFileSync(fileURLToPath(new URL("./fixtures/earthquakes.json", import.meta.url)), "utf-8")
+    );
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = (async () =>
+      new Response(JSON.stringify(fixture), { status: 200, headers: { "content-type": "application/json" } })) as unknown as typeof fetch;
+
+    try {
+      const res = await worker.fetch(
+        mcpRequest({
+          jsonrpc: "2.0",
+          id: 9,
+          method: "tools/call",
+          params: { name: "tw_query_dataset", arguments: { datasetId: "cwa:E-A0015-001", params: { limit: 1 } } }
+        }),
+        { CWA_API_KEY: "test-key" } as never
+      );
+      const body = (await res.json()) as {
+        result?: {
+          isError?: boolean;
+          structuredContent?: {
+            ok?: boolean;
+            source?: string;
+            dataset?: string;
+            cached?: boolean;
+            updateFrequency?: string;
+            data?: { earthquakes?: unknown[] };
+          };
+        };
+      };
+      expect(body.result?.isError).toBeUndefined();
+      expect(body.result?.structuredContent?.ok).toBe(true);
+      expect(body.result?.structuredContent?.source).toBe("中央氣象署");
+      expect(body.result?.structuredContent?.dataset).toBe("E-A0015-001");
+      expect(body.result?.structuredContent?.data?.earthquakes).toHaveLength(1);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
   });
 
   it("returns an actionable tool error (not a transport error) when CWA_API_KEY is missing", async () => {

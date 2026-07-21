@@ -5,6 +5,7 @@ import { CfWorkerJsonSchemaValidator } from "@modelcontextprotocol/sdk/validatio
 import type { CacheStore } from "./infra/cache.js";
 import { airQualityInputShape, handleAirQualityTool } from "./tools/air-quality.js";
 import { handleRecentEarthquakesTool, recentEarthquakesInputShape } from "./tools/earthquake.js";
+import { handleQueryDatasetTool, handleSearchDatasetsTool, queryDatasetInputShape, searchDatasetsInputShape } from "./tools/generic.js";
 import { handleWeatherForecastTool, weatherForecastInputShape } from "./tools/weather.js";
 
 export interface Env {
@@ -100,6 +101,60 @@ function createServer(env: Env): McpServer {
       }
     },
     ({ county, siteName }) => handleAirQualityTool({ county, siteName }, env)
+  );
+
+  server.registerTool(
+    "tw_search_datasets",
+    {
+      title: "搜尋本伺服器已登記的資料集",
+      description:
+        "在本伺服器已登記（registry）的資料集清單中做關鍵字搜尋，協助找出可用的 datasetId 與其查詢參數，" +
+        "**只搜尋本伺服器已收錄的資料集，不是搜尋整個政府開放資料平台**。\n\n" +
+        "參數：\n" +
+        "- query：搜尋關鍵字，比對資料集標題與關鍵字標籤（例如「地震」「空氣品質」「溫度」）。\n" +
+        "- source：選填，只搜尋特定機關（cwa＝中央氣象署，moenv＝環境部），不填則搜尋所有機關。\n\n" +
+        "適用情境：不確定要用哪個精選工具查某項資料、或想知道除了 tw_weather_forecast／tw_recent_earthquakes／" +
+        "tw_air_quality 之外還有哪些資料集可以透過 tw_query_dataset 查詢時。\n" +
+        "不適用：查詢資料集的實際內容（找到 datasetId 後請改用 tw_query_dataset）。\n\n" +
+        "資料範圍限制：只涵蓋本伺服器 registry 已登記的資料集，搜尋不到不代表該資料在政府開放資料平台上不存在，" +
+        "只代表本伺服器尚未收錄；registry 內容會隨伺服器擴充而增加。",
+      inputSchema: searchDatasetsInputShape,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true
+      }
+    },
+    ({ query, source }) => handleSearchDatasetsTool({ query, source })
+  );
+
+  server.registerTool(
+    "tw_query_dataset",
+    {
+      title: "依 datasetId 查詢已登記資料集",
+      description:
+        "依 tw_search_datasets 查到的 datasetId，執行該資料集的實際查詢並回傳結果——等同直接呼叫該資料集" +
+        "對應的精選工具（若有的話），走一樣的快取與錯誤處理流程。\n\n" +
+        "參數：\n" +
+        "- datasetId：必填，須為已註冊的資料集 id（例如「cwa:E-A0015-001」），只接受本伺服器 registry 內" +
+        "已知的 id，**不接受任意路徑或網址**——這是安全邊界，防止被當作跳板打任意上游 API。\n" +
+        "- params：該資料集要求的查詢參數，依資料集而不同（例如地震資料集要 limit，空品資料集要 county 或 " +
+        "siteName），可先用 tw_search_datasets 查詢每個資料集接受哪些參數。\n\n" +
+        "適用情境：已經知道 datasetId、想用通用方式查詢任何已登記資料集時；或未來新增進 registry 但還沒有" +
+        "專屬精選工具的長尾資料集。\n" +
+        "不適用：不知道 datasetId 時（請先用 tw_search_datasets 查詢）。\n\n" +
+        "資料範圍限制：只能查詢已登記進 registry 的資料集；datasetId 不存在時會回傳明確錯誤，並提示改用 " +
+        "tw_search_datasets 查詢目前可用的資料集清單。",
+      inputSchema: queryDatasetInputShape,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true
+      }
+    },
+    ({ datasetId, params }) => handleQueryDatasetTool({ datasetId, params }, env)
   );
 
   return server;
