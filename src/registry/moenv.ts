@@ -46,6 +46,29 @@ export interface AirQualityResult {
   stations: AirQualityStation[];
 }
 
+/**
+ * "Exactly one of county/siteName" — a relationship between two
+ * independently-optional fields that `airQualityInputShape` alone can't
+ * express (each field is valid on its own). Shared by `runAirQuality`
+ * (src/tools/air-quality.ts) and `tw_query_dataset` (tools/generic.ts, via
+ * `DatasetEntry.validateParams`) so the rule can't drift between the two
+ * call paths.
+ */
+export function validateAirQualityParams(params: AirQualityParams): void {
+  if (!params.county && !params.siteName) {
+    throw new ToolError({
+      code: "INVALID_PARAMS",
+      message: "請提供 county（縣市）或 siteName（測站名稱）其中一個參數，例如 county=\"臺北市\" 或 siteName=\"板橋\"。"
+    });
+  }
+  if (params.county && params.siteName) {
+    throw new ToolError({
+      code: "INVALID_PARAMS",
+      message: "county 與 siteName 只能擇一提供：查整個縣市請只給 county，查單一測站請只給 siteName。"
+    });
+  }
+}
+
 function toNumberOrNull(value: string | null): number | null {
   if (value === null) return null;
   const n = Number(value);
@@ -73,6 +96,7 @@ export const airQualityEntry: DatasetEntry<AirQualityParams, MoenvAqiRecordNorma
   title: "空氣品質指標（AQI）",
   keywords: ["空氣品質", "空品", "AQI", "PM2.5", "PM10", "臭氧", "air quality"],
   paramsSchema: airQualityInputShape,
+  validateParams: validateAirQualityParams,
   buildQueryParams: params => ({
     filters: params.county ? `county,EQ,${params.county}` : `sitename,EQ,${params.siteName}`,
     limit: String(AQX_P_432_FETCH_LIMIT)

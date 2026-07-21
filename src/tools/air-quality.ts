@@ -1,8 +1,8 @@
 import { moenvAdapter } from "../adapters/moenv.js";
 import { withCacheTracked } from "../infra/cache.js";
 import { buildFailureEnvelope, buildSuccessEnvelope } from "../infra/envelope.js";
-import { ToolError, toToolError } from "../infra/errors.js";
-import { airQualityEntry, airQualityInputShape, type AirQualityResult } from "../registry/moenv.js";
+import { toToolError } from "../infra/errors.js";
+import { airQualityEntry, airQualityInputShape, validateAirQualityParams, type AirQualityResult } from "../registry/moenv.js";
 import type { Env } from "../index.js";
 import type { McpToolResult } from "./types.js";
 
@@ -20,19 +20,7 @@ export async function runAirQuality(
   apiKey: string | undefined,
   fetchImpl?: typeof fetch
 ): Promise<AirQualityResult> {
-  const { county, siteName } = input;
-  if (!county && !siteName) {
-    throw new ToolError({
-      code: "INVALID_PARAMS",
-      message: "請提供 county（縣市）或 siteName（測站名稱）其中一個參數，例如 county=\"臺北市\" 或 siteName=\"板橋\"。"
-    });
-  }
-  if (county && siteName) {
-    throw new ToolError({
-      code: "INVALID_PARAMS",
-      message: "county 與 siteName 只能擇一提供：查整個縣市請只給 county，查單一測站請只給 siteName。"
-    });
-  }
+  validateAirQualityParams(input);
 
   const raw = await moenvAdapter.fetchDataset(airQualityEntry, input, { MOENV_API_KEY: apiKey }, fetchImpl);
   return airQualityEntry.transform(raw, input);

@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { AQX_P_432_FETCH_LIMIT } from "../../src/constants.js";
 import { ToolError } from "../../src/infra/errors.js";
 import { normalizeMoenvRecord } from "../../src/adapters/moenv.js";
-import { airQualityEntry } from "../../src/registry/moenv.js";
+import { airQualityEntry, validateAirQualityParams } from "../../src/registry/moenv.js";
 import { getDatasetEntry } from "../../src/registry/index.js";
 
 // This fixture is overwritten with a real, live response whenever
@@ -136,5 +136,32 @@ describe("airQualityEntry", () => {
     expect(station.o3).toBeNull();
     expect(station.mainPollutant).toBeNull();
     expect(station.pm10).toBe(30);
+  });
+});
+
+describe("validateAirQualityParams", () => {
+  // Also exercised indirectly via airQualityEntry.validateParams by
+  // tw_query_dataset (test/tools/generic.test.ts) — this is the single
+  // source of truth both that generic path and runAirQuality
+  // (src/tools/air-quality.ts) call, so it's tested directly here too.
+  it("is wired up as airQualityEntry's validateParams hook", () => {
+    expect(airQualityEntry.validateParams).toBe(validateAirQualityParams);
+  });
+
+  it("rejects when neither county nor siteName is given", () => {
+    expect(() => validateAirQualityParams({})).toThrow(ToolError);
+    expect(() => validateAirQualityParams({})).toThrow(/擇一|其中一個/);
+  });
+
+  it("rejects when both county and siteName are given", () => {
+    expect(() => validateAirQualityParams({ county: "新北市", siteName: "板橋" })).toThrow(/只能擇一/);
+  });
+
+  it("accepts county alone", () => {
+    expect(() => validateAirQualityParams({ county: "新北市" })).not.toThrow();
+  });
+
+  it("accepts siteName alone", () => {
+    expect(() => validateAirQualityParams({ siteName: "板橋" })).not.toThrow();
   });
 });

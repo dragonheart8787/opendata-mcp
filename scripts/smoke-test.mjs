@@ -14,7 +14,13 @@ import { writeFileSync } from "node:fs";
 
 const URL_ARG = process.env.SMOKE_TEST_URL || "https://opendata-mcp.dragonheartliu1440.workers.dev/mcp";
 
-const EXPECTED_TOOLS = ["tw_weather_forecast", "tw_recent_earthquakes", "tw_air_quality"];
+const EXPECTED_TOOLS = [
+  "tw_weather_forecast",
+  "tw_recent_earthquakes",
+  "tw_air_quality",
+  "tw_search_datasets",
+  "tw_query_dataset"
+];
 
 const TOOL_CALLS = [
   {
@@ -33,6 +39,18 @@ const TOOL_CALLS = [
     name: "tw_air_quality",
     arguments: { county: "臺北市" },
     checkData: data => Array.isArray(data?.stations) && data.stations.length > 0
+  },
+  {
+    name: "tw_search_datasets",
+    arguments: { query: "地震" },
+    // Should always find cwa:E-A0015-001 by keyword; a stable, no-upstream-call sanity check.
+    checkData: data => Array.isArray(data?.results) && data.results.some(r => r.datasetId === "cwa:E-A0015-001")
+  },
+  {
+    name: "tw_query_dataset",
+    arguments: { datasetId: "cwa:E-A0015-001", params: { limit: 1 } },
+    // Same underlying dataset as tw_recent_earthquakes, reached through the generic layer instead.
+    checkData: data => Array.isArray(data?.earthquakes)
   }
 ];
 
