@@ -17,11 +17,10 @@ const weatherFixture = JSON.parse(
 const earthquakeFixture = JSON.parse(
   readFileSync(fileURLToPath(new URL("../fixtures/earthquakes.json", import.meta.url)), "utf-8")
 );
-// Reconstructed from a real captured API response committed as a test
-// fixture in a third-party CWA client library (go-cwb) — NOT a fresh
-// direct capture from this session. See the module-level comment on
-// tideForecastEntry (src/registry/cwa.ts) for the full provenance note.
-// Needs a real capture via fixtures-refresh.yml to raise confidence.
+// Confirmed 2026-07-21 via a real dispatch of fixtures-refresh.yml against
+// the live API (trimmed to 3 of the ~266 returned locations to keep the
+// fixture small — see the module-level comment on tideForecastEntry,
+// src/registry/cwa.ts, for the full provenance note).
 const tideFixture = JSON.parse(
   readFileSync(fileURLToPath(new URL("../fixtures/tide-forecast.json", import.meta.url)), "utf-8")
 );
@@ -174,13 +173,23 @@ describe("tideForecastEntry", () => {
   });
 
   it("transform finds the requested location and passes its forecast entries through", () => {
-    const rawLocation = tideFixture.records.location[0];
-    const result = tideForecastEntry.transform(tideFixture.records, { locationName: rawLocation.locationName });
+    const rawEntry = tideFixture.records.TideForecasts[0];
+    const rawLocation = rawEntry.Location;
+    const result = tideForecastEntry.transform(tideFixture.records, { locationName: rawLocation.LocationName });
 
-    expect(result.locationName).toBe(rawLocation.locationName);
-    expect(result.stationId).toBe(rawLocation.stationId);
-    expect(result.forecast).toEqual(rawLocation.time);
-    expect(result.forecast).toHaveLength(rawLocation.time.length);
+    expect(result.locationName).toBe(rawLocation.LocationName);
+    expect(result.stationId).toBe(rawLocation.LocationId);
+    expect(result.forecast).toEqual(rawLocation.TimePeriods.Daily);
+    expect(result.forecast).toHaveLength(rawLocation.TimePeriods.Daily.length);
+  });
+
+  it("transform re-filters client-side even though the fixture (like real CWA traffic) returns every location regardless of the requested locationName", () => {
+    expect(tideFixture.records.TideForecasts.length).toBeGreaterThan(1);
+    const rawEntry = tideFixture.records.TideForecasts[1];
+    const rawLocation = rawEntry.Location;
+    const result = tideForecastEntry.transform(tideFixture.records, { locationName: rawLocation.LocationName });
+
+    expect(result.locationName).toBe(rawLocation.LocationName);
   });
 
   it("transform throws NOT_FOUND for a locationName not present in the response", () => {

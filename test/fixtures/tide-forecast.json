@@ -3,47 +3,451 @@
   "result": {
     "resource_id": "F-A0021-001",
     "fields": [
-      { "id": "locationName", "type": "String" },
-      { "id": "stationId", "type": "String" },
-      { "id": "elementName", "type": "String" },
-      { "id": "elementValue", "type": "String" },
-      { "id": "parameterName", "type": "String" },
-      { "id": "parameterValue", "type": "String" },
-      { "id": "parameterUnit", "type": "String" },
-      { "id": "parameterMeasure", "type": "String" },
-      { "id": "dataTime", "type": "Timestamp" },
-      { "id": "startTime", "type": "Timestamp" },
-      { "id": "endTime", "type": "Timestamp" }
+      {
+        "id": "LocationName",
+        "type": "String"
+      },
+      {
+        "id": "LocationId",
+        "type": "String"
+      },
+      {
+        "id": "Latitude",
+        "type": "Double"
+      },
+      {
+        "id": "Longitude",
+        "type": "Double"
+      },
+      {
+        "id": "Date",
+        "type": "Date"
+      },
+      {
+        "id": "LunarDate",
+        "type": "Date"
+      },
+      {
+        "id": "TideRange",
+        "type": "String"
+      },
+      {
+        "id": "DateTime",
+        "type": "DateTime"
+      },
+      {
+        "id": "AboveTWVD",
+        "type": "String"
+      },
+      {
+        "id": "AboveLocalMSL",
+        "type": "Integer"
+      },
+      {
+        "id": "AboveChartDatum",
+        "type": "Integer"
+      }
     ]
   },
   "records": {
-    "datasetDescription": "潮汐預報(未來1個月潮汐預報，鄉鎮、大潮小潮、滿潮乾潮、時間、潮高)",
-    "location": [
+    "dataid": "F-A0021-001",
+    "note": "潮汐預報(未來1個月潮汐預報，鄉鎮、大潮小潮、滿潮乾潮、時間、潮高)",
+    "TideForecasts": [
       {
-        "locationName": "宜蘭縣南澳鄉",
-        "stationId": "000212",
-        "time": [
-          {
-            "dataTime": "2026-08-19",
-            "parameter": [
-              { "parameterName": "農曆日期", "parameterValue": "七月初七" },
-              { "parameterName": "潮汐", "parameterValue": "大潮" },
-              { "parameterName": "潮時", "parameterValue": "滿潮", "parameterMeasure": "TWVD" },
-              { "parameterName": "時間", "parameterValue": "05:12" },
-              { "parameterName": "潮高", "parameterValue": "182", "parameterUnit": "公分" }
-            ]
-          },
-          {
-            "dataTime": "2026-08-20",
-            "parameter": [
-              { "parameterName": "農曆日期", "parameterValue": "七月初八" },
-              { "parameterName": "潮汐", "parameterValue": "大潮" },
-              { "parameterName": "潮時", "parameterValue": "乾潮", "parameterMeasure": "TWVD" },
-              { "parameterName": "時間", "parameterValue": "11:03" },
-              { "parameterName": "潮高", "parameterValue": "24", "parameterUnit": "公分" }
+        "Location": {
+          "LocationId": "10002120",
+          "LocationName": "宜蘭縣南澳鄉",
+          "Latitude": 24.4149,
+          "Longitude": 121.8068,
+          "TimePeriods": {
+            "Daily": [
+              {
+                "Date": "2026-07-21",
+                "LunarDate": "2026-06-08",
+                "TideRange": "小",
+                "Time": [
+                  {
+                    "DateTime": "2026-07-21T04:59:00+08:00",
+                    "Tide": "乾潮",
+                    "TideHeights": {
+                      "AboveTWVD": "-6",
+                      "AboveLocalMSL": 4,
+                      "AboveChartDatum": 115
+                    }
+                  },
+                  {
+                    "DateTime": "2026-07-21T11:08:00+08:00",
+                    "Tide": "滿潮",
+                    "TideHeights": {
+                      "AboveTWVD": "51",
+                      "AboveLocalMSL": 61,
+                      "AboveChartDatum": 172
+                    }
+                  },
+                  {
+                    "DateTime": "2026-07-21T16:47:00+08:00",
+                    "Tide": "乾潮",
+                    "TideHeights": {
+                      "AboveTWVD": "5",
+                      "AboveLocalMSL": 15,
+                      "AboveChartDatum": 126
+                    }
+                  },
+                  {
+                    "DateTime": "2026-07-21T23:09:00+08:00",
+                    "Tide": "滿潮",
+                    "TideHeights": {
+                      "AboveTWVD": "68",
+                      "AboveLocalMSL": 78,
+                      "AboveChartDatum": 188
+                    }
+                  }
+                ]
+              },
+              {
+                "Date": "2026-07-22",
+                "LunarDate": "2026-06-09",
+                "TideRange": "小",
+                "Time": [
+                  {
+                    "DateTime": "2026-07-22T06:11:00+08:00",
+                    "Tide": "乾潮",
+                    "TideHeights": {
+                      "AboveTWVD": "-3",
+                      "AboveLocalMSL": 7,
+                      "AboveChartDatum": 117
+                    }
+                  },
+                  {
+                    "DateTime": "2026-07-22T12:32:00+08:00",
+                    "Tide": "滿潮",
+                    "TideHeights": {
+                      "AboveTWVD": "39",
+                      "AboveLocalMSL": 49,
+                      "AboveChartDatum": 159
+                    }
+                  },
+                  {
+                    "DateTime": "2026-07-22T17:32:00+08:00",
+                    "Tide": "乾潮",
+                    "TideHeights": {
+                      "AboveTWVD": "17",
+                      "AboveLocalMSL": 27,
+                      "AboveChartDatum": 137
+                    }
+                  }
+                ]
+              },
+              {
+                "Date": "2026-07-23",
+                "LunarDate": "2026-06-10",
+                "TideRange": "小",
+                "Time": [
+                  {
+                    "DateTime": "2026-07-23T00:00:00+08:00",
+                    "Tide": "滿潮",
+                    "TideHeights": {
+                      "AboveTWVD": "64",
+                      "AboveLocalMSL": 74,
+                      "AboveChartDatum": 184
+                    }
+                  },
+                  {
+                    "DateTime": "2026-07-23T07:47:00+08:00",
+                    "Tide": "乾潮",
+                    "TideHeights": {
+                      "AboveTWVD": "-5",
+                      "AboveLocalMSL": 5,
+                      "AboveChartDatum": 116
+                    }
+                  },
+                  {
+                    "DateTime": "2026-07-23T14:35:00+08:00",
+                    "Tide": "滿潮",
+                    "TideHeights": {
+                      "AboveTWVD": "36",
+                      "AboveLocalMSL": 46,
+                      "AboveChartDatum": 156
+                    }
+                  },
+                  {
+                    "DateTime": "2026-07-23T18:47:00+08:00",
+                    "Tide": "乾潮",
+                    "TideHeights": {
+                      "AboveTWVD": "25",
+                      "AboveLocalMSL": 35,
+                      "AboveChartDatum": 145
+                    }
+                  }
+                ]
+              }
             ]
           }
-        ]
+        }
+      },
+      {
+        "Location": {
+          "LocationId": "10015050",
+          "LocationName": "花蓮縣吉安鄉",
+          "Latitude": 23.9424,
+          "Longitude": 121.6125,
+          "TimePeriods": {
+            "Daily": [
+              {
+                "Date": "2026-07-21",
+                "LunarDate": "2026-06-08",
+                "TideRange": "小",
+                "Time": [
+                  {
+                    "DateTime": "2026-07-21T04:57:00+08:00",
+                    "Tide": "乾潮",
+                    "TideHeights": {
+                      "AboveTWVD": "-6",
+                      "AboveLocalMSL": 4,
+                      "AboveChartDatum": 116
+                    }
+                  },
+                  {
+                    "DateTime": "2026-07-21T11:12:00+08:00",
+                    "Tide": "滿潮",
+                    "TideHeights": {
+                      "AboveTWVD": "52",
+                      "AboveLocalMSL": 62,
+                      "AboveChartDatum": 174
+                    }
+                  },
+                  {
+                    "DateTime": "2026-07-21T16:45:00+08:00",
+                    "Tide": "乾潮",
+                    "TideHeights": {
+                      "AboveTWVD": "5",
+                      "AboveLocalMSL": 15,
+                      "AboveChartDatum": 128
+                    }
+                  },
+                  {
+                    "DateTime": "2026-07-21T23:13:00+08:00",
+                    "Tide": "滿潮",
+                    "TideHeights": {
+                      "AboveTWVD": "69",
+                      "AboveLocalMSL": 79,
+                      "AboveChartDatum": 191
+                    }
+                  }
+                ]
+              },
+              {
+                "Date": "2026-07-22",
+                "LunarDate": "2026-06-09",
+                "TideRange": "小",
+                "Time": [
+                  {
+                    "DateTime": "2026-07-22T06:09:00+08:00",
+                    "Tide": "乾潮",
+                    "TideHeights": {
+                      "AboveTWVD": "-3",
+                      "AboveLocalMSL": 7,
+                      "AboveChartDatum": 119
+                    }
+                  },
+                  {
+                    "DateTime": "2026-07-22T12:36:00+08:00",
+                    "Tide": "滿潮",
+                    "TideHeights": {
+                      "AboveTWVD": "40",
+                      "AboveLocalMSL": 50,
+                      "AboveChartDatum": 162
+                    }
+                  },
+                  {
+                    "DateTime": "2026-07-22T17:30:00+08:00",
+                    "Tide": "乾潮",
+                    "TideHeights": {
+                      "AboveTWVD": "17",
+                      "AboveLocalMSL": 27,
+                      "AboveChartDatum": 139
+                    }
+                  }
+                ]
+              },
+              {
+                "Date": "2026-07-23",
+                "LunarDate": "2026-06-10",
+                "TideRange": "小",
+                "Time": [
+                  {
+                    "DateTime": "2026-07-23T00:04:00+08:00",
+                    "Tide": "滿潮",
+                    "TideHeights": {
+                      "AboveTWVD": "65",
+                      "AboveLocalMSL": 75,
+                      "AboveChartDatum": 187
+                    }
+                  },
+                  {
+                    "DateTime": "2026-07-23T07:45:00+08:00",
+                    "Tide": "乾潮",
+                    "TideHeights": {
+                      "AboveTWVD": "-5",
+                      "AboveLocalMSL": 5,
+                      "AboveChartDatum": 117
+                    }
+                  },
+                  {
+                    "DateTime": "2026-07-23T14:39:00+08:00",
+                    "Tide": "滿潮",
+                    "TideHeights": {
+                      "AboveTWVD": "36",
+                      "AboveLocalMSL": 46,
+                      "AboveChartDatum": 159
+                    }
+                  },
+                  {
+                    "DateTime": "2026-07-23T18:45:00+08:00",
+                    "Tide": "乾潮",
+                    "TideHeights": {
+                      "AboveTWVD": "25",
+                      "AboveLocalMSL": 35,
+                      "AboveChartDatum": 148
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "Location": {
+          "LocationId": "09020040",
+          "LocationName": "金門縣金寧鄉",
+          "Latitude": 24.4617,
+          "Longitude": 118.2975,
+          "TimePeriods": {
+            "Daily": [
+              {
+                "Date": "2026-07-21",
+                "LunarDate": "2026-06-08",
+                "TideRange": "中",
+                "Time": [
+                  {
+                    "DateTime": "2026-07-21T04:49:00+08:00",
+                    "Tide": "滿潮",
+                    "TideHeights": {
+                      "AboveTWVD": "201",
+                      "AboveLocalMSL": 203,
+                      "AboveChartDatum": 536
+                    }
+                  },
+                  {
+                    "DateTime": "2026-07-21T11:25:00+08:00",
+                    "Tide": "乾潮",
+                    "TideHeights": {
+                      "AboveTWVD": "-206",
+                      "AboveLocalMSL": -204,
+                      "AboveChartDatum": 128
+                    }
+                  },
+                  {
+                    "DateTime": "2026-07-21T17:20:00+08:00",
+                    "Tide": "滿潮",
+                    "TideHeights": {
+                      "AboveTWVD": "159",
+                      "AboveLocalMSL": 160,
+                      "AboveChartDatum": 494
+                    }
+                  },
+                  {
+                    "DateTime": "2026-07-21T23:32:00+08:00",
+                    "Tide": "乾潮",
+                    "TideHeights": {
+                      "AboveTWVD": "-161",
+                      "AboveLocalMSL": -158,
+                      "AboveChartDatum": 174
+                    }
+                  }
+                ]
+              },
+              {
+                "Date": "2026-07-22",
+                "LunarDate": "2026-06-09",
+                "TideRange": "小",
+                "Time": [
+                  {
+                    "DateTime": "2026-07-22T05:33:00+08:00",
+                    "Tide": "滿潮",
+                    "TideHeights": {
+                      "AboveTWVD": "178",
+                      "AboveLocalMSL": 179,
+                      "AboveChartDatum": 512
+                    }
+                  },
+                  {
+                    "DateTime": "2026-07-22T12:21:00+08:00",
+                    "Tide": "乾潮",
+                    "TideHeights": {
+                      "AboveTWVD": "-199",
+                      "AboveLocalMSL": -197,
+                      "AboveChartDatum": 135
+                    }
+                  },
+                  {
+                    "DateTime": "2026-07-22T18:24:00+08:00",
+                    "Tide": "滿潮",
+                    "TideHeights": {
+                      "AboveTWVD": "135",
+                      "AboveLocalMSL": 136,
+                      "AboveChartDatum": 469
+                    }
+                  }
+                ]
+              },
+              {
+                "Date": "2026-07-23",
+                "LunarDate": "2026-06-10",
+                "TideRange": "小",
+                "Time": [
+                  {
+                    "DateTime": "2026-07-23T00:29:00+08:00",
+                    "Tide": "乾潮",
+                    "TideHeights": {
+                      "AboveTWVD": "-122",
+                      "AboveLocalMSL": -120,
+                      "AboveChartDatum": 212
+                    }
+                  },
+                  {
+                    "DateTime": "2026-07-23T06:25:00+08:00",
+                    "Tide": "滿潮",
+                    "TideHeights": {
+                      "AboveTWVD": "153",
+                      "AboveLocalMSL": 154,
+                      "AboveChartDatum": 487
+                    }
+                  },
+                  {
+                    "DateTime": "2026-07-23T13:22:00+08:00",
+                    "Tide": "乾潮",
+                    "TideHeights": {
+                      "AboveTWVD": "-193",
+                      "AboveLocalMSL": -191,
+                      "AboveChartDatum": 142
+                    }
+                  },
+                  {
+                    "DateTime": "2026-07-23T19:40:00+08:00",
+                    "Tide": "滿潮",
+                    "TideHeights": {
+                      "AboveTWVD": "122",
+                      "AboveLocalMSL": 123,
+                      "AboveChartDatum": 456
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
       }
     ]
   }

@@ -189,19 +189,21 @@ export const recentEarthquakesEntry: DatasetEntry<
 //
 // Confirmed to exist and still maintained (opendata.cwa.gov.tw/dataset/
 // observation/F-A0021-001, "潮汐預報(未來1個月潮汐預報，鄉鎮、大潮小潮、
-// 滿潮乾潮、時間、潮高)"). This sandbox cannot reach opendata.cwa.gov.tw
-// directly (blocked, same as every prior session), so the shape below is
-// reconstructed from a real captured API response committed as a test
-// fixture in a maintained third-party CWA client library
-// (github.com/minchao/go-cwb, cwb/testdata/F-A0021-001.json) — not a fresh
-// direct capture from this session. The `locationName` query param is
-// confirmed the same way (used verbatim in that library's request-building
-// code and tests). `transform` is deliberately shallow — it filters to the
-// requested location and passes the `time` array through close to as-is,
-// rather than deep-extracting individual parameter fields whose exact
-// nesting isn't independently confirmed — so a wrong assumption about deep
-// structure can't silently corrupt data or throw. Needs a real capture via
-// fixtures-refresh.yml before this confidence level is fully resolved.
+// 滿潮乾潮、時間、潮高)"). Structure below is confirmed 2026-07-21 via a real
+// dispatch of fixtures-refresh.yml against the live API — an earlier version
+// of this entry was reconstructed from a 2020-vintage real response
+// committed as a test fixture in a third-party CWA client library
+// (go-cwb), which turned out to be stale: CWA has since restructured this
+// dataset's top-level response entirely (`records.dataid`/`records.note`/
+// `records.TideForecasts` now, not `records.datasetDescription`/
+// `records.location`). The real response also confirmed that, like
+// aqx_p_432, the `locationName` filter isn't honored upstream — the API
+// returns all ~266 locations nationwide regardless of the query param, so
+// `transform` re-filters client-side the same way aqx_p_432 already does.
+// `transform` stays deliberately shallow — it passes each day's `Time`
+// array through close to as-is rather than deep-extracting individual
+// tide-height fields, since those aren't load-bearing for any curated tool
+// yet.
 
 export const tideForecastInputShape = {
   locationName: z
@@ -217,22 +219,37 @@ export interface TideForecastParams {
   locationName: string;
 }
 
+interface CwaTideDaily {
+  Date: string;
+  LunarDate: string;
+  /** 大潮/中潮/小潮, e.g. "大" | "中" | "小". */
+  TideRange: string;
+  Time: unknown[];
+}
+
 interface CwaTideLocation {
-  locationName: string;
-  stationId?: string;
-  time?: unknown[];
+  LocationId: string;
+  LocationName: string;
+  Latitude: number;
+  Longitude: number;
+  TimePeriods: { Daily: CwaTideDaily[] };
+}
+
+interface CwaTideForecastEntry {
+  Location: CwaTideLocation;
 }
 
 interface CwaTideRecords {
-  datasetDescription?: string;
-  location?: CwaTideLocation[];
+  dataid?: string;
+  note?: string;
+  TideForecasts?: CwaTideForecastEntry[];
 }
 
 export interface TideForecastResult {
   [key: string]: unknown;
   locationName: string;
-  stationId?: string;
-  /** Raw per-day tide entries, passed through close to as-is — see the module-level comment on why this isn't deep-extracted. */
+  stationId: string;
+  /** Raw per-day tide entries (CwaTideDaily[]), passed through close to as-is — see the module-level comment on why this isn't deep-extracted. */
   forecast: unknown[];
 }
 
@@ -245,8 +262,8 @@ export const tideForecastEntry: DatasetEntry<TideForecastParams, CwaTideRecords,
   paramsSchema: tideForecastInputShape,
   buildQueryParams: params => ({ locationName: params.locationName }),
   transform: (raw, params) => {
-    const location = (raw.location ?? []).find(l => l.locationName === params.locationName);
-    if (!location) {
+    const entry = (raw.TideForecasts ?? []).find(e => e.Location?.LocationName === params.locationName);
+    if (!entry) {
       throw new ToolError({
         code: "NOT_FOUND",
         message:
@@ -255,18 +272,18 @@ export const tideForecastEntry: DatasetEntry<TideForecastParams, CwaTideRecords,
       });
     }
     return {
-      locationName: location.locationName,
-      stationId: location.stationId,
-      forecast: location.time ?? []
+      locationName: entry.Location.LocationName,
+      stationId: entry.Location.LocationId,
+      forecast: entry.Location.TimePeriods?.Daily ?? []
     };
   },
   cacheTtlSeconds: TIDE_FORECAST_CACHE_TTL_SECONDS,
   updateFrequency: "每月更新（提供未來 1 個月預報）",
   docUrl: "https://opendata.cwa.gov.tw/dataset/observation/F-A0021-001",
   notes:
-    "透過通用層（tw_query_dataset）查詢，尚無專屬工具。回應結構依據第三方開源 CWA client 函式庫" +
-    "（go-cwb）提交的真實 API 回應樣本重建，本 session 未直接呼叫官方 API 驗證，待 fixtures-refresh.yml" +
-    "下次排程時以真實 API 回應確認欄位細節（尤其 forecast 陣列內的巢狀結構）。",
+    "透過通用層（tw_query_dataset）查詢，尚無專屬工具。欄位結構已於 2026-07-21 透過 fixtures-refresh.yml" +
+    "真實 API 回應確認（records.TideForecasts[].Location.TimePeriods.Daily[]）。與 aqx_p_432 相同，" +
+    "locationName 篩選條件在上游未必生效，故 transform 於前端重新篩選。",
   sampleParams: { locationName: "宜蘭縣南澳鄉" },
   fixtureFileName: "tide-forecast.json"
 };
