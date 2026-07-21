@@ -2,9 +2,12 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
+  marineObservationEntry,
   recentEarthquakesEntry,
   stationObservationEntry,
   tideForecastEntry,
+  typhoonNewsEntry,
+  typhoonWarningEntry,
   uvDailyMaxEntry,
   weatherForecastEntry,
   weatherWarningEntry
@@ -48,6 +51,19 @@ const weatherWarningFixture = JSON.parse(
 );
 const uvDailyMaxFixture = JSON.parse(
   readFileSync(fileURLToPath(new URL("../fixtures/uv-daily-max.json", import.meta.url)), "utf-8")
+);
+// Deliberately trivial placeholders — these three entries are minimal,
+// structure-unverified skeletons (see their module-level comments in
+// src/registry/cwa.ts), so there's no real evidence to build a realistic
+// fixture from yet. Only exercises transform's pass-through behavior.
+const typhoonNewsFixture = JSON.parse(
+  readFileSync(fileURLToPath(new URL("../fixtures/typhoon-news.json", import.meta.url)), "utf-8")
+);
+const typhoonWarningFixture = JSON.parse(
+  readFileSync(fileURLToPath(new URL("../fixtures/typhoon-warning.json", import.meta.url)), "utf-8")
+);
+const marineObservationFixture = JSON.parse(
+  readFileSync(fileURLToPath(new URL("../fixtures/marine-observation.json", import.meta.url)), "utf-8")
 );
 
 // CWA's IssueTime / ValidTime.EndTime format, confirmed against real captured
@@ -335,5 +351,55 @@ describe("uvDailyMaxEntry", () => {
 
     expect(result.query).toEqual({ stationId: raw.StationID });
     expect(result.stations).toEqual([{ stationId: raw.StationID, uvIndex: raw.UVIndex }]);
+  });
+});
+
+// The remaining three entries are deliberately minimal, structure-unverified
+// skeletons (see their module-level comments in src/registry/cwa.ts) — these
+// tests only lock in the pass-through contract (no params, raw response
+// returned unparsed as `{ raw }`), not any real field structure, since none
+// is confirmed yet.
+describe("typhoonNewsEntry", () => {
+  it("is registered under cwa:W-C0034-005 and matches the imported entry", () => {
+    expect(getDatasetEntry("cwa:W-C0034-005")).toBe(typhoonNewsEntry);
+  });
+
+  it("buildQueryParams sends no query params (structure unverified, no known filter)", () => {
+    expect(typhoonNewsEntry.buildQueryParams({})).toEqual({});
+  });
+
+  it("transform passes the raw response through unparsed", () => {
+    const result = typhoonNewsEntry.transform(typhoonNewsFixture.records, {});
+    expect(result).toEqual({ raw: typhoonNewsFixture.records });
+  });
+});
+
+describe("typhoonWarningEntry", () => {
+  it("is registered under cwa:W-C0034-001 and matches the imported entry", () => {
+    expect(getDatasetEntry("cwa:W-C0034-001")).toBe(typhoonWarningEntry);
+  });
+
+  it("buildQueryParams sends no query params (structure unverified, no known filter)", () => {
+    expect(typhoonWarningEntry.buildQueryParams({})).toEqual({});
+  });
+
+  it("transform passes the raw response through unparsed", () => {
+    const result = typhoonWarningEntry.transform(typhoonWarningFixture.records, {});
+    expect(result).toEqual({ raw: typhoonWarningFixture.records });
+  });
+});
+
+describe("marineObservationEntry", () => {
+  it("is registered under cwa:O-B0076-001 and matches the imported entry", () => {
+    expect(getDatasetEntry("cwa:O-B0076-001")).toBe(marineObservationEntry);
+  });
+
+  it("buildQueryParams sends no query params (structure unverified, no known filter)", () => {
+    expect(marineObservationEntry.buildQueryParams({})).toEqual({});
+  });
+
+  it("transform passes the raw response through unparsed", () => {
+    const result = marineObservationEntry.transform(marineObservationFixture.records, {});
+    expect(result).toEqual({ raw: marineObservationFixture.records });
   });
 });

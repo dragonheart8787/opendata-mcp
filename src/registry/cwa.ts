@@ -3,15 +3,21 @@ import {
   E_A0015_001_DATASET_ID,
   F_A0021_001_DATASET_ID,
   F_C0032_001_DATASET_ID,
+  MARINE_OBSERVATION_CACHE_TTL_SECONDS,
   O_A0001_001_DATASET_ID,
   O_A0005_001_DATASET_ID,
+  O_B0076_001_DATASET_ID,
   STATION_OBSERVATION_CACHE_TTL_SECONDS,
   TAIWAN_CITIES,
+  TYPHOON_NEWS_CACHE_TTL_SECONDS,
+  TYPHOON_WARNING_CACHE_TTL_SECONDS,
   UV_DAILY_MAX_CACHE_TTL_SECONDS,
   WEATHER_CACHE_TTL_SECONDS,
   EARTHQUAKE_CACHE_TTL_SECONDS,
   TIDE_FORECAST_CACHE_TTL_SECONDS,
   W_C0033_001_DATASET_ID,
+  W_C0034_001_DATASET_ID,
+  W_C0034_005_DATASET_ID,
   WEATHER_WARNING_CACHE_TTL_SECONDS
 } from "../constants.js";
 import { ToolError } from "../infra/errors.js";
@@ -594,9 +600,150 @@ export const uvDailyMaxEntry: DatasetEntry<UvDailyMaxParams, CwaUvDailyMaxRecord
   fixtureFileName: "uv-daily-max.json"
 };
 
+// --- W-C0034-005: typhoon news/bulletin (powers tw_typhoon — minimal skeleton, structure unverified) ---
+//
+// Confirmed to exist as a live catalog listing (search-engine snippets
+// referencing opendata.cwa.gov.tw/dataset/.../W-C0034-005 and the
+// data.gov.tw catalog entry "颱風消息與警報-颱風消息", updated every 6 hours
+// while a tropical cyclone is active in the northwest Pacific/South China
+// Sea). go-cwb doesn't implement any W-C0034 dataset, and no field-level
+// JSON structure could be found anywhere. This is the dataset selected to
+// power the tw_typhoon curated tool (name/active-status/track/issued-time,
+// per the task's spec) rather than W-C0034-001 (颱風警報, see below) because
+// its own description explicitly covers current status + forecast track
+// points, matching what the tool needs — W-C0034-001 covers the separate
+// "which areas are under a warning right now" bulletin. Registered as a
+// deliberately minimal skeleton: no query params, `transform` passes the
+// raw response through unparsed. fixtures-refresh.yml's next real dispatch
+// will capture the actual shape, at which point this entry — and the
+// tw_typhoon tool built on top of it — should be finished with real field
+// extraction instead of a raw dump.
+
+export const typhoonNewsInputShape = {};
+
+export type TyphoonNewsParams = Record<string, never>;
+
+export interface TyphoonNewsResult {
+  [key: string]: unknown;
+  raw: unknown;
+}
+
+export const typhoonNewsEntry: DatasetEntry<TyphoonNewsParams, unknown, TyphoonNewsResult> = {
+  id: "cwa:W-C0034-005",
+  source: "cwa",
+  path: W_C0034_005_DATASET_ID,
+  title: "颱風消息",
+  keywords: ["颱風", "颱風消息", "颱風動態", "颱風路徑", "颱風警報", "typhoon", "typhoon news", "typhoon track"],
+  paramsSchema: typhoonNewsInputShape,
+  buildQueryParams: () => ({}),
+  transform: raw => ({ raw }),
+  cacheTtlSeconds: TYPHOON_NEWS_CACHE_TTL_SECONDS,
+  updateFrequency: "有颱風活動時每 6 小時更新一次，無颱風活動時不定期（確切頻率未經驗證）",
+  docUrl: "https://opendata.cwa.gov.tw/dataset/all/W-C0034-005",
+  notes:
+    "結構完全未驗證——transform 目前原樣透傳整個 records 內容（{ raw: ... }），待 fixtures-refresh.yml" +
+    "首次真實抓取後，再依實際回應設計正式的欄位擷取邏輯與 tw_typhoon 工具本體。",
+  sampleParams: {},
+  fixtureFileName: "typhoon-news.json"
+};
+
+// --- W-C0034-001: typhoon warning (generic-layer only — minimal skeleton, structure unverified) ---
+//
+// Confirmed to exist as a live catalog listing (search-engine snippet with
+// exact page title "颱風消息與警報-颱風警報" at opendata.cwa.gov.tw/dataset/
+// warning/W-C0034-001). Distinct from W-C0034-005 above (see that entry's
+// comment for why the curated tool consumes 005, not this one) — this is
+// the "which areas are currently under a typhoon warning" bulletin. No
+// field-level JSON structure could be found anywhere. Registered as a
+// deliberately minimal skeleton, same rationale as W-C0034-005.
+
+export const typhoonWarningInputShape = {};
+
+export type TyphoonWarningParams = Record<string, never>;
+
+export interface TyphoonWarningResult {
+  [key: string]: unknown;
+  raw: unknown;
+}
+
+export const typhoonWarningEntry: DatasetEntry<TyphoonWarningParams, unknown, TyphoonWarningResult> = {
+  id: "cwa:W-C0034-001",
+  source: "cwa",
+  path: W_C0034_001_DATASET_ID,
+  title: "颱風警報",
+  keywords: ["颱風警報", "海上颱風警報", "陸上颱風警報", "颱風特報", "typhoon warning"],
+  paramsSchema: typhoonWarningInputShape,
+  buildQueryParams: () => ({}),
+  transform: raw => ({ raw }),
+  cacheTtlSeconds: TYPHOON_WARNING_CACHE_TTL_SECONDS,
+  updateFrequency: "颱風警報生效期間每小時更新一次，無警報時不定期（確切頻率未經驗證）",
+  docUrl: "https://opendata.cwa.gov.tw/dataset/warning/W-C0034-001",
+  notes:
+    "透過通用層（tw_query_dataset）查詢，尚無專屬工具。結構完全未驗證——" +
+    "transform 目前原樣透傳整個 records 內容（{ raw: ... }），待 fixtures-refresh.yml 首次真實抓取" +
+    "後，再依實際回應設計正式的欄位擷取邏輯。",
+  sampleParams: {},
+  fixtureFileName: "typhoon-warning.json"
+};
+
+// --- O-B0076-001: marine observation stations (buoy/tide) — generic-layer only, status unconfirmed ---
+//
+// Confirmed to exist as a catalog listing, title "海象觀測測站資料-浮標站與
+// 潮位站測站資料" (real-time buoy/tide-station marine observations: tide
+// level, sea temperature, wave, wind, pressure, current). Retried after
+// F-A0012-001 (海面天氣預報) was dropped from this registry for being
+// served only via CWA's older /fileapi/ endpoint, incompatible with this
+// codebase's uniform /api/v1/rest/datastore/ fetch path. This dataset's own
+// category metadata is inconsistent across search results (seen tagged
+// both "forecast" and "all"), and CWA appears to run a substantial part of
+// its marine/ocean data through a *separate* platform
+// (ocean.cwa.gov.tw/ocenapi.cwa.gov.tw, its own auth and dataset-code
+// scheme, e.g. "API-Tide6haH" — nothing like the opendata.cwa.gov.tw
+// datastore convention) rather than the datastore API — a real risk this
+// entry has the same architectural incompatibility F-A0012-001 did. Not
+// resolvable by search alone (same conclusion as F-A0012-001's investigation
+// required a real dispatch to confirm), so registered as a minimal skeleton
+// and left to fixtures-refresh.yml's real dispatch to prove reachable via
+// the datastore endpoint or not. If it 404s the same way, this entry should
+// be removed the same way F-A0012-001 was.
+
+export const marineObservationInputShape = {};
+
+export type MarineObservationParams = Record<string, never>;
+
+export interface MarineObservationResult {
+  [key: string]: unknown;
+  raw: unknown;
+}
+
+export const marineObservationEntry: DatasetEntry<MarineObservationParams, unknown, MarineObservationResult> = {
+  id: "cwa:O-B0076-001",
+  source: "cwa",
+  path: O_B0076_001_DATASET_ID,
+  title: "海象觀測測站資料（浮標站與潮位站）",
+  keywords: ["海象", "海象觀測", "波浪", "浮標", "潮位站", "海溫", "海流", "marine observation", "buoy", "wave"],
+  paramsSchema: marineObservationInputShape,
+  buildQueryParams: () => ({}),
+  transform: raw => ({ raw }),
+  cacheTtlSeconds: MARINE_OBSERVATION_CACHE_TTL_SECONDS,
+  updateFrequency: "確切頻率未經驗證",
+  docUrl: "https://opendata.cwa.gov.tw/dataset/all/O-B0076-001",
+  notes:
+    "透過通用層（tw_query_dataset）查詢，尚無專屬工具。結構完全未驗證，甚至能否透過本專案統一使用的" +
+    "datastore 端點（/api/v1/rest/datastore/）取得都未確認——CWA 部分海象資料改由獨立的" +
+    "ocean.cwa.gov.tw／oceanapi.cwa.gov.tw 平台提供，認證與資料集代碼慣例完全不同，可能與" +
+    "F-A0012-001（海面天氣預報）同樣的架構不相容。待 fixtures-refresh.yml 首次真實抓取確認可行性，" +
+    "若同樣 404，比照 F-A0012-001 直接移除此 entry。",
+  sampleParams: {},
+  fixtureFileName: "marine-observation.json"
+};
+
 registerEntry(weatherForecastEntry as unknown as DatasetEntry<never, unknown, unknown>);
 registerEntry(recentEarthquakesEntry as unknown as DatasetEntry<never, unknown, unknown>);
 registerEntry(tideForecastEntry as unknown as DatasetEntry<never, unknown, unknown>);
 registerEntry(stationObservationEntry as unknown as DatasetEntry<never, unknown, unknown>);
 registerEntry(weatherWarningEntry as unknown as DatasetEntry<never, unknown, unknown>);
 registerEntry(uvDailyMaxEntry as unknown as DatasetEntry<never, unknown, unknown>);
+registerEntry(typhoonNewsEntry as unknown as DatasetEntry<never, unknown, unknown>);
+registerEntry(typhoonWarningEntry as unknown as DatasetEntry<never, unknown, unknown>);
+registerEntry(marineObservationEntry as unknown as DatasetEntry<never, unknown, unknown>);
