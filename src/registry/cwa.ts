@@ -1,10 +1,12 @@
 import { z } from "zod";
 import {
   E_A0015_001_DATASET_ID,
+  F_A0021_001_DATASET_ID,
   F_C0032_001_DATASET_ID,
   TAIWAN_CITIES,
   WEATHER_CACHE_TTL_SECONDS,
-  EARTHQUAKE_CACHE_TTL_SECONDS
+  EARTHQUAKE_CACHE_TTL_SECONDS,
+  TIDE_FORECAST_CACHE_TTL_SECONDS
 } from "../constants.js";
 import { ToolError } from "../infra/errors.js";
 import type { CwaEarthquake, CwaEarthquakeRecords, CwaForecastLocation, CwaForecastRecords } from "../types.js";
@@ -179,5 +181,90 @@ export const recentEarthquakesEntry: DatasetEntry<
   notes: "僅涵蓋中央氣象署認定為「顯著有感」等級以上之地震，規模過小或有感範圍過小的地震可能未收錄於此資料集。"
 };
 
+// --- F-A0021-001: tide forecast (generic-layer only — no curated tool yet) ---
+//
+// Confirmed to exist and still maintained (opendata.cwa.gov.tw/dataset/
+// observation/F-A0021-001, "潮汐預報(未來1個月潮汐預報，鄉鎮、大潮小潮、
+// 滿潮乾潮、時間、潮高)"). This sandbox cannot reach opendata.cwa.gov.tw
+// directly (blocked, same as every prior session), so the shape below is
+// reconstructed from a real captured API response committed as a test
+// fixture in a maintained third-party CWA client library
+// (github.com/minchao/go-cwb, cwb/testdata/F-A0021-001.json) — not a fresh
+// direct capture from this session. The `locationName` query param is
+// confirmed the same way (used verbatim in that library's request-building
+// code and tests). `transform` is deliberately shallow — it filters to the
+// requested location and passes the `time` array through close to as-is,
+// rather than deep-extracting individual parameter fields whose exact
+// nesting isn't independently confirmed — so a wrong assumption about deep
+// structure can't silently corrupt data or throw. Needs a real capture via
+// fixtures-refresh.yml before this confidence level is fully resolved.
+
+export const tideForecastInputShape = {
+  locationName: z
+    .string()
+    .min(1)
+    .describe(
+      "潮汐預報地點名稱（通常為鄉鎮層級，例如「宜蘭縣南澳鄉」），須與中央氣象署潮汐預報地點清單完全相符，" +
+        "本伺服器未內建完整地點清單。"
+    )
+};
+
+export interface TideForecastParams {
+  locationName: string;
+}
+
+interface CwaTideLocation {
+  locationName: string;
+  stationId?: string;
+  time?: unknown[];
+}
+
+interface CwaTideRecords {
+  datasetDescription?: string;
+  location?: CwaTideLocation[];
+}
+
+export interface TideForecastResult {
+  [key: string]: unknown;
+  locationName: string;
+  stationId?: string;
+  /** Raw per-day tide entries, passed through close to as-is — see the module-level comment on why this isn't deep-extracted. */
+  forecast: unknown[];
+}
+
+export const tideForecastEntry: DatasetEntry<TideForecastParams, CwaTideRecords, TideForecastResult> = {
+  id: "cwa:F-A0021-001",
+  source: "cwa",
+  path: F_A0021_001_DATASET_ID,
+  title: "潮汐預報（未來1個月）",
+  keywords: ["潮汐", "潮汐預報", "漲潮", "退潮", "滿潮", "乾潮", "潮差", "大潮", "小潮", "tide", "tide forecast"],
+  paramsSchema: tideForecastInputShape,
+  buildQueryParams: params => ({ locationName: params.locationName }),
+  transform: (raw, params) => {
+    const location = (raw.location ?? []).find(l => l.locationName === params.locationName);
+    if (!location) {
+      throw new ToolError({
+        code: "NOT_FOUND",
+        message:
+          `中央氣象署沒有回傳「${params.locationName}」的潮汐預報資料，請確認地點名稱是否為中央氣象署潮汐預報` +
+          `清單中的正確全名（通常是鄉鎮層級，例如「宜蘭縣南澳鄉」）。`
+      });
+    }
+    return {
+      locationName: location.locationName,
+      stationId: location.stationId,
+      forecast: location.time ?? []
+    };
+  },
+  cacheTtlSeconds: TIDE_FORECAST_CACHE_TTL_SECONDS,
+  updateFrequency: "每月更新（提供未來 1 個月預報）",
+  docUrl: "https://opendata.cwa.gov.tw/dataset/observation/F-A0021-001",
+  notes:
+    "透過通用層（tw_query_dataset）查詢，尚無專屬工具。回應結構依據第三方開源 CWA client 函式庫" +
+    "（go-cwb）提交的真實 API 回應樣本重建，本 session 未直接呼叫官方 API 驗證，待 fixtures-refresh.yml" +
+    "下次排程時以真實 API 回應確認欄位細節（尤其 forecast 陣列內的巢狀結構）。"
+};
+
 registerEntry(weatherForecastEntry as unknown as DatasetEntry<never, unknown, unknown>);
 registerEntry(recentEarthquakesEntry as unknown as DatasetEntry<never, unknown, unknown>);
+registerEntry(tideForecastEntry as unknown as DatasetEntry<never, unknown, unknown>);

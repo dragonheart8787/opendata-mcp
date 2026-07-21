@@ -1,0 +1,29 @@
+[
+  {
+    "SiteName": "臺北",
+    "Uvi": "3",
+    "Unit": "0",
+    "County": "臺北市",
+    "WGS84_LON": "121.514907",
+    "WGS84_LAT": "25.037841",
+    "DataCreationDate": "2026-07-21 10:00"
+  },
+  {
+    "SiteName": "板橋",
+    "Uvi": "2",
+    "Unit": "0",
+    "County": "新北市",
+    "WGS84_LON": "121.442764",
+    "WGS84_LAT": "25.006146",
+    "DataCreationDate": "2026-07-21 10:00"
+  },
+  {
+    "SiteName": "鹿林山",
+    "Uvi": "",
+    "Unit": "",
+    "County": "南投縣",
+    "WGS84_LON": "120.873333",
+    "WGS84_LAT": "23.469722",
+    "DataCreationDate": "2026-07-21 10:00"
+  }
+]

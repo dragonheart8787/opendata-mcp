@@ -5,6 +5,8 @@ export const CWA_AUTH_KEY_URL = "https://opendata.cwa.gov.tw/user/authkey";
 
 export const F_C0032_001_DATASET_ID = "F-C0032-001";
 export const E_A0015_001_DATASET_ID = "E-A0015-001";
+/** Tide forecast (未來1個月潮汐預報) — generic-layer only, see registry/cwa.ts. */
+export const F_A0021_001_DATASET_ID = "F-A0021-001";
 
 export const MOENV_API_BASE_URL = "https://data.moenv.gov.tw/api/v2";
 
@@ -12,6 +14,10 @@ export const MOENV_API_BASE_URL = "https://data.moenv.gov.tw/api/v2";
 export const MOENV_SIGNUP_URL = "https://data.moenv.gov.tw/";
 
 export const AQX_P_432_DATASET_ID = "aqx_p_432";
+/** Air quality forecast (空氣品質預報, distinct from the real-time aqx_p_432) — generic-layer only, see registry/moenv.ts. */
+export const AQF_P_01_DATASET_ID = "aqf_p_01";
+/** Real-time UV index by station (紫外線即時監測資料) — generic-layer only, see registry/moenv.ts. */
+export const UV_S_01_DATASET_ID = "UV_S_01";
 
 /**
  * Records requested per aqx_p_432 call so client-side filtering (see
@@ -32,6 +38,12 @@ export const AQX_P_432_FETCH_LIMIT = 1000;
 export const WEATHER_CACHE_TTL_SECONDS = 30 * 60;
 export const EARTHQUAKE_CACHE_TTL_SECONDS = 5 * 60;
 export const AIR_QUALITY_CACHE_TTL_SECONDS = 10 * 60;
+/** F-A0021-001 covers a rolling 1-month window and changes rarely within a day. */
+export const TIDE_FORECAST_CACHE_TTL_SECONDS = 6 * 60 * 60;
+/** aqf_p_01 is published 3x/day (10:30/16:30/22:00) with ad-hoc updates between. */
+export const AIR_QUALITY_FORECAST_CACHE_TTL_SECONDS = 30 * 60;
+/** UV_S_01 is hourly station data. */
+export const UV_REALTIME_CACHE_TTL_SECONDS = 30 * 60;
 
 /**
  * Taiwan's 22 counties/cities as used by CWA's `locationName` parameter.

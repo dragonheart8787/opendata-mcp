@@ -1,0 +1,22 @@
+[
+  {
+    "Content": "今日空氣品質，北部空品區為良好至普通等級，主要污染物為臭氧，敏感族群請留意身體狀況。",
+    "PublishTime": "2026/07/20 22:00:00",
+    "Area": "北部",
+    "MajorPollutant": "臭氧",
+    "ForecastDate": "2026-07-21",
+    "AQI": "良好至普通",
+    "MinorPollutant": "細懸浮微粒",
+    "MinorPollutantAQI": "良好"
+  },
+  {
+    "Content": "今日空氣品質，高屏空品區為普通等級，主要污染物為細懸浮微粒。",
+    "PublishTime": "2026/07/20 22:00:00",
+    "Area": "高屏",
+    "MajorPollutant": "細懸浮微粒",
+    "ForecastDate": "2026-07-21",
+    "AQI": "普通",
+    "MinorPollutant": "",
+    "MinorPollutantAQI": ""
+  }
+]
