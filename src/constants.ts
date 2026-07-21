@@ -13,6 +13,10 @@ export const W_C0033_001_DATASET_ID = "W-C0033-001";
 export const O_A0001_001_DATASET_ID = "O-A0001-001";
 /** Daily maximum UV index (紫外線指數-每日紫外線指數最大值) — generic-layer only, see registry/cwa.ts. */
 export const O_A0005_001_DATASET_ID = "O-A0005-001";
+/** Typhoon news/bulletin (颱風消息與警報-颱風消息) — powers tw_typhoon, see registry/cwa.ts and tools/typhoon.ts. */
+export const W_C0034_005_DATASET_ID = "W-C0034-005";
+/** Typhoon warning (颱風消息與警報-颱風警報) — generic-layer only, see registry/cwa.ts. */
+export const W_C0034_001_DATASET_ID = "W-C0034-001";
 
 export const MOENV_API_BASE_URL = "https://data.moenv.gov.tw/api/v2";
 
@@ -56,6 +60,10 @@ export const WEATHER_WARNING_CACHE_TTL_SECONDS = 10 * 60;
 export const STATION_OBSERVATION_CACHE_TTL_SECONDS = 15 * 60;
 /** O-A0005-001 is a same-day rolling maximum that updates as new readings come in (confirmed via real API response), not a static once-daily value — same cadence class as UV_S_01. */
 export const UV_DAILY_MAX_CACHE_TTL_SECONDS = 30 * 60;
+/** W-C0034-005 updates every 6 hours when a tropical cyclone is active (per its own dataset description); short TTL matters most during that window. */
+export const TYPHOON_NEWS_CACHE_TTL_SECONDS = 10 * 60;
+/** W-C0034-001 is issued hourly once a typhoon warning is in effect — same urgency class as weather warnings. */
+export const TYPHOON_WARNING_CACHE_TTL_SECONDS = 10 * 60;
 
 /**
  * Taiwan's 22 counties/cities as used by CWA's `locationName` parameter.

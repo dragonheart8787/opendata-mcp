@@ -62,6 +62,7 @@ describe("worker fetch routing", () => {
       expect.arrayContaining([
         "tw_weather_forecast",
         "tw_recent_earthquakes",
+        "tw_typhoon",
         "tw_air_quality",
         "tw_search_datasets",
         "tw_query_dataset"
@@ -149,6 +150,39 @@ describe("worker fetch routing", () => {
       expect(body.result?.structuredContent?.source).toBe("中央氣象署");
       expect(body.result?.structuredContent?.dataset).toBe("E-A0015-001");
       expect(body.result?.structuredContent?.data?.earthquakes).toHaveLength(1);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it("tw_typhoon's envelope issuedAt reflects the latest analysis time across active systems", async () => {
+    const fixture = JSON.parse(
+      readFileSync(fileURLToPath(new URL("./fixtures/typhoon-news.json", import.meta.url)), "utf-8")
+    );
+    const rawCyclone = fixture.records.TropicalCyclones.TropicalCyclone[0];
+    const fixes = rawCyclone.AnalysisData.Fix;
+    const latestDateTime = fixes[fixes.length - 1].DateTime;
+
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = (async () =>
+      new Response(JSON.stringify(fixture), { status: 200, headers: { "content-type": "application/json" } })) as unknown as typeof fetch;
+
+    try {
+      const res = await worker.fetch(
+        mcpRequest({
+          jsonrpc: "2.0",
+          id: 10,
+          method: "tools/call",
+          params: { name: "tw_typhoon", arguments: {} }
+        }),
+        { CWA_API_KEY: "test-key" } as never
+      );
+      const body = (await res.json()) as {
+        result?: { isError?: boolean; structuredContent?: { ok?: boolean; issuedAt?: string } };
+      };
+      expect(body.result?.isError).toBeUndefined();
+      expect(body.result?.structuredContent?.ok).toBe(true);
+      expect(body.result?.structuredContent?.issuedAt).toBe(latestDateTime);
     } finally {
       globalThis.fetch = originalFetch;
     }

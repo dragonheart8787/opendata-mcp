@@ -5,6 +5,8 @@ import {
   recentEarthquakesEntry,
   stationObservationEntry,
   tideForecastEntry,
+  typhoonNewsEntry,
+  typhoonWarningEntry,
   uvDailyMaxEntry,
   weatherForecastEntry,
   weatherWarningEntry
@@ -48,6 +50,19 @@ const weatherWarningFixture = JSON.parse(
 );
 const uvDailyMaxFixture = JSON.parse(
   readFileSync(fileURLToPath(new URL("../fixtures/uv-daily-max.json", import.meta.url)), "utf-8")
+);
+// Confirmed 2026-07-21 via a real dispatch of fixtures-refresh.yml against
+// the live API — see each entry's module-level comment in src/registry/
+// cwa.ts for the full provenance note. typhoon-news.json's only tropical
+// cyclone happened to still be an unnamed depression (no TyphoonName/
+// CwaTyphoonName) at capture time — the "named typhoon" code path is
+// exercised by an inline fixture below instead, since the live-refreshed
+// fixture can't guarantee that field is ever present.
+const typhoonNewsFixture = JSON.parse(
+  readFileSync(fileURLToPath(new URL("../fixtures/typhoon-news.json", import.meta.url)), "utf-8")
+);
+const typhoonWarningFixture = JSON.parse(
+  readFileSync(fileURLToPath(new URL("../fixtures/typhoon-warning.json", import.meta.url)), "utf-8")
 );
 
 // CWA's IssueTime / ValidTime.EndTime format, confirmed against real captured
@@ -335,5 +350,124 @@ describe("uvDailyMaxEntry", () => {
 
     expect(result.query).toEqual({ stationId: raw.StationID });
     expect(result.stations).toEqual([{ stationId: raw.StationID, uvIndex: raw.UVIndex }]);
+  });
+});
+
+describe("typhoonNewsEntry", () => {
+  it("is registered under cwa:W-C0034-005 and matches the imported entry", () => {
+    expect(getDatasetEntry("cwa:W-C0034-005")).toBe(typhoonNewsEntry);
+  });
+
+  it("buildQueryParams sends no query params (real dispatch confirmed an unfiltered fetch returns every active system)", () => {
+    expect(typhoonNewsEntry.buildQueryParams({})).toEqual({});
+  });
+
+  it("transform reports hasActiveSystem true and summarizes each tropical cyclone from the fixture", () => {
+    const rawCyclone = typhoonNewsFixture.records.TropicalCyclones.TropicalCyclone[0];
+    const rawAnalysisFixes = rawCyclone.AnalysisData.Fix;
+    const rawLatestFix = rawAnalysisFixes[rawAnalysisFixes.length - 1];
+    const rawForecastFixes = rawCyclone.ForecastData.Fix;
+
+    const result = typhoonNewsEntry.transform(typhoonNewsFixture.records, {});
+
+    expect(result.hasActiveSystem).toBe(true);
+    expect(result.typhoons).toHaveLength(1);
+
+    const typhoon = result.typhoons[0];
+    expect(typhoon.cwaNumber).toBe(rawCyclone.CwaTdNo);
+    expect(typhoon.name).toBeNull();
+    expect(typhoon.internationalName).toBeNull();
+    expect(typhoon.isNamedTyphoon).toBe(false);
+
+    expect(typhoon.latestPosition).not.toBeNull();
+    expect(typhoon.latestPosition!.time).toBe(rawLatestFix.DateTime);
+    expect(typhoon.latestPosition!.latitude).toBe(Number(rawLatestFix.CoordinateLatitude));
+    expect(typhoon.latestPosition!.longitude).toBe(Number(rawLatestFix.CoordinateLongitude));
+    expect(typhoon.latestPosition!.maxWindSpeedMs).toBe(Number(rawLatestFix.MaxWindSpeed));
+
+    expect(typhoon.forecastTrack).toHaveLength(rawForecastFixes.length);
+    typhoon.forecastTrack.forEach((point, i) => {
+      expect(point.time).toBe(rawForecastFixes[i].InitialTime);
+      expect(point.forecastHour).toBe(Number(rawForecastFixes[i].ForecastHour));
+      expect(point.latitude).toBe(Number(rawForecastFixes[i].CoordinateLatitude));
+    });
+  });
+
+  it("transform reports hasActiveSystem false and an empty list when there are no active tropical cyclones", () => {
+    const result = typhoonNewsEntry.transform({ TropicalCyclones: { TropicalCyclone: [] } }, {});
+    expect(result.hasActiveSystem).toBe(false);
+    expect(result.typhoons).toEqual([]);
+  });
+
+  it("transform surfaces name/internationalName and isNamedTyphoon true once CWA has named the system", () => {
+    // Inline, not the shared fixture (which happened to capture an
+    // unnamed depression) — this needs TyphoonName/CwaTyphoonName
+    // guaranteed present, which the live-refreshed fixture can't promise.
+    const namedTyphoonRaw = {
+      TropicalCyclones: {
+        TropicalCyclone: [
+          {
+            Year: "2026",
+            CwaTyNo: "9",
+            TyphoonName: "BAVI",
+            CwaTyphoonName: "巴威",
+            AnalysisData: {
+              Fix: [
+                {
+                  DateTime: "2026-07-12T08:00:00+08:00",
+                  CoordinateLongitude: "119.7",
+                  CoordinateLatitude: "29.8",
+                  MaxWindSpeed: "28",
+                  MaxGustSpeed: "35",
+                  Pressure: "980"
+                }
+              ]
+            },
+            ForecastData: { Fix: [] }
+          }
+        ]
+      }
+    };
+
+    const result = typhoonNewsEntry.transform(namedTyphoonRaw, {});
+    expect(result.typhoons[0].name).toBe("巴威");
+    expect(result.typhoons[0].internationalName).toBe("BAVI");
+    expect(result.typhoons[0].isNamedTyphoon).toBe(true);
+    expect(result.typhoons[0].cwaNumber).toBe("9");
+  });
+});
+
+describe("typhoonWarningEntry", () => {
+  it("is registered under cwa:W-C0034-001 and matches the imported entry", () => {
+    expect(getDatasetEntry("cwa:W-C0034-001")).toBe(typhoonWarningEntry);
+  });
+
+  it("buildQueryParams sends no query params (real dispatch confirmed an unfiltered fetch returns every bulletin)", () => {
+    expect(typhoonWarningEntry.buildQueryParams({})).toEqual({});
+  });
+
+  it("transform maps each CAP alert to the compact bulletin shape", () => {
+    const rawAlert = typhoonWarningFixture.records.info[0];
+    const result = typhoonWarningEntry.transform(typhoonWarningFixture.records, {});
+
+    expect(result.bulletins).toHaveLength(1);
+    const bulletin = result.bulletins[0];
+    expect(bulletin.headline).toBe(rawAlert.headline);
+    expect(bulletin.event).toBe(rawAlert.event);
+    expect(bulletin.urgency).toBe(rawAlert.urgency);
+    expect(bulletin.severity).toBe(rawAlert.severity);
+    expect(bulletin.certainty).toBe(rawAlert.certainty);
+    expect(bulletin.effective).toBe(rawAlert.effective);
+    expect(bulletin.onset).toBe(rawAlert.onset);
+    expect(bulletin.expires).toBe(rawAlert.expires);
+    expect(bulletin.senderName).toBe(rawAlert.senderName);
+    expect(bulletin.webUrl).toBe(rawAlert.web);
+    expect(bulletin.areas).toEqual(rawAlert.area.map((a: any) => a.areaDesc));
+    expect(bulletin.description).toEqual(rawAlert.description);
+  });
+
+  it("transform returns an empty list (not an error) when there are no bulletins", () => {
+    const result = typhoonWarningEntry.transform({ info: [] }, {});
+    expect(result.bulletins).toEqual([]);
   });
 });
