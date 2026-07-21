@@ -1,5 +1,152 @@
 {
   "success": "true",
-  "result": {},
-  "records": {}
+  "result": {
+    "resource_id": "O-A0005-001",
+    "fields": [
+      {
+        "id": "elementName",
+        "type": "String"
+      },
+      {
+        "id": "Date",
+        "type": "Date"
+      },
+      {
+        "id": "StationID",
+        "type": "String"
+      },
+      {
+        "id": "UVIndex",
+        "type": "Float"
+      }
+    ]
+  },
+  "records": {
+    "weatherElement": {
+      "elementName": "氣象站每日紫外線指數最大值",
+      "location": [
+        {
+          "StationID": "467420",
+          "UVIndex": 8
+        },
+        {
+          "StationID": "467280",
+          "UVIndex": 13
+        },
+        {
+          "StationID": "467290",
+          "UVIndex": 11
+        },
+        {
+          "StationID": "467350",
+          "UVIndex": 13
+        },
+        {
+          "StationID": "467270",
+          "UVIndex": 12
+        },
+        {
+          "StationID": "467110",
+          "UVIndex": 11
+        },
+        {
+          "StationID": "467300",
+          "UVIndex": 12
+        },
+        {
+          "StationID": "466940",
+          "UVIndex": 12
+        },
+        {
+          "StationID": "466950",
+          "UVIndex": 13
+        },
+        {
+          "StationID": "466920",
+          "UVIndex": 8
+        },
+        {
+          "StationID": "466930",
+          "UVIndex": 12
+        },
+        {
+          "StationID": "466900",
+          "UVIndex": 12
+        },
+        {
+          "StationID": "466910",
+          "UVIndex": 7
+        },
+        {
+          "StationID": "467990",
+          "UVIndex": 12
+        },
+        {
+          "StationID": "466881",
+          "UVIndex": 11
+        },
+        {
+          "StationID": "466990",
+          "UVIndex": 10
+        },
+        {
+          "StationID": "467620",
+          "UVIndex": 11
+        },
+        {
+          "StationID": "467050",
+          "UVIndex": 12
+        },
+        {
+          "StationID": "467441",
+          "UVIndex": 13
+        },
+        {
+          "StationID": "467480",
+          "UVIndex": 10
+        },
+        {
+          "StationID": "467490",
+          "UVIndex": 10
+        },
+        {
+          "StationID": "467610",
+          "UVIndex": 12
+        },
+        {
+          "StationID": "467660",
+          "UVIndex": 12
+        },
+        {
+          "StationID": "467590",
+          "UVIndex": 13
+        },
+        {
+          "StationID": "467650",
+          "UVIndex": 11
+        },
+        {
+          "StationID": "467571",
+          "UVIndex": 12
+        },
+        {
+          "StationID": "467410",
+          "UVIndex": 11
+        },
+        {
+          "StationID": "467550",
+          "UVIndex": 12
+        },
+        {
+          "StationID": "467540",
+          "UVIndex": 13
+        },
+        {
+          "StationID": "467080",
+          "UVIndex": 11
+        }
+      ],
+      "Date": "2026-07-21"
+    }
+  }
 }
