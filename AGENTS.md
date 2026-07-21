@@ -109,6 +109,8 @@ This server has no write tools and never will (see architecture doc §0 non-goal
 
 **測試規範**：針對有 client-side 過濾邏輯的資料集，測試裡應包含一個「上游回傳未過濾完整清單」的情境，斷言 transform 依然正確篩出目標子集——這樣以後如果有人不小心把過濾邏輯優化掉，測試會抓到（見 §4 的測試要求）。
 
+**CWA 海象類資料集（浮標站、波浪、潮位）已知與本專案統一使用的 `/api/v1/rest/datastore/` 端點不相容。** `F-A0012-001` 與 `O-B0076-001` 兩次獨立嘗試皆在真實 dispatch 中回傳真實 HTTP 404，研判這類資料是走獨立的 `ocean.cwa.gov.tw`／`oceanapi.cwa.gov.tw` 平台（不同的認證與資料集代碼格式）。**除非未來發現該平台有相容的 API 形式，否則不要再嘗試接入海象類資料集**——重複嘗試已驗證過兩次的失敗模式，不會有新結果。
+
 ## 7. What a PR must say
 
 1. **Files touched**, grouped by layer (infra / adapters / registry / tools / docs).
