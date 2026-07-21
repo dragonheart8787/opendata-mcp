@@ -7,6 +7,14 @@ export const F_C0032_001_DATASET_ID = "F-C0032-001";
 export const E_A0015_001_DATASET_ID = "E-A0015-001";
 /** Tide forecast (未來1個月潮汐預報) — generic-layer only, see registry/cwa.ts. */
 export const F_A0021_001_DATASET_ID = "F-A0021-001";
+/** Weather warnings (天氣特報) — generic-layer only, skeleton entry, see registry/cwa.ts. */
+export const W_C0033_001_DATASET_ID = "W-C0033-001";
+/** Automated weather station observations (自動氣象站-氣象觀測資料) — generic-layer only, see registry/cwa.ts. */
+export const O_A0001_001_DATASET_ID = "O-A0001-001";
+/** Marine weather forecast, offshore/coastal fishery (海象_遠海漁業／近海漁業氣象預報) — generic-layer only, skeleton entry, see registry/cwa.ts. */
+export const F_A0012_001_DATASET_ID = "F-A0012-001";
+/** Daily maximum UV index (紫外線指數-每日紫外線指數最大值) — generic-layer only, skeleton entry, see registry/cwa.ts. */
+export const O_A0005_001_DATASET_ID = "O-A0005-001";
 
 export const MOENV_API_BASE_URL = "https://data.moenv.gov.tw/api/v2";
 
@@ -44,6 +52,14 @@ export const TIDE_FORECAST_CACHE_TTL_SECONDS = 6 * 60 * 60;
 export const AIR_QUALITY_FORECAST_CACHE_TTL_SECONDS = 30 * 60;
 /** UV_S_01 is hourly station data. */
 export const UV_REALTIME_CACHE_TTL_SECONDS = 30 * 60;
+/** W-C0033-001 update cadence is unverified (issued/lifted on an irregular schedule) — kept short since a stale warning is worse than an extra fetch. */
+export const WEATHER_WARNING_CACHE_TTL_SECONDS = 10 * 60;
+/** O-A0001-001 is hourly automated station data, same cadence class as UV_S_01/aqx_p_432. */
+export const STATION_OBSERVATION_CACHE_TTL_SECONDS = 15 * 60;
+/** F-A0012-001 marine forecasts are typically issued a few times per day; unverified so kept on the shorter side. */
+export const MARINE_FORECAST_CACHE_TTL_SECONDS = 60 * 60;
+/** O-A0005-001 is a daily-cadence value, same class as the F-A0021-001 tide forecast. */
+export const UV_DAILY_MAX_CACHE_TTL_SECONDS = 3 * 60 * 60;
 
 /**
  * Taiwan's 22 counties/cities as used by CWA's `locationName` parameter.

@@ -1,7 +1,15 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { recentEarthquakesEntry, tideForecastEntry, weatherForecastEntry } from "../../src/registry/cwa.js";
+import {
+  marineForecastEntry,
+  recentEarthquakesEntry,
+  stationObservationEntry,
+  tideForecastEntry,
+  uvDailyMaxEntry,
+  weatherForecastEntry,
+  weatherWarningEntry
+} from "../../src/registry/cwa.js";
 import { getDatasetEntry } from "../../src/registry/index.js";
 import { ToolError } from "../../src/infra/errors.js";
 
@@ -23,6 +31,26 @@ const earthquakeFixture = JSON.parse(
 // src/registry/cwa.ts, for the full provenance note).
 const tideFixture = JSON.parse(
   readFileSync(fileURLToPath(new URL("../fixtures/tide-forecast.json", import.meta.url)), "utf-8")
+);
+// Real Go source code in a third-party CWA client library (go-cwb) — not a
+// fresh direct capture from this session. See the module-level comment on
+// stationObservationEntry (src/registry/cwa.ts) for the full provenance
+// note. Needs a real capture via fixtures-refresh.yml to raise confidence.
+const stationObservationFixture = JSON.parse(
+  readFileSync(fileURLToPath(new URL("../fixtures/station-observation.json", import.meta.url)), "utf-8")
+);
+// Deliberately trivial placeholders — these three entries are minimal,
+// structure-unverified skeletons (see their module-level comments in
+// src/registry/cwa.ts), so there's no real evidence to build a realistic
+// fixture from yet. Only exercises transform's pass-through behavior.
+const weatherWarningFixture = JSON.parse(
+  readFileSync(fileURLToPath(new URL("../fixtures/weather-warning.json", import.meta.url)), "utf-8")
+);
+const marineForecastFixture = JSON.parse(
+  readFileSync(fileURLToPath(new URL("../fixtures/marine-forecast.json", import.meta.url)), "utf-8")
+);
+const uvDailyMaxFixture = JSON.parse(
+  readFileSync(fileURLToPath(new URL("../fixtures/uv-daily-max.json", import.meta.url)), "utf-8")
 );
 
 // CWA's IssueTime / ValidTime.EndTime format, confirmed against real captured
@@ -201,5 +229,90 @@ describe("tideForecastEntry", () => {
       expect((error as ToolError).code).toBe("NOT_FOUND");
       expect((error as ToolError).message).toContain("不存在的地點");
     }
+  });
+});
+
+describe("stationObservationEntry", () => {
+  it("is registered under cwa:O-A0001-001 and matches the imported entry", () => {
+    expect(getDatasetEntry("cwa:O-A0001-001")).toBe(stationObservationEntry);
+  });
+
+  it("buildQueryParams passes locationName through verbatim", () => {
+    expect(stationObservationEntry.buildQueryParams({ locationName: "合歡山" })).toEqual({
+      locationName: "合歡山"
+    });
+  });
+
+  it("transform finds the requested station and passes weatherElement through", () => {
+    const rawLocation = stationObservationFixture.records.location[0];
+    const result = stationObservationEntry.transform(stationObservationFixture.records, {
+      locationName: rawLocation.locationName
+    });
+
+    expect(result.locationName).toBe(rawLocation.locationName);
+    expect(result.stationId).toBe(rawLocation.stationId);
+    expect(result.obsTime).toBe(rawLocation.time.obsTime);
+    expect(result.weatherElement).toEqual(rawLocation.weatherElement);
+  });
+
+  it("transform throws NOT_FOUND for a locationName not present in the response", () => {
+    try {
+      stationObservationEntry.transform(stationObservationFixture.records, { locationName: "不存在的測站" });
+      expect.unreachable();
+    } catch (error) {
+      expect(error).toBeInstanceOf(ToolError);
+      expect((error as ToolError).code).toBe("NOT_FOUND");
+      expect((error as ToolError).message).toContain("不存在的測站");
+    }
+  });
+});
+
+// The remaining three entries are deliberately minimal, structure-unverified
+// skeletons (see their module-level comments in src/registry/cwa.ts) — these
+// tests only lock in the pass-through contract (no params, raw response
+// returned unparsed as `{ raw }`), not any real field structure, since none
+// is confirmed yet.
+describe("weatherWarningEntry", () => {
+  it("is registered under cwa:W-C0033-001 and matches the imported entry", () => {
+    expect(getDatasetEntry("cwa:W-C0033-001")).toBe(weatherWarningEntry);
+  });
+
+  it("buildQueryParams sends no query params (structure unverified, no known filter)", () => {
+    expect(weatherWarningEntry.buildQueryParams({})).toEqual({});
+  });
+
+  it("transform passes the raw response through unparsed", () => {
+    const result = weatherWarningEntry.transform(weatherWarningFixture.records, {});
+    expect(result).toEqual({ raw: weatherWarningFixture.records });
+  });
+});
+
+describe("marineForecastEntry", () => {
+  it("is registered under cwa:F-A0012-001 and matches the imported entry", () => {
+    expect(getDatasetEntry("cwa:F-A0012-001")).toBe(marineForecastEntry);
+  });
+
+  it("buildQueryParams sends no query params (structure unverified, no known filter)", () => {
+    expect(marineForecastEntry.buildQueryParams({})).toEqual({});
+  });
+
+  it("transform passes the raw response through unparsed", () => {
+    const result = marineForecastEntry.transform(marineForecastFixture.records, {});
+    expect(result).toEqual({ raw: marineForecastFixture.records });
+  });
+});
+
+describe("uvDailyMaxEntry", () => {
+  it("is registered under cwa:O-A0005-001 and matches the imported entry", () => {
+    expect(getDatasetEntry("cwa:O-A0005-001")).toBe(uvDailyMaxEntry);
+  });
+
+  it("buildQueryParams sends no query params (structure unverified, no known filter)", () => {
+    expect(uvDailyMaxEntry.buildQueryParams({})).toEqual({});
+  });
+
+  it("transform passes the raw response through unparsed", () => {
+    const result = uvDailyMaxEntry.transform(uvDailyMaxFixture.records, {});
+    expect(result).toEqual({ raw: uvDailyMaxFixture.records });
   });
 });
