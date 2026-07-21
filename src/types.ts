@@ -71,7 +71,15 @@ export interface CwaShakingArea {
   AreaIntensity: string;
 }
 
+export interface CwaEarthquakeValidTime {
+  EndTime: string;
+}
+
 export interface CwaEarthquake {
+  /** Report publish time, ISO 8601 with offset (e.g. "2026-07-15T22:48:31+08:00"). Not always confirmed present — treated as optional like Web/ShakemapImageURI. */
+  IssueTime?: string;
+  /** Wraps the report's validity end time, not a timestamp itself. */
+  ValidTime?: CwaEarthquakeValidTime;
   EarthquakeNo: number;
   ReportType: string;
   ReportColor: string;

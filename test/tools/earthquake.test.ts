@@ -15,6 +15,11 @@ const fixture = JSON.parse(
 );
 const rawEarthquakes: any[] = fixture.records.Earthquake;
 
+// CWA's IssueTime / ValidTime.EndTime format, confirmed against real captured
+// values (test/fixtures/earthquakes.json, e.g. "2026-07-15T22:48:31+08:00") —
+// ISO 8601 with a numeric UTC offset. Passed through verbatim, not reformatted.
+const ISO_8601_WITH_OFFSET = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/;
+
 describe("runRecentEarthquakes", () => {
   it("maps each raw earthquake's fields onto the correct summary fields", async () => {
     const result = await runRecentEarthquakes(rawEarthquakes.length, "test-key", jsonFetch(fixture));
@@ -32,7 +37,45 @@ describe("runRecentEarthquakes", () => {
       expect(eq.detailUrl).toBe(raw.Web);
       expect(typeof eq.maxIntensity).toBe("string");
       expect(eq.maxIntensity.length).toBeGreaterThan(0);
+
+      expect(eq.issuedAt).toBe(raw.IssueTime ?? null);
+      expect(eq.validUntil).toBe(raw.ValidTime?.EndTime ?? null);
+      if (eq.issuedAt !== null) {
+        expect(eq.issuedAt).toMatch(ISO_8601_WITH_OFFSET);
+      }
+      if (eq.validUntil !== null) {
+        expect(eq.validUntil).toMatch(ISO_8601_WITH_OFFSET);
+      }
     });
+  });
+
+  it("falls back to null for issuedAt/validUntil when the raw report doesn't include IssueTime/ValidTime", async () => {
+    // Inline, not the shared fixture: this edge case needs IssueTime/ValidTime
+    // guaranteed absent, which the live-refreshed fixture can't guarantee.
+    const earthquakeWithoutIssueOrValidTime = {
+      success: "true",
+      records: {
+        datasetDescription: "顯著有感地震報告",
+        Earthquake: [
+          {
+            EarthquakeNo: 888888,
+            ReportContent: "測試地震（無發布/有效時間欄位）",
+            Web: "https://example.com/888888",
+            EarthquakeInfo: {
+              OriginTime: "2026-01-01 00:00:00",
+              FocalDepth: 10,
+              Epicenter: { Location: "測試" },
+              EarthquakeMagnitude: { MagnitudeType: "芮氏規模", MagnitudeValue: 3 }
+            },
+            Intensity: { ShakingArea: [{ CountyName: "A", AreaIntensity: "1級" }] }
+          }
+        ]
+      }
+    };
+
+    const result = await runRecentEarthquakes(1, "test-key", jsonFetch(earthquakeWithoutIssueOrValidTime));
+    expect(result.earthquakes[0].issuedAt).toBeNull();
+    expect(result.earthquakes[0].validUntil).toBeNull();
   });
 
   it("picks the strongest intensity across all shaking areas, not just the first one", async () => {
@@ -90,6 +133,12 @@ describe("formatRecentEarthquakesText", () => {
     for (const raw of rawEarthquakes) {
       expect(text).toContain(`No.${raw.EarthquakeNo}`);
       expect(text).toContain(`芮氏規模 ${raw.EarthquakeInfo.EarthquakeMagnitude.MagnitudeValue}`);
+      if (raw.IssueTime) {
+        expect(text).toContain(`報告發布時間：${raw.IssueTime}`);
+      }
+      if (raw.ValidTime?.EndTime) {
+        expect(text).toContain(`報告有效至：${raw.ValidTime.EndTime}`);
+      }
     }
     expect(text).toContain("最大震度：");
   });

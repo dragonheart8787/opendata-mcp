@@ -36,6 +36,12 @@ export function formatRecentEarthquakesText(result: RecentEarthquakesResult): st
     lines.push(`- 深度：${eq.depthKm} 公里`);
     lines.push(`- 最大震度：${eq.maxIntensity}`);
     lines.push(`- 說明：${eq.reportContent}`);
+    if (eq.issuedAt) {
+      lines.push(`- 報告發布時間：${eq.issuedAt}`);
+    }
+    if (eq.validUntil) {
+      lines.push(`- 報告有效至：${eq.validUntil}`);
+    }
     if (eq.detailUrl) {
       lines.push(`- 詳細報告：${eq.detailUrl}`);
     }

@@ -18,6 +18,11 @@ const earthquakeFixture = JSON.parse(
   readFileSync(fileURLToPath(new URL("../fixtures/earthquakes.json", import.meta.url)), "utf-8")
 );
 
+// CWA's IssueTime / ValidTime.EndTime format, confirmed against real captured
+// values (test/fixtures/earthquakes.json, e.g. "2026-07-15T22:48:31+08:00") —
+// ISO 8601 with a numeric UTC offset.
+const ISO_8601_WITH_OFFSET = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/;
+
 describe("weatherForecastEntry", () => {
   it("is registered under cwa:F-C0032-001 and matches the imported entry", () => {
     expect(getDatasetEntry("cwa:F-C0032-001")).toBe(weatherForecastEntry);
@@ -80,6 +85,67 @@ describe("recentEarthquakesEntry", () => {
     expect(result.earthquakes[0].earthquakeNo).toBe(raw.EarthquakeNo);
     expect(typeof result.earthquakes[0].maxIntensity).toBe("string");
     expect(result.earthquakes[0].maxIntensity.length).toBeGreaterThan(0);
+
+    expect(result.earthquakes[0].issuedAt).toBe(raw.IssueTime ?? null);
+    expect(result.earthquakes[0].validUntil).toBe(raw.ValidTime?.EndTime ?? null);
+    if (result.earthquakes[0].issuedAt !== null) {
+      expect(result.earthquakes[0].issuedAt).toMatch(ISO_8601_WITH_OFFSET);
+    }
+    if (result.earthquakes[0].validUntil !== null) {
+      expect(result.earthquakes[0].validUntil).toMatch(ISO_8601_WITH_OFFSET);
+    }
+  });
+
+  it("transform maps IssueTime to issuedAt and ValidTime.EndTime to validUntil", () => {
+    const earthquakeWithTimes = {
+      EarthquakeNo: 777777,
+      ReportType: "地震報告",
+      ReportColor: "綠色",
+      ReportContent: "測試",
+      IssueTime: "2026-03-01T10:00:00+08:00",
+      ValidTime: { EndTime: "2026-03-01T18:00:00+08:00" },
+      EarthquakeInfo: {
+        OriginTime: "2026-03-01 09:55:00",
+        Source: "中央氣象署地震測報中心",
+        FocalDepth: 10,
+        Epicenter: { Location: "測試", EpicenterLatitude: 23.5, EpicenterLongitude: 121 },
+        EarthquakeMagnitude: { MagnitudeType: "芮氏規模", MagnitudeValue: 3 }
+      },
+      Intensity: { ShakingArea: [{ AreaDesc: "A地區", CountyName: "A", AreaIntensity: "1級" }] }
+    };
+
+    const result = recentEarthquakesEntry.transform(
+      { datasetDescription: "", Earthquake: [earthquakeWithTimes] },
+      { limit: 1 }
+    );
+
+    expect(result.earthquakes[0].issuedAt).toBe("2026-03-01T10:00:00+08:00");
+    expect(result.earthquakes[0].validUntil).toBe("2026-03-01T18:00:00+08:00");
+  });
+
+  it("transform falls back to null for issuedAt/validUntil when IssueTime/ValidTime are absent from the raw report", () => {
+    const earthquakeWithoutTimes = {
+      EarthquakeNo: 666666,
+      ReportType: "地震報告",
+      ReportColor: "綠色",
+      ReportContent: "測試",
+      EarthquakeInfo: {
+        OriginTime: "2026-03-01 09:55:00",
+        Source: "中央氣象署地震測報中心",
+        FocalDepth: 10,
+        Epicenter: { Location: "測試", EpicenterLatitude: 23.5, EpicenterLongitude: 121 },
+        EarthquakeMagnitude: { MagnitudeType: "芮氏規模", MagnitudeValue: 3 }
+      },
+      Intensity: { ShakingArea: [{ AreaDesc: "A地區", CountyName: "A", AreaIntensity: "1級" }] }
+    };
+
+    const result = recentEarthquakesEntry.transform(
+      { datasetDescription: "", Earthquake: [earthquakeWithoutTimes] },
+      { limit: 1 }
+    );
+
+    expect(result.earthquakes[0].issuedAt).toBeNull();
+    expect(result.earthquakes[0].validUntil).toBeNull();
   });
 
   it("transform returns an empty list (not an error) when there are no earthquakes", () => {

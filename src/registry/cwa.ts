@@ -118,6 +118,10 @@ function intensityRank(intensity: string | undefined): number {
 export interface EarthquakeSummary {
   earthquakeNo: number;
   originTime: string;
+  /** When CWA published this report (may differ from originTime by a few minutes). Not confirmed always present, so nullable like detailUrl. */
+  issuedAt: string | null;
+  /** When this report's validity period ends — after this, a later/updated report may supersede it. */
+  validUntil: string | null;
   magnitude: number;
   magnitudeType: string;
   depthKm: number;
@@ -136,6 +140,8 @@ function summarizeEarthquake(earthquake: CwaEarthquake): EarthquakeSummary {
   return {
     earthquakeNo: earthquake.EarthquakeNo,
     originTime: earthquake.EarthquakeInfo.OriginTime,
+    issuedAt: earthquake.IssueTime ?? null,
+    validUntil: earthquake.ValidTime?.EndTime ?? null,
     magnitude: earthquake.EarthquakeInfo.EarthquakeMagnitude.MagnitudeValue,
     magnitudeType: earthquake.EarthquakeInfo.EarthquakeMagnitude.MagnitudeType,
     depthKm: earthquake.EarthquakeInfo.FocalDepth,
