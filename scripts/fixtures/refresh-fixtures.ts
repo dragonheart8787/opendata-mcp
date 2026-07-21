@@ -1,13 +1,21 @@
 #!/usr/bin/env tsx
 /**
- * Fetches real responses for every registered dataset, diffs their
- * structure (not values — see shape-diff.ts) against the checked-in
- * fixtures in test/fixtures/, and rewrites any fixture whose shape
- * changed. Intended to run from .github/workflows/fixtures-refresh.yml
- * on a schedule, using repo secrets CWA_API_KEY / MOENV_API_KEY (GitHub
- * Actions has unrestricted egress, unlike the Claude Code sandbox this
- * pipeline exists to route around — see docs/adr and
- * docs/sessions/SESSION-B.md for why).
+ * Fetches real responses for every registered dataset that declares
+ * `sampleParams` (see registry/index.ts), diffs their structure (not
+ * values — see shape-diff.ts) against the checked-in fixtures in
+ * test/fixtures/, and rewrites any fixture whose shape changed. Intended to
+ * run from .github/workflows/fixtures-refresh.yml on a schedule, using repo
+ * secrets CWA_API_KEY / MOENV_API_KEY (GitHub Actions has unrestricted
+ * egress, unlike the Claude Code sandbox this pipeline exists to route
+ * around — see docs/adr and docs/sessions/SESSION-B.md for why).
+ *
+ * The dataset list is read dynamically from `listDatasetEntries()` — this
+ * used to be a hand-maintained list of exactly the 3 original datasets,
+ * which meant every new registry entry needed a matching manual edit here
+ * or it silently got no drift coverage (a gap called out explicitly in the
+ * PR that added 3 more registry-only entries). Now any dataset that sets
+ * `sampleParams` is automatically included; one that doesn't is skipped
+ * with a visible log line rather than crashing or being silently omitted.
  *
  * Reuses the adapters' own `buildCwaUrl` / `buildMoenvUrl` helpers so the
  * request sent here is byte-identical (auth injection, query params) to
@@ -25,9 +33,14 @@ import { fileURLToPath } from "node:url";
 import { buildCwaUrl } from "../../src/adapters/cwa.js";
 import { buildMoenvUrl } from "../../src/adapters/moenv.js";
 import { httpGet } from "../../src/infra/http.js";
-import { recentEarthquakesEntry, weatherForecastEntry } from "../../src/registry/cwa.js";
-import { airQualityEntry } from "../../src/registry/moenv.js";
+import { listDatasetEntries } from "../../src/registry/index.js";
 import { diffShapesFromValues, formatShapeDiff } from "./shape-diff.js";
+
+// Side-effect imports: populate the registry singleton with every source's
+// entries before listDatasetEntries() is called below. New sources need
+// their registry module imported here too, same as src/index.ts does.
+import "../../src/registry/cwa.js";
+import "../../src/registry/moenv.js";
 
 const FIXTURES_DIR = path.resolve(fileURLToPath(new URL(".", import.meta.url)), "../../test/fixtures");
 
@@ -57,28 +70,43 @@ interface DatasetCheck {
   fetch: () => Promise<unknown>;
 }
 
+/** Derives a stable, filesystem-safe fixture filename for an entry that didn't set `fixtureFileName` explicitly. */
+function fallbackFixtureFileName(datasetId: string): string {
+  return `${datasetId.replace(/[^a-zA-Z0-9_-]+/g, "-")}.json`;
+}
+
 function buildChecks(): DatasetCheck[] {
   if (!CWA_API_KEY || !MOENV_API_KEY) {
     throw new Error("CWA_API_KEY and MOENV_API_KEY must both be set in the environment.");
   }
 
-  return [
-    {
-      name: "weather-forecast (cwa:F-C0032-001)",
-      fixturePath: path.join(FIXTURES_DIR, "weather-forecast.json"),
-      fetch: () => fetchRawJson(buildCwaUrl(weatherForecastEntry, { city: "臺北市" }, CWA_API_KEY!), CWA_API_KEY)
-    },
-    {
-      name: "earthquakes (cwa:E-A0015-001)",
-      fixturePath: path.join(FIXTURES_DIR, "earthquakes.json"),
-      fetch: () => fetchRawJson(buildCwaUrl(recentEarthquakesEntry, { limit: 3 }, CWA_API_KEY!), CWA_API_KEY)
-    },
-    {
-      name: "air-quality (moenv:aqx_p_432)",
-      fixturePath: path.join(FIXTURES_DIR, "air-quality.json"),
-      fetch: () => fetchRawJson(buildMoenvUrl(airQualityEntry, { county: "臺北市" }, MOENV_API_KEY!), MOENV_API_KEY)
+  const checks: DatasetCheck[] = [];
+
+  for (const entry of listDatasetEntries()) {
+    if (entry.sampleParams === undefined) {
+      console.log(`Skipping ${entry.id} (${entry.title}) — no sampleParams declared, can't safely build a request.`);
+      continue;
     }
-  ];
+
+    const fixtureFileName = entry.fixtureFileName ?? fallbackFixtureFileName(entry.id);
+    const sampleParams = entry.sampleParams;
+
+    checks.push({
+      name: `${entry.title} (${entry.id})`,
+      fixturePath: path.join(FIXTURES_DIR, fixtureFileName),
+      fetch: () => {
+        if (entry.source === "cwa") {
+          return fetchRawJson(buildCwaUrl(entry, sampleParams, CWA_API_KEY!), CWA_API_KEY);
+        }
+        if (entry.source === "moenv") {
+          return fetchRawJson(buildMoenvUrl(entry, sampleParams, MOENV_API_KEY!), MOENV_API_KEY);
+        }
+        throw new Error(`No fixtures-refresh fetch strategy for source "${entry.source}" (dataset ${entry.id}).`);
+      }
+    });
+  }
+
+  return checks;
 }
 
 async function main(): Promise<void> {

@@ -90,7 +90,9 @@ export const weatherForecastEntry: DatasetEntry<WeatherForecastParams, CwaForeca
   },
   cacheTtlSeconds: WEATHER_CACHE_TTL_SECONDS,
   updateFrequency: "每日數次",
-  docUrl: "https://opendata.cwa.gov.tw/dataset/forecast/F-C0032-001"
+  docUrl: "https://opendata.cwa.gov.tw/dataset/forecast/F-C0032-001",
+  sampleParams: { city: "臺北市" },
+  fixtureFileName: "weather-forecast.json"
 };
 
 // --- E-A0015-001: significant earthquake reports ---
@@ -178,7 +180,9 @@ export const recentEarthquakesEntry: DatasetEntry<
   cacheTtlSeconds: EARTHQUAKE_CACHE_TTL_SECONDS,
   updateFrequency: "地震發生時即時發布",
   docUrl: "https://opendata.cwa.gov.tw/dataset/earthquake/E-A0015-001",
-  notes: "僅涵蓋中央氣象署認定為「顯著有感」等級以上之地震，規模過小或有感範圍過小的地震可能未收錄於此資料集。"
+  notes: "僅涵蓋中央氣象署認定為「顯著有感」等級以上之地震，規模過小或有感範圍過小的地震可能未收錄於此資料集。",
+  sampleParams: { limit: 3 },
+  fixtureFileName: "earthquakes.json"
 };
 
 // --- F-A0021-001: tide forecast (generic-layer only — no curated tool yet) ---
@@ -262,7 +266,9 @@ export const tideForecastEntry: DatasetEntry<TideForecastParams, CwaTideRecords,
   notes:
     "透過通用層（tw_query_dataset）查詢，尚無專屬工具。回應結構依據第三方開源 CWA client 函式庫" +
     "（go-cwb）提交的真實 API 回應樣本重建，本 session 未直接呼叫官方 API 驗證，待 fixtures-refresh.yml" +
-    "下次排程時以真實 API 回應確認欄位細節（尤其 forecast 陣列內的巢狀結構）。"
+    "下次排程時以真實 API 回應確認欄位細節（尤其 forecast 陣列內的巢狀結構）。",
+  sampleParams: { locationName: "宜蘭縣南澳鄉" },
+  fixtureFileName: "tide-forecast.json"
 };
 
 registerEntry(weatherForecastEntry as unknown as DatasetEntry<never, unknown, unknown>);

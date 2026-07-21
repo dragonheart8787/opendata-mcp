@@ -159,7 +159,9 @@ export const airQualityEntry: DatasetEntry<AirQualityParams, MoenvAqiRecordNorma
   cacheTtlSeconds: AIR_QUALITY_CACHE_TTL_SECONDS,
   updateFrequency: "每小時",
   docUrl: "https://data.moenv.gov.tw/dataset/detail/aqx_p_432",
-  notes: "僅提供當前小時的即時觀測值，不涵蓋歷史紀錄也不涵蓋預報值。"
+  notes: "僅提供當前小時的即時觀測值，不涵蓋歷史紀錄也不涵蓋預報值。",
+  sampleParams: { county: "臺北市" },
+  fixtureFileName: "air-quality.json"
 };
 
 registerEntry(airQualityEntry as unknown as DatasetEntry<never, unknown, unknown>);
@@ -251,7 +253,13 @@ export const airQualityForecastEntry: DatasetEntry<AirQualityForecastParams, Aqi
   notes:
     "透過通用層（tw_query_dataset）查詢，尚無專屬工具。與即時 aqx_p_432 是不同資料集——這是「預報」，" +
     "不是即時觀測值。欄位名稱與大小寫依資料集說明頁確認，本 session 未直接呼叫官方 API 驗證，" +
-    "待 fixtures-refresh.yml 下次排程時以真實 API 回應確認。"
+    "待 fixtures-refresh.yml 下次排程時以真實 API 回應確認。",
+  // Deliberately no filter: `area`'s exact real member values aren't
+  // confirmed, and MOENV's `filters` param isn't reliably honored anyway
+  // (see airQualityEntry's own comment) — an unfiltered fetch reliably
+  // captures the dataset's real shape regardless.
+  sampleParams: {},
+  fixtureFileName: "air-quality-forecast.json"
 };
 
 registerEntry(airQualityForecastEntry as unknown as DatasetEntry<never, unknown, unknown>);
@@ -340,7 +348,10 @@ export const uvRealtimeEntry: DatasetEntry<UvRealtimeParams, UvRealtimeRecord[],
   notes:
     "透過通用層（tw_query_dataset）查詢，尚無專屬工具。與 CWA 的每日紫外線指數（每日最大值）角度不同——" +
     "這是環境部測站的即時觀測值，非每日最大值。本 session 未直接呼叫官方 API 驗證，" +
-    "待 fixtures-refresh.yml 下次排程時以真實 API 回應確認。"
+    "待 fixtures-refresh.yml 下次排程時以真實 API 回應確認。",
+  // Deliberately no filter — see airQualityForecastEntry.sampleParams for why.
+  sampleParams: {},
+  fixtureFileName: "uv-realtime.json"
 };
 
 registerEntry(uvRealtimeEntry as unknown as DatasetEntry<never, unknown, unknown>);
