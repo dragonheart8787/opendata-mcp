@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { recentEarthquakesEntry, weatherForecastEntry } from "../../src/registry/cwa.js";
+import { recentEarthquakesEntry, tideForecastEntry, weatherForecastEntry } from "../../src/registry/cwa.js";
 import { getDatasetEntry } from "../../src/registry/index.js";
 import { ToolError } from "../../src/infra/errors.js";
 
@@ -16,6 +16,13 @@ const weatherFixture = JSON.parse(
 );
 const earthquakeFixture = JSON.parse(
   readFileSync(fileURLToPath(new URL("../fixtures/earthquakes.json", import.meta.url)), "utf-8")
+);
+// Confirmed 2026-07-21 via a real dispatch of fixtures-refresh.yml against
+// the live API (trimmed to 3 of the ~266 returned locations to keep the
+// fixture small — see the module-level comment on tideForecastEntry,
+// src/registry/cwa.ts, for the full provenance note).
+const tideFixture = JSON.parse(
+  readFileSync(fileURLToPath(new URL("../fixtures/tide-forecast.json", import.meta.url)), "utf-8")
 );
 
 // CWA's IssueTime / ValidTime.EndTime format, confirmed against real captured
@@ -151,5 +158,48 @@ describe("recentEarthquakesEntry", () => {
   it("transform returns an empty list (not an error) when there are no earthquakes", () => {
     const result = recentEarthquakesEntry.transform({ datasetDescription: "", Earthquake: [] }, { limit: 3 });
     expect(result.earthquakes).toEqual([]);
+  });
+});
+
+describe("tideForecastEntry", () => {
+  it("is registered under cwa:F-A0021-001 and matches the imported entry", () => {
+    expect(getDatasetEntry("cwa:F-A0021-001")).toBe(tideForecastEntry);
+  });
+
+  it("buildQueryParams passes locationName through verbatim", () => {
+    expect(tideForecastEntry.buildQueryParams({ locationName: "宜蘭縣南澳鄉" })).toEqual({
+      locationName: "宜蘭縣南澳鄉"
+    });
+  });
+
+  it("transform finds the requested location and passes its forecast entries through", () => {
+    const rawEntry = tideFixture.records.TideForecasts[0];
+    const rawLocation = rawEntry.Location;
+    const result = tideForecastEntry.transform(tideFixture.records, { locationName: rawLocation.LocationName });
+
+    expect(result.locationName).toBe(rawLocation.LocationName);
+    expect(result.stationId).toBe(rawLocation.LocationId);
+    expect(result.forecast).toEqual(rawLocation.TimePeriods.Daily);
+    expect(result.forecast).toHaveLength(rawLocation.TimePeriods.Daily.length);
+  });
+
+  it("transform re-filters client-side even though the fixture (like real CWA traffic) returns every location regardless of the requested locationName", () => {
+    expect(tideFixture.records.TideForecasts.length).toBeGreaterThan(1);
+    const rawEntry = tideFixture.records.TideForecasts[1];
+    const rawLocation = rawEntry.Location;
+    const result = tideForecastEntry.transform(tideFixture.records, { locationName: rawLocation.LocationName });
+
+    expect(result.locationName).toBe(rawLocation.LocationName);
+  });
+
+  it("transform throws NOT_FOUND for a locationName not present in the response", () => {
+    try {
+      tideForecastEntry.transform(tideFixture.records, { locationName: "不存在的地點" });
+      expect.unreachable();
+    } catch (error) {
+      expect(error).toBeInstanceOf(ToolError);
+      expect((error as ToolError).code).toBe("NOT_FOUND");
+      expect((error as ToolError).message).toContain("不存在的地點");
+    }
   });
 });

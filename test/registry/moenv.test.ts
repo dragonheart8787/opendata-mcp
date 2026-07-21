@@ -4,7 +4,12 @@ import { describe, expect, it, vi } from "vitest";
 import { AQX_P_432_FETCH_LIMIT } from "../../src/constants.js";
 import { ToolError } from "../../src/infra/errors.js";
 import { normalizeMoenvRecord } from "../../src/adapters/moenv.js";
-import { airQualityEntry, validateAirQualityParams } from "../../src/registry/moenv.js";
+import {
+  airQualityEntry,
+  airQualityForecastEntry,
+  uvRealtimeEntry,
+  validateAirQualityParams
+} from "../../src/registry/moenv.js";
 import { getDatasetEntry } from "../../src/registry/index.js";
 
 // This fixture is overwritten with a real, live response whenever
@@ -18,6 +23,17 @@ const rawFixture = JSON.parse(
 // Registry transforms receive already-normalized raw records (the adapter's job),
 // so run the fixture through the same normalization the adapter applies.
 const fixture = rawFixture.map(normalizeMoenvRecord);
+
+// Field names (all-lowercase) were confirmed 2026-07-21 via a real dispatch
+// of fixtures-refresh.yml against the live API — see the module-level
+// comments on airQualityForecastEntry/uvRealtimeEntry (src/registry/moenv.ts)
+// for the full provenance note.
+const airQualityForecastFixture = JSON.parse(
+  readFileSync(fileURLToPath(new URL("../fixtures/air-quality-forecast.json", import.meta.url)), "utf-8")
+).map(normalizeMoenvRecord);
+const uvRealtimeFixture = JSON.parse(
+  readFileSync(fileURLToPath(new URL("../fixtures/uv-realtime.json", import.meta.url)), "utf-8")
+).map(normalizeMoenvRecord);
 
 describe("airQualityEntry", () => {
   it("is registered under moenv:aqx_p_432 and matches the imported entry", () => {
@@ -163,5 +179,70 @@ describe("validateAirQualityParams", () => {
 
   it("accepts siteName alone", () => {
     expect(() => validateAirQualityParams({ siteName: "板橋" })).not.toThrow();
+  });
+});
+
+describe("airQualityForecastEntry", () => {
+  it("is registered under moenv:aqf_p_01 and matches the imported entry", () => {
+    expect(getDatasetEntry("moenv:aqf_p_01")).toBe(airQualityForecastEntry);
+  });
+
+  it("transform returns every forecast area when no area filter is given", () => {
+    const result = airQualityForecastEntry.transform(airQualityForecastFixture, {});
+    expect(result.forecasts).toHaveLength(airQualityForecastFixture.length);
+  });
+
+  it("transform filters by area and maps fields to the compact shape", () => {
+    const raw = airQualityForecastFixture.find((r: any) => r.area === "北部");
+    const result = airQualityForecastEntry.transform(airQualityForecastFixture, { area: "北部" });
+
+    expect(result.query).toEqual({ area: "北部" });
+    expect(result.forecasts).toHaveLength(1);
+    expect(result.forecasts[0]).toEqual({
+      area: raw.area,
+      forecastDate: raw.forecastdate,
+      aqi: raw.aqi,
+      majorPollutant: raw.majorpollutant,
+      minorPollutant: raw.minorpollutant,
+      minorPollutantAqi: raw.minorpollutantaqi,
+      publishTime: raw.publishtime,
+      content: raw.content
+    });
+  });
+
+  it("maps MOENV's missing-value markers to null for minor pollutant fields", () => {
+    const result = airQualityForecastEntry.transform(airQualityForecastFixture, { area: "高屏" });
+    expect(result.forecasts[0].minorPollutant).toBeNull();
+    expect(result.forecasts[0].minorPollutantAqi).toBeNull();
+  });
+});
+
+describe("uvRealtimeEntry", () => {
+  it("is registered under moenv:UV_S_01 and matches the imported entry", () => {
+    expect(getDatasetEntry("moenv:UV_S_01")).toBe(uvRealtimeEntry);
+  });
+
+  it("transform returns every station when no county filter is given", () => {
+    const result = uvRealtimeEntry.transform(uvRealtimeFixture, {});
+    expect(result.stations).toHaveLength(uvRealtimeFixture.length);
+  });
+
+  it("transform filters by county and maps fields to the compact shape", () => {
+    const raw = uvRealtimeFixture.find((r: any) => r.county === "臺北市");
+    const result = uvRealtimeEntry.transform(uvRealtimeFixture, { county: "臺北市" });
+
+    expect(result.query).toEqual({ county: "臺北市" });
+    expect(result.stations).toHaveLength(1);
+    expect(result.stations[0]).toEqual({
+      siteName: raw.sitename,
+      uvi: Number(raw.uvi),
+      county: raw.county,
+      dataTime: raw.datacreationdate
+    });
+  });
+
+  it("maps a missing Uvi value to null, not 0 or NaN", () => {
+    const result = uvRealtimeEntry.transform(uvRealtimeFixture, { county: "南投縣" });
+    expect(result.stations[0].uvi).toBeNull();
   });
 });

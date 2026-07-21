@@ -36,14 +36,41 @@ jobs:
           MOENV_API_KEY: ${{ secrets.MOENV_API_KEY }}
         run: npm run refresh-fixtures
 
+      # Captures whatever refresh-fixtures.ts wrote to test/fixtures/ right
+      # away, independent of what happens next. Without this, a real
+      # response fetched here is lost for good if the test step below
+      # crashes (a failed step without `if: always()` skips every later
+      # step, including "Open a PR" — the only other place fixture content
+      # gets persisted) — which is exactly what happened the first time a
+      # newly-registered entry's field-name assumptions turned out wrong.
+      - name: Upload fetched fixtures as an artifact (always, even if later steps fail)
+        if: always() && steps.refresh.outputs.changed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fetched-fixtures
+          path: test/fixtures/*.json
+          retention-days: 14
+
       - name: Typecheck and run the test suite against any updated fixtures
+        id: verify
         if: steps.refresh.outputs.changed == 'true'
         run: |
           npm run typecheck
           npm test
 
+      # These three steps run with `always()` so a detected structural
+      # change is always surfaced for human review, even when the test
+      # suite (written against the *old* shape) fails against the freshly
+      # fetched fixture — that failure is itself useful signal for the PR/
+      # issue, not a reason to hide the drift. Previously these were gated
+      # on `steps.refresh.outputs.changed == 'true'` alone, which — combined
+      # with GitHub Actions' default of skipping every later step after a
+      # failed one — meant a real API response that didn't match a
+      # registry entry's assumed shape got fetched, diffed, and then
+      # silently discarded with no PR, no issue, and (before the artifact
+      # upload above existed) no way to recover what was actually fetched.
       - name: Ensure the schema-drift label exists
-        if: steps.refresh.outputs.changed == 'true'
+        if: always() && steps.refresh.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -53,18 +80,18 @@ jobs:
             --repo "${{ github.repository }}" || true
 
       - name: Open a PR with the updated fixtures
-        if: steps.refresh.outputs.changed == 'true'
+        if: always() && steps.refresh.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v6
         with:
           commit-message: "[schema-drift] Update fixtures from live API responses"
-          title: "[schema-drift] Fixture structure changed: ${{ steps.refresh.outputs.changed-datasets }}"
+          title: "[schema-drift] Fixture structure changed: ${{ steps.refresh.outputs.changed-datasets }}${{ steps.verify.outcome == 'failure' && ' (tests failing against new shape)' || '' }}"
           body-path: ${{ steps.refresh.outputs.summary-file }}
           branch: fixtures-refresh/schema-drift
           labels: schema-drift
           add-paths: test/fixtures/*.json
 
       - name: Open an issue flagging the drift
-        if: steps.refresh.outputs.changed == 'true'
+        if: always() && steps.refresh.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

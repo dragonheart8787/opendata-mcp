@@ -50,6 +50,25 @@ export interface DatasetEntry<TParams = never, TRaw = unknown, TResult = unknown
   updateFrequency: string;
   docUrl: string;
   notes?: string;
+  /**
+   * A realistic, valid params object used only by
+   * scripts/fixtures/refresh-fixtures.ts to exercise this entry against the
+   * real upstream API. Optional — there's no generic, safe way to guess
+   * valid params for an arbitrary dataset (a required enum field needs a
+   * real member value, not just "any string"), so an entry without this
+   * set is skipped by refresh-fixtures.ts (logged, not fatal) rather than
+   * the script crashing or sending a bogus request.
+   */
+  sampleParams?: TParams;
+  /**
+   * Fixture filename (relative to test/fixtures/), used by
+   * scripts/fixtures/refresh-fixtures.ts and read directly by this entry's
+   * own tests. Optional — refresh-fixtures.ts falls back to a name derived
+   * from `id` if omitted, but that fallback won't match what an existing
+   * test file reads, so any entry with committed tests should set this
+   * explicitly.
+   */
+  fixtureFileName?: string;
 }
 
 const registry = new Map<string, DatasetEntry<never, unknown, unknown>>();

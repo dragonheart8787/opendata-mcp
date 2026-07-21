@@ -1,5 +1,14 @@
 import { z } from "zod";
-import { AQX_P_432_DATASET_ID, AQX_P_432_FETCH_LIMIT, TAIWAN_CITIES, AIR_QUALITY_CACHE_TTL_SECONDS } from "../constants.js";
+import {
+  AQX_P_432_DATASET_ID,
+  AQX_P_432_FETCH_LIMIT,
+  TAIWAN_CITIES,
+  AIR_QUALITY_CACHE_TTL_SECONDS,
+  AQF_P_01_DATASET_ID,
+  AIR_QUALITY_FORECAST_CACHE_TTL_SECONDS,
+  UV_S_01_DATASET_ID,
+  UV_REALTIME_CACHE_TTL_SECONDS
+} from "../constants.js";
 import { ToolError } from "../infra/errors.js";
 import type { MoenvAqiRecordNormalized } from "../types.js";
 import { registerEntry, type DatasetEntry } from "./index.js";
@@ -150,7 +159,206 @@ export const airQualityEntry: DatasetEntry<AirQualityParams, MoenvAqiRecordNorma
   cacheTtlSeconds: AIR_QUALITY_CACHE_TTL_SECONDS,
   updateFrequency: "每小時",
   docUrl: "https://data.moenv.gov.tw/dataset/detail/aqx_p_432",
-  notes: "僅提供當前小時的即時觀測值，不涵蓋歷史紀錄也不涵蓋預報值。"
+  notes: "僅提供當前小時的即時觀測值，不涵蓋歷史紀錄也不涵蓋預報值。",
+  sampleParams: { county: "臺北市" },
+  fixtureFileName: "air-quality.json"
 };
 
 registerEntry(airQualityEntry as unknown as DatasetEntry<never, unknown, unknown>);
+
+// --- aqf_p_01: air quality forecast (generic-layer only — distinct from aqx_p_432's real-time AQI) ---
+//
+// Confirmed to exist and still maintained (data.moenv.gov.tw/dataset/detail/
+// aqf_p_01, "空氣品質預報資料", published 3x/day per the dataset's own
+// description). Field names are all-lowercase
+// (content/publishtime/area/majorpollutant/forecastdate/aqi/minorpollutant/
+// minorpollutantaqi) — confirmed 2026-07-21 via a real dispatch of
+// fixtures-refresh.yml against the live API. An earlier version of this
+// entry guessed PascalCase field names from the dataset's human-readable
+// description page (Content/PublishTime/Area/...), which turned out to be
+// wrong: like aqx_p_432, MOENV's actual v2 REST API returns all-lowercase
+// field names regardless of how the description page displays them for
+// readability — see docs/ARCHITECTURE.md's note on MOENV field-casing
+// drift. Filters client-side (matching aqx_p_432's established defense
+// against MOENV not reliably honoring the `filters` query param) so a wrong
+// assumption about the upstream filter behavior degrades to "returns
+// everything" rather than silently missing matches.
+
+interface AqiForecastRecord {
+  content: string | null;
+  publishtime: string | null;
+  area: string | null;
+  majorpollutant: string | null;
+  forecastdate: string | null;
+  aqi: string | null;
+  minorpollutant: string | null;
+  minorpollutantaqi: string | null;
+}
+
+export const airQualityForecastInputShape = {
+  area: z
+    .string()
+    .min(1)
+    .optional()
+    .describe(
+      "空氣品質預報分區名稱（例如「北部」「中部」「雲嘉南」「高屏」「宜蘭」「花東」等），" +
+        "不填則回傳所有分區。本伺服器未內建完整分區清單。"
+    )
+};
+
+export interface AirQualityForecastParams {
+  area?: string;
+}
+
+export interface AirQualityForecastResult {
+  [key: string]: unknown;
+  query: { area?: string };
+  forecasts: Array<{
+    area: string | null;
+    forecastDate: string | null;
+    aqi: string | null;
+    majorPollutant: string | null;
+    minorPollutant: string | null;
+    minorPollutantAqi: string | null;
+    publishTime: string | null;
+    content: string | null;
+  }>;
+}
+
+export const airQualityForecastEntry: DatasetEntry<AirQualityForecastParams, AqiForecastRecord[], AirQualityForecastResult> = {
+  id: "moenv:aqf_p_01",
+  source: "moenv",
+  path: AQF_P_01_DATASET_ID,
+  title: "空氣品質預報",
+  keywords: ["空氣品質預報", "空品預報", "AQI 預報", "明日空氣品質", "air quality forecast", "aqi forecast"],
+  paramsSchema: airQualityForecastInputShape,
+  buildQueryParams: params => ({
+    filters: params.area ? `area,EQ,${params.area}` : undefined,
+    limit: "1000"
+  }),
+  transform: (raw, params) => {
+    const matched = params.area ? raw.filter(r => r.area === params.area) : raw;
+    return {
+      query: params.area ? { area: params.area } : {},
+      forecasts: matched.map(r => ({
+        area: r.area,
+        forecastDate: r.forecastdate,
+        aqi: r.aqi,
+        majorPollutant: r.majorpollutant,
+        minorPollutant: r.minorpollutant,
+        minorPollutantAqi: r.minorpollutantaqi,
+        publishTime: r.publishtime,
+        content: r.content
+      }))
+    };
+  },
+  cacheTtlSeconds: AIR_QUALITY_FORECAST_CACHE_TTL_SECONDS,
+  updateFrequency: "每日 3 次發布（10:30、16:30、22:00），視情況每 30 分鐘更新",
+  docUrl: "https://data.moenv.gov.tw/dataset/detail/aqf_p_01",
+  notes:
+    "透過通用層（tw_query_dataset）查詢，尚無專屬工具。與即時 aqx_p_432 是不同資料集——這是「預報」，" +
+    "不是即時觀測值。欄位名稱已於 2026-07-21 透過 fixtures-refresh.yml 真實 API 回應確認為全小寫" +
+    "（與 aqx_p_432 相同慣例），與資料集說明頁顯示的 PascalCase 不同。",
+  // Deliberately no filter: `area`'s exact real member values aren't
+  // confirmed, and MOENV's `filters` param isn't reliably honored anyway
+  // (see airQualityEntry's own comment) — an unfiltered fetch reliably
+  // captures the dataset's real shape regardless.
+  sampleParams: {},
+  fixtureFileName: "air-quality-forecast.json"
+};
+
+registerEntry(airQualityForecastEntry as unknown as DatasetEntry<never, unknown, unknown>);
+
+// --- UV_S_01: real-time UV index by station (generic-layer only) ---
+//
+// Confirmed to exist and still maintained (data.moenv.gov.tw/dataset/detail/
+// UV_S_01, "紫外線即時監測資料", hourly). Field names are all-lowercase
+// (sitename/uvi/unit/county/wgs84_lon/wgs84_lat/datacreationdate) —
+// confirmed 2026-07-21 via a real dispatch of fixtures-refresh.yml against
+// the live API. An earlier version of this entry guessed PascalCase field
+// names (SiteName/Uvi/Unit/County/WGS84_LON/WGS84_LAT/DataCreationDate)
+// from the current data.moenv.gov.tw dataset page content, which turned out
+// to be wrong the same way aqf_p_01's did: the v2 REST API itself returns
+// all-lowercase regardless of what the description page displays — see
+// docs/ARCHITECTURE.md's note on MOENV field-casing drift. `unit` field's
+// exact meaning (measurement unit vs. a danger-level code) isn't confirmed,
+// so it's passed through as an opaque string rather than interpreted.
+
+interface UvRealtimeRecord {
+  sitename: string | null;
+  uvi: string | null;
+  unit: string | null;
+  county: string | null;
+  wgs84_lon: string | null;
+  wgs84_lat: string | null;
+  datacreationdate: string | null;
+}
+
+export const uvRealtimeInputShape = {
+  county: z
+    .enum(TAIWAN_CITIES)
+    .optional()
+    .describe(
+      "縣市名稱（台灣 22 縣市之一），回傳該縣市所有測站的紫外線指數。不填則回傳所有測站。須用「臺」而非「台」。"
+    )
+};
+
+export interface UvRealtimeParams {
+  county?: string;
+}
+
+export interface UvRealtimeStation {
+  siteName: string | null;
+  uvi: number | null;
+  county: string | null;
+  dataTime: string | null;
+}
+
+export interface UvRealtimeResult {
+  [key: string]: unknown;
+  query: { county?: string };
+  stations: UvRealtimeStation[];
+}
+
+function toNumberOrNullUv(value: string | null): number | null {
+  if (value === null) return null;
+  const n = Number(value);
+  return Number.isNaN(n) ? null : n;
+}
+
+export const uvRealtimeEntry: DatasetEntry<UvRealtimeParams, UvRealtimeRecord[], UvRealtimeResult> = {
+  id: "moenv:UV_S_01",
+  source: "moenv",
+  path: UV_S_01_DATASET_ID,
+  title: "紫外線即時監測資料",
+  keywords: ["紫外線", "紫外線指數", "UV", "UVI", "曬傷", "防曬", "uv index", "real-time uv", "紫外線測站"],
+  paramsSchema: uvRealtimeInputShape,
+  buildQueryParams: params => ({
+    filters: params.county ? `county,EQ,${params.county}` : undefined,
+    limit: "1000"
+  }),
+  transform: (raw, params) => {
+    const matched = params.county ? raw.filter(r => r.county === params.county) : raw;
+    return {
+      query: params.county ? { county: params.county } : {},
+      stations: matched.map(r => ({
+        siteName: r.sitename,
+        uvi: toNumberOrNullUv(r.uvi),
+        county: r.county,
+        dataTime: r.datacreationdate
+      }))
+    };
+  },
+  cacheTtlSeconds: UV_REALTIME_CACHE_TTL_SECONDS,
+  updateFrequency: "每小時更新",
+  docUrl: "https://data.moenv.gov.tw/dataset/detail/UV_S_01",
+  notes:
+    "透過通用層（tw_query_dataset）查詢，尚無專屬工具。與 CWA 的每日紫外線指數（每日最大值）角度不同——" +
+    "這是環境部測站的即時觀測值，非每日最大值。欄位名稱已於 2026-07-21 透過 fixtures-refresh.yml 真實 API" +
+    "回應確認為全小寫，與資料集說明頁顯示的 PascalCase 不同。",
+  // Deliberately no filter — see airQualityForecastEntry.sampleParams for why.
+  sampleParams: {},
+  fixtureFileName: "uv-realtime.json"
+};
+
+registerEntry(uvRealtimeEntry as unknown as DatasetEntry<never, unknown, unknown>);
