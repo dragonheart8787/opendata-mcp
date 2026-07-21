@@ -170,24 +170,29 @@ registerEntry(airQualityEntry as unknown as DatasetEntry<never, unknown, unknown
 //
 // Confirmed to exist and still maintained (data.moenv.gov.tw/dataset/detail/
 // aqf_p_01, "空氣品質預報資料", published 3x/day per the dataset's own
-// description). This sandbox cannot reach data.moenv.gov.tw directly
-// (blocked, same as every prior session), so field names below come from
-// the dataset's own description page content (Content/PublishTime/Area/
-// MajorPollutant/ForecastDate/AQI/MinorPollutant/MinorPollutantAQI) rather
-// than a fresh direct capture. Filters client-side (matching aqx_p_432's
-// established defense against MOENV not reliably honoring the `filters`
-// query param) so a wrong assumption about the upstream filter behavior
-// degrades to "returns everything" rather than silently missing matches.
+// description). Field names are all-lowercase
+// (content/publishtime/area/majorpollutant/forecastdate/aqi/minorpollutant/
+// minorpollutantaqi) — confirmed 2026-07-21 via a real dispatch of
+// fixtures-refresh.yml against the live API. An earlier version of this
+// entry guessed PascalCase field names from the dataset's human-readable
+// description page (Content/PublishTime/Area/...), which turned out to be
+// wrong: like aqx_p_432, MOENV's actual v2 REST API returns all-lowercase
+// field names regardless of how the description page displays them for
+// readability — see docs/ARCHITECTURE.md's note on MOENV field-casing
+// drift. Filters client-side (matching aqx_p_432's established defense
+// against MOENV not reliably honoring the `filters` query param) so a wrong
+// assumption about the upstream filter behavior degrades to "returns
+// everything" rather than silently missing matches.
 
 interface AqiForecastRecord {
-  Content: string | null;
-  PublishTime: string | null;
-  Area: string | null;
-  MajorPollutant: string | null;
-  ForecastDate: string | null;
-  AQI: string | null;
-  MinorPollutant: string | null;
-  MinorPollutantAQI: string | null;
+  content: string | null;
+  publishtime: string | null;
+  area: string | null;
+  majorpollutant: string | null;
+  forecastdate: string | null;
+  aqi: string | null;
+  minorpollutant: string | null;
+  minorpollutantaqi: string | null;
 }
 
 export const airQualityForecastInputShape = {
@@ -228,22 +233,22 @@ export const airQualityForecastEntry: DatasetEntry<AirQualityForecastParams, Aqi
   keywords: ["空氣品質預報", "空品預報", "AQI 預報", "明日空氣品質", "air quality forecast", "aqi forecast"],
   paramsSchema: airQualityForecastInputShape,
   buildQueryParams: params => ({
-    filters: params.area ? `Area,EQ,${params.area}` : undefined,
+    filters: params.area ? `area,EQ,${params.area}` : undefined,
     limit: "1000"
   }),
   transform: (raw, params) => {
-    const matched = params.area ? raw.filter(r => r.Area === params.area) : raw;
+    const matched = params.area ? raw.filter(r => r.area === params.area) : raw;
     return {
       query: params.area ? { area: params.area } : {},
       forecasts: matched.map(r => ({
-        area: r.Area,
-        forecastDate: r.ForecastDate,
-        aqi: r.AQI,
-        majorPollutant: r.MajorPollutant,
-        minorPollutant: r.MinorPollutant,
-        minorPollutantAqi: r.MinorPollutantAQI,
-        publishTime: r.PublishTime,
-        content: r.Content
+        area: r.area,
+        forecastDate: r.forecastdate,
+        aqi: r.aqi,
+        majorPollutant: r.majorpollutant,
+        minorPollutant: r.minorpollutant,
+        minorPollutantAqi: r.minorpollutantaqi,
+        publishTime: r.publishtime,
+        content: r.content
       }))
     };
   },
@@ -252,8 +257,8 @@ export const airQualityForecastEntry: DatasetEntry<AirQualityForecastParams, Aqi
   docUrl: "https://data.moenv.gov.tw/dataset/detail/aqf_p_01",
   notes:
     "透過通用層（tw_query_dataset）查詢，尚無專屬工具。與即時 aqx_p_432 是不同資料集——這是「預報」，" +
-    "不是即時觀測值。欄位名稱與大小寫依資料集說明頁確認，本 session 未直接呼叫官方 API 驗證，" +
-    "待 fixtures-refresh.yml 下次排程時以真實 API 回應確認。",
+    "不是即時觀測值。欄位名稱已於 2026-07-21 透過 fixtures-refresh.yml 真實 API 回應確認為全小寫" +
+    "（與 aqx_p_432 相同慣例），與資料集說明頁顯示的 PascalCase 不同。",
   // Deliberately no filter: `area`'s exact real member values aren't
   // confirmed, and MOENV's `filters` param isn't reliably honored anyway
   // (see airQualityEntry's own comment) — an unfiltered fetch reliably
@@ -267,24 +272,26 @@ registerEntry(airQualityForecastEntry as unknown as DatasetEntry<never, unknown,
 // --- UV_S_01: real-time UV index by station (generic-layer only) ---
 //
 // Confirmed to exist and still maintained (data.moenv.gov.tw/dataset/detail/
-// UV_S_01, "紫外線即時監測資料", hourly). Field names below
-// (SiteName/Uvi/Unit/County/WGS84_LON/WGS84_LAT/DataCreationDate) come from
-// the current data.moenv.gov.tw dataset page content — NOT from the older
-// epa.gov.tw mirror of the same dataset, which uses different field names
-// (UVI/WGS84Lat/WGS84Lon) and is exactly the kind of stale-domain field-
-// casing drift docs/ARCHITECTURE.md already flags as a known MOENV risk.
-// `Unit` field's exact meaning (measurement unit vs. a danger-level code)
-// isn't confirmed, so it's passed through as an opaque string rather than
-// interpreted.
+// UV_S_01, "紫外線即時監測資料", hourly). Field names are all-lowercase
+// (sitename/uvi/unit/county/wgs84_lon/wgs84_lat/datacreationdate) —
+// confirmed 2026-07-21 via a real dispatch of fixtures-refresh.yml against
+// the live API. An earlier version of this entry guessed PascalCase field
+// names (SiteName/Uvi/Unit/County/WGS84_LON/WGS84_LAT/DataCreationDate)
+// from the current data.moenv.gov.tw dataset page content, which turned out
+// to be wrong the same way aqf_p_01's did: the v2 REST API itself returns
+// all-lowercase regardless of what the description page displays — see
+// docs/ARCHITECTURE.md's note on MOENV field-casing drift. `unit` field's
+// exact meaning (measurement unit vs. a danger-level code) isn't confirmed,
+// so it's passed through as an opaque string rather than interpreted.
 
 interface UvRealtimeRecord {
-  SiteName: string | null;
-  Uvi: string | null;
-  Unit: string | null;
-  County: string | null;
-  WGS84_LON: string | null;
-  WGS84_LAT: string | null;
-  DataCreationDate: string | null;
+  sitename: string | null;
+  uvi: string | null;
+  unit: string | null;
+  county: string | null;
+  wgs84_lon: string | null;
+  wgs84_lat: string | null;
+  datacreationdate: string | null;
 }
 
 export const uvRealtimeInputShape = {
@@ -327,18 +334,18 @@ export const uvRealtimeEntry: DatasetEntry<UvRealtimeParams, UvRealtimeRecord[],
   keywords: ["紫外線", "紫外線指數", "UV", "UVI", "曬傷", "防曬", "uv index", "real-time uv", "紫外線測站"],
   paramsSchema: uvRealtimeInputShape,
   buildQueryParams: params => ({
-    filters: params.county ? `County,EQ,${params.county}` : undefined,
+    filters: params.county ? `county,EQ,${params.county}` : undefined,
     limit: "1000"
   }),
   transform: (raw, params) => {
-    const matched = params.county ? raw.filter(r => r.County === params.county) : raw;
+    const matched = params.county ? raw.filter(r => r.county === params.county) : raw;
     return {
       query: params.county ? { county: params.county } : {},
       stations: matched.map(r => ({
-        siteName: r.SiteName,
-        uvi: toNumberOrNullUv(r.Uvi),
-        county: r.County,
-        dataTime: r.DataCreationDate
+        siteName: r.sitename,
+        uvi: toNumberOrNullUv(r.uvi),
+        county: r.county,
+        dataTime: r.datacreationdate
       }))
     };
   },
@@ -347,8 +354,8 @@ export const uvRealtimeEntry: DatasetEntry<UvRealtimeParams, UvRealtimeRecord[],
   docUrl: "https://data.moenv.gov.tw/dataset/detail/UV_S_01",
   notes:
     "透過通用層（tw_query_dataset）查詢，尚無專屬工具。與 CWA 的每日紫外線指數（每日最大值）角度不同——" +
-    "這是環境部測站的即時觀測值，非每日最大值。本 session 未直接呼叫官方 API 驗證，" +
-    "待 fixtures-refresh.yml 下次排程時以真實 API 回應確認。",
+    "這是環境部測站的即時觀測值，非每日最大值。欄位名稱已於 2026-07-21 透過 fixtures-refresh.yml 真實 API" +
+    "回應確認為全小寫，與資料集說明頁顯示的 PascalCase 不同。",
   // Deliberately no filter — see airQualityForecastEntry.sampleParams for why.
   sampleParams: {},
   fixtureFileName: "uv-realtime.json"

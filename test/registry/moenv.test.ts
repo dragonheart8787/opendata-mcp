@@ -24,11 +24,10 @@ const rawFixture = JSON.parse(
 // so run the fixture through the same normalization the adapter applies.
 const fixture = rawFixture.map(normalizeMoenvRecord);
 
-// Field names below come from each dataset's own description page content,
-// not a fresh direct capture from this session — see the module-level
+// Field names (all-lowercase) were confirmed 2026-07-21 via a real dispatch
+// of fixtures-refresh.yml against the live API — see the module-level
 // comments on airQualityForecastEntry/uvRealtimeEntry (src/registry/moenv.ts)
-// for the full provenance note. Needs a real capture via
-// fixtures-refresh.yml to raise confidence.
+// for the full provenance note.
 const airQualityForecastFixture = JSON.parse(
   readFileSync(fileURLToPath(new URL("../fixtures/air-quality-forecast.json", import.meta.url)), "utf-8")
 ).map(normalizeMoenvRecord);
@@ -194,20 +193,20 @@ describe("airQualityForecastEntry", () => {
   });
 
   it("transform filters by area and maps fields to the compact shape", () => {
-    const raw = airQualityForecastFixture.find((r: any) => r.Area === "北部");
+    const raw = airQualityForecastFixture.find((r: any) => r.area === "北部");
     const result = airQualityForecastEntry.transform(airQualityForecastFixture, { area: "北部" });
 
     expect(result.query).toEqual({ area: "北部" });
     expect(result.forecasts).toHaveLength(1);
     expect(result.forecasts[0]).toEqual({
-      area: raw.Area,
-      forecastDate: raw.ForecastDate,
-      aqi: raw.AQI,
-      majorPollutant: raw.MajorPollutant,
-      minorPollutant: raw.MinorPollutant,
-      minorPollutantAqi: raw.MinorPollutantAQI,
-      publishTime: raw.PublishTime,
-      content: raw.Content
+      area: raw.area,
+      forecastDate: raw.forecastdate,
+      aqi: raw.aqi,
+      majorPollutant: raw.majorpollutant,
+      minorPollutant: raw.minorpollutant,
+      minorPollutantAqi: raw.minorpollutantaqi,
+      publishTime: raw.publishtime,
+      content: raw.content
     });
   });
 
@@ -229,16 +228,16 @@ describe("uvRealtimeEntry", () => {
   });
 
   it("transform filters by county and maps fields to the compact shape", () => {
-    const raw = uvRealtimeFixture.find((r: any) => r.County === "臺北市");
+    const raw = uvRealtimeFixture.find((r: any) => r.county === "臺北市");
     const result = uvRealtimeEntry.transform(uvRealtimeFixture, { county: "臺北市" });
 
     expect(result.query).toEqual({ county: "臺北市" });
     expect(result.stations).toHaveLength(1);
     expect(result.stations[0]).toEqual({
-      siteName: raw.SiteName,
-      uvi: Number(raw.Uvi),
-      county: raw.County,
-      dataTime: raw.DataCreationDate
+      siteName: raw.sitename,
+      uvi: Number(raw.uvi),
+      county: raw.county,
+      dataTime: raw.datacreationdate
     });
   });
 

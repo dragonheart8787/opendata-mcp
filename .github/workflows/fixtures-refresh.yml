@@ -36,6 +36,21 @@ jobs:
           MOENV_API_KEY: ${{ secrets.MOENV_API_KEY }}
         run: npm run refresh-fixtures
 
+      # Captures whatever refresh-fixtures.ts wrote to test/fixtures/ right
+      # away, independent of what happens next. Without this, a real
+      # response fetched here is lost for good if the test step below
+      # crashes (a failed step without `if: always()` skips every later
+      # step, including "Open a PR" — the only other place fixture content
+      # gets persisted) — which is exactly what happened the first time a
+      # newly-registered entry's field-name assumptions turned out wrong.
+      - name: Upload fetched fixtures as an artifact (always, even if later steps fail)
+        if: always() && steps.refresh.outputs.changed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fetched-fixtures
+          path: test/fixtures/*.json
+          retention-days: 14
+
       - name: Typecheck and run the test suite against any updated fixtures
         if: steps.refresh.outputs.changed == 'true'
         run: |
