@@ -62,6 +62,7 @@ describe("worker fetch routing", () => {
       expect.arrayContaining([
         "tw_weather_forecast",
         "tw_recent_earthquakes",
+        "tw_typhoon",
         "tw_air_quality",
         "tw_search_datasets",
         "tw_query_dataset"

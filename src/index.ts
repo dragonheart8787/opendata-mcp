@@ -6,6 +6,7 @@ import type { CacheStore } from "./infra/cache.js";
 import { airQualityInputShape, handleAirQualityTool } from "./tools/air-quality.js";
 import { handleRecentEarthquakesTool, recentEarthquakesInputShape } from "./tools/earthquake.js";
 import { handleQueryDatasetTool, handleSearchDatasetsTool, queryDatasetInputShape, searchDatasetsInputShape } from "./tools/generic.js";
+import { handleTyphoonTool, typhoonNewsInputShape } from "./tools/typhoon.js";
 import { handleWeatherForecastTool, weatherForecastInputShape } from "./tools/weather.js";
 
 export interface Env {
@@ -76,6 +77,34 @@ function createServer(env: Env): McpServer {
       }
     },
     ({ limit }) => handleRecentEarthquakesTool({ limit }, env)
+  );
+
+  server.registerTool(
+    "tw_typhoon",
+    {
+      title: "台灣颱風消息（轉載中央氣象署）",
+      description:
+        "查詢中央氣象署（CWA）「颱風消息」（資料集 W-C0034-005），" +
+        "轉載中央氣象署目前發布的西北太平洋與南海活動熱帶氣旋資訊，包含名稱、中央氣象署編號、" +
+        "最近一次分析位置（時間、經緯度、風速、陣風、氣壓），以及中央氣象署自己發布的未來路徑預測點" +
+        "（若有）。本工具僅逐字轉載官方已發布內容，不做任何路徑推算、強度判斷或登陸機率預測。\n\n" +
+        "參數：無。\n\n" +
+        "適用情境：使用者詢問「現在有沒有颱風」「颱風動態如何」「颱風路徑預測」「颱風叫什麼名字」。\n" +
+        "不適用：本工具不做颱風路徑分析、強度預測或登陸機率判斷，僅轉載官方公告；若使用者需要" +
+        "「哪些縣市目前有生效中的颱風警報」，請改用 tw_query_dataset 查詢 cwa:W-C0034-001（颱風警報，" +
+        "含各縣市警戒範圍與正式警報文字）。\n\n" +
+        "資料範圍限制：涵蓋整個西北太平洋與南海所有活動中的熱帶氣旋，包含尚未達颱風強度、" +
+        "尚未命名的「熱帶性低氣壓」，不代表這些系統一定會侵襲台灣；查無資料代表該區域目前沒有" +
+        "中央氣象署列管中的熱帶氣旋系統，不代表資料異常。",
+      inputSchema: typhoonNewsInputShape,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true
+      }
+    },
+    () => handleTyphoonTool(env)
   );
 
   server.registerTool(

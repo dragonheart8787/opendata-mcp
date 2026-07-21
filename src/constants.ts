@@ -17,8 +17,6 @@ export const O_A0005_001_DATASET_ID = "O-A0005-001";
 export const W_C0034_005_DATASET_ID = "W-C0034-005";
 /** Typhoon warning (颱風消息與警報-颱風警報) — generic-layer only, see registry/cwa.ts. */
 export const W_C0034_001_DATASET_ID = "W-C0034-001";
-/** Marine observation stations — buoy/tide stations (海象觀測測站資料-浮標站與潮位站測站資料) — generic-layer only, see registry/cwa.ts. Status unconfirmed as of registration; may not be reachable via the datastore endpoint (see the module comment). */
-export const O_B0076_001_DATASET_ID = "O-B0076-001";
 
 export const MOENV_API_BASE_URL = "https://data.moenv.gov.tw/api/v2";
 
@@ -66,8 +64,6 @@ export const UV_DAILY_MAX_CACHE_TTL_SECONDS = 30 * 60;
 export const TYPHOON_NEWS_CACHE_TTL_SECONDS = 10 * 60;
 /** W-C0034-001 is issued hourly once a typhoon warning is in effect — same urgency class as weather warnings. */
 export const TYPHOON_WARNING_CACHE_TTL_SECONDS = 10 * 60;
-/** O-B0076-001 cadence unverified — kept short pending confirmation this dataset is even reachable via the datastore endpoint. */
-export const MARINE_OBSERVATION_CACHE_TTL_SECONDS = 15 * 60;
 
 /**
  * Taiwan's 22 counties/cities as used by CWA's `locationName` parameter.

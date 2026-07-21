@@ -3,10 +3,8 @@ import {
   E_A0015_001_DATASET_ID,
   F_A0021_001_DATASET_ID,
   F_C0032_001_DATASET_ID,
-  MARINE_OBSERVATION_CACHE_TTL_SECONDS,
   O_A0001_001_DATASET_ID,
   O_A0005_001_DATASET_ID,
-  O_B0076_001_DATASET_ID,
   STATION_OBSERVATION_CACHE_TTL_SECONDS,
   TAIWAN_CITIES,
   TYPHOON_NEWS_CACHE_TTL_SECONDS,
@@ -600,35 +598,146 @@ export const uvDailyMaxEntry: DatasetEntry<UvDailyMaxParams, CwaUvDailyMaxRecord
   fixtureFileName: "uv-daily-max.json"
 };
 
-// --- W-C0034-005: typhoon news/bulletin (powers tw_typhoon — minimal skeleton, structure unverified) ---
+// --- W-C0034-005: typhoon news/bulletin (powers tw_typhoon) ---
 //
-// Confirmed to exist as a live catalog listing (search-engine snippets
-// referencing opendata.cwa.gov.tw/dataset/.../W-C0034-005 and the
-// data.gov.tw catalog entry "颱風消息與警報-颱風消息", updated every 6 hours
-// while a tropical cyclone is active in the northwest Pacific/South China
-// Sea). go-cwb doesn't implement any W-C0034 dataset, and no field-level
-// JSON structure could be found anywhere. This is the dataset selected to
-// power the tw_typhoon curated tool (name/active-status/track/issued-time,
-// per the task's spec) rather than W-C0034-001 (颱風警報, see below) because
-// its own description explicitly covers current status + forecast track
-// points, matching what the tool needs — W-C0034-001 covers the separate
-// "which areas are under a warning right now" bulletin. Registered as a
-// deliberately minimal skeleton: no query params, `transform` passes the
-// raw response through unparsed. fixtures-refresh.yml's next real dispatch
-// will capture the actual shape, at which point this entry — and the
-// tw_typhoon tool built on top of it — should be finished with real field
-// extraction instead of a raw dump.
+// Confirmed to exist and still maintained (data.gov.tw catalog entry
+// "颱風消息與警報-颱風消息", official description: "西北太平洋地區及南海目前
+// 所有活動中熱帶氣旋之資訊-熱帶性低氣壓及颱風過去、現在及未來預報之資訊",
+// updated every 6 hours while a tropical cyclone is active). Structure below
+// is confirmed 2026-07-21 via a real dispatch of fixtures-refresh.yml
+// against the live API: `records.TropicalCyclones.TropicalCyclone[]`, one
+// entry per active system in the NW Pacific/South China Sea (not just ones
+// threatening Taiwan — see tw_typhoon's tool description for this scope
+// caveat). Each entry has `AnalysisData.Fix[]` (past+current observed
+// positions) and `ForecastData.Fix[]` (CWA's own future track forecast
+// points, keyed by ForecastHour) — both transcribed as-is, never generated
+// or extrapolated by this server. Important: `TyphoonName`/`CwaTyphoonName`/
+// `CwaTyNo` are only present once CWA has upgraded and named the system —
+// a weaker system (tropical depression) only has `CwaTdNo`, which the real
+// capture confirms (see test/fixtures/typhoon-news.json). This is the
+// dataset selected to power tw_typhoon (rather than W-C0034-001 below)
+// because it's the one that actually carries name/position/track data;
+// W-C0034-001 is the separate "which areas are under a warning right now"
+// text bulletin.
 
 export const typhoonNewsInputShape = {};
 
 export type TyphoonNewsParams = Record<string, never>;
 
-export interface TyphoonNewsResult {
-  [key: string]: unknown;
-  raw: unknown;
+interface CwaTyphoonAnalysisFix {
+  DateTime?: string;
+  CoordinateLongitude?: string;
+  CoordinateLatitude?: string;
+  MaxWindSpeed?: string;
+  MaxGustSpeed?: string;
+  Pressure?: string;
+  MovingSpeed?: string;
+  MovingDirection?: string;
 }
 
-export const typhoonNewsEntry: DatasetEntry<TyphoonNewsParams, unknown, TyphoonNewsResult> = {
+interface CwaTyphoonForecastFix {
+  InitialTime?: string;
+  ForecastHour?: string;
+  CoordinateLongitude?: string;
+  CoordinateLatitude?: string;
+  MaxWindSpeed?: string;
+  MaxGustSpeed?: string;
+  Pressure?: string;
+  MovingSpeed?: string;
+  MovingDirection?: string;
+}
+
+interface CwaTropicalCyclone {
+  Year?: string;
+  TyphoonName?: string;
+  CwaTyphoonName?: string;
+  CwaTdNo?: string;
+  CwaTyNo?: string;
+  AnalysisData?: { Fix?: CwaTyphoonAnalysisFix[] };
+  ForecastData?: { Fix?: CwaTyphoonForecastFix[] };
+}
+
+interface CwaTyphoonNewsRecords {
+  dataid?: string;
+  note?: string;
+  TropicalCyclones?: { TropicalCyclone?: CwaTropicalCyclone[] };
+}
+
+function toNumberOrNullTyphoon(value: string | undefined): number | null {
+  if (value === undefined) return null;
+  const n = Number(value);
+  return Number.isNaN(n) ? null : n;
+}
+
+export interface TyphoonTrackPoint {
+  [key: string]: unknown;
+  time: string | null;
+  longitude: number | null;
+  latitude: number | null;
+  maxWindSpeedMs: number | null;
+  maxGustSpeedMs: number | null;
+  pressureHpa: number | null;
+}
+
+export interface TyphoonForecastPoint extends TyphoonTrackPoint {
+  forecastHour: number | null;
+}
+
+export interface TyphoonSummary {
+  [key: string]: unknown;
+  /** CWA's official Chinese name once assigned; null while still an unnamed tropical depression. */
+  name: string | null;
+  /** International (English) name once assigned; null while still an unnamed tropical depression. */
+  internationalName: string | null;
+  /** True once CWA has upgraded and named this system as a typhoon; false while it's still just a numbered tropical depression. */
+  isNamedTyphoon: boolean;
+  /** CWA's typhoon number (颱風編號) once named, else its tropical-depression number (熱帶性低氣壓編號). */
+  cwaNumber: string | null;
+  /** Most recent observed position — the last entry in AnalysisData.Fix, transcribed as-is. */
+  latestPosition: TyphoonTrackPoint | null;
+  /** CWA's own forecast track points, transcribed as-is — never generated or extrapolated by this server. */
+  forecastTrack: TyphoonForecastPoint[];
+}
+
+export interface TyphoonNewsResult {
+  [key: string]: unknown;
+  hasActiveSystem: boolean;
+  typhoons: TyphoonSummary[];
+}
+
+function summarizeAnalysisFix(fix: CwaTyphoonAnalysisFix): TyphoonTrackPoint {
+  return {
+    time: fix.DateTime ?? null,
+    longitude: toNumberOrNullTyphoon(fix.CoordinateLongitude),
+    latitude: toNumberOrNullTyphoon(fix.CoordinateLatitude),
+    maxWindSpeedMs: toNumberOrNullTyphoon(fix.MaxWindSpeed),
+    maxGustSpeedMs: toNumberOrNullTyphoon(fix.MaxGustSpeed),
+    pressureHpa: toNumberOrNullTyphoon(fix.Pressure)
+  };
+}
+
+function summarizeForecastFix(fix: CwaTyphoonForecastFix): TyphoonForecastPoint {
+  return {
+    ...summarizeAnalysisFix(fix),
+    time: fix.InitialTime ?? null,
+    forecastHour: toNumberOrNullTyphoon(fix.ForecastHour)
+  };
+}
+
+function summarizeTropicalCyclone(cyclone: CwaTropicalCyclone): TyphoonSummary {
+  const analysisFixes = cyclone.AnalysisData?.Fix ?? [];
+  const latestAnalysisFix = analysisFixes[analysisFixes.length - 1];
+  return {
+    name: cyclone.CwaTyphoonName ?? null,
+    internationalName: cyclone.TyphoonName ?? null,
+    isNamedTyphoon: Boolean(cyclone.CwaTyphoonName || cyclone.TyphoonName),
+    cwaNumber: cyclone.CwaTyNo ?? cyclone.CwaTdNo ?? null,
+    latestPosition: latestAnalysisFix ? summarizeAnalysisFix(latestAnalysisFix) : null,
+    forecastTrack: (cyclone.ForecastData?.Fix ?? []).map(summarizeForecastFix)
+  };
+}
+
+export const typhoonNewsEntry: DatasetEntry<TyphoonNewsParams, CwaTyphoonNewsRecords, TyphoonNewsResult> = {
   id: "cwa:W-C0034-005",
   source: "cwa",
   path: W_C0034_005_DATASET_ID,
@@ -636,37 +745,97 @@ export const typhoonNewsEntry: DatasetEntry<TyphoonNewsParams, unknown, TyphoonN
   keywords: ["颱風", "颱風消息", "颱風動態", "颱風路徑", "颱風警報", "typhoon", "typhoon news", "typhoon track"],
   paramsSchema: typhoonNewsInputShape,
   buildQueryParams: () => ({}),
-  transform: raw => ({ raw }),
+  transform: raw => {
+    const cyclones = raw.TropicalCyclones?.TropicalCyclone ?? [];
+    return {
+      hasActiveSystem: cyclones.length > 0,
+      typhoons: cyclones.map(summarizeTropicalCyclone)
+    };
+  },
   cacheTtlSeconds: TYPHOON_NEWS_CACHE_TTL_SECONDS,
-  updateFrequency: "有颱風活動時每 6 小時更新一次，無颱風活動時不定期（確切頻率未經驗證）",
+  updateFrequency: "有熱帶氣旋活動時每 6 小時更新一次，無活動時不定期",
   docUrl: "https://opendata.cwa.gov.tw/dataset/all/W-C0034-005",
   notes:
-    "結構完全未驗證——transform 目前原樣透傳整個 records 內容（{ raw: ... }），待 fixtures-refresh.yml" +
-    "首次真實抓取後，再依實際回應設計正式的欄位擷取邏輯與 tw_typhoon 工具本體。",
+    "欄位結構已於 2026-07-21 透過 fixtures-refresh.yml 真實 API 回應確認" +
+    "（records.TropicalCyclones.TropicalCyclone[].{AnalysisData,ForecastData}）。轉載中央氣象署" +
+    "已發布之分析與預測路徑點，本伺服器不自行計算或推測路徑。涵蓋整個西北太平洋與南海的熱帶氣旋" +
+    "（含尚未達颱風強度、未命名的熱帶性低氣壓），不代表一定會侵襲台灣。",
   sampleParams: {},
   fixtureFileName: "typhoon-news.json"
 };
 
-// --- W-C0034-001: typhoon warning (generic-layer only — minimal skeleton, structure unverified) ---
+// --- W-C0034-001: typhoon warning (generic-layer only) ---
 //
-// Confirmed to exist as a live catalog listing (search-engine snippet with
-// exact page title "颱風消息與警報-颱風警報" at opendata.cwa.gov.tw/dataset/
-// warning/W-C0034-001). Distinct from W-C0034-005 above (see that entry's
-// comment for why the curated tool consumes 005, not this one) — this is
-// the "which areas are currently under a typhoon warning" bulletin. No
-// field-level JSON structure could be found anywhere. Registered as a
-// deliberately minimal skeleton, same rationale as W-C0034-005.
+// Confirmed to exist and still maintained (data.gov.tw catalog entry
+// "颱風消息與警報-颱風警報"). Distinct from W-C0034-005 above (see that
+// entry's comment for why the curated tool consumes 005, not this one) —
+// this is CWA's official CAP-format (Common Alerting Protocol) "which areas
+// are currently under a typhoon warning" bulletin. Structure confirmed
+// 2026-07-21 via a real dispatch of fixtures-refresh.yml:
+// `records.info[]`, each a full CAP alert object (headline/urgency/
+// severity/certainty/effective/onset/expires/area[]/description). The real
+// captured sample (test/fixtures/typhoon-warning.json) happened to be a
+// "warning lifted" (解除颱風警報) bulletin, not an active warning — headline
+// text alone signals that, so transform surfaces it verbatim rather than
+// trying to infer an "isActive" boolean from urgency/severity/certainty
+// (CAP's own vocabulary for those fields doesn't map cleanly to a simple
+// active/inactive flag, and guessing that mapping risks exactly the kind of
+// invented interpretation this server must not do for typhoon warnings).
+// `description` is passed through mostly as-is — its internal `section`
+// list is genuinely freeform bulletin text set per-alert by CWA, not a
+// fixed schema safe to deep-parse.
 
 export const typhoonWarningInputShape = {};
 
 export type TyphoonWarningParams = Record<string, never>;
 
-export interface TyphoonWarningResult {
-  [key: string]: unknown;
-  raw: unknown;
+interface CwaCapArea {
+  areaDesc?: string;
 }
 
-export const typhoonWarningEntry: DatasetEntry<TyphoonWarningParams, unknown, TyphoonWarningResult> = {
+interface CwaCapAlert {
+  language?: string;
+  event?: string;
+  urgency?: string;
+  severity?: string;
+  certainty?: string;
+  effective?: string;
+  onset?: string;
+  expires?: string;
+  senderName?: string;
+  headline?: string;
+  description?: unknown;
+  web?: string;
+  area?: CwaCapArea[];
+}
+
+interface CwaTyphoonWarningRecords {
+  info?: CwaCapAlert[];
+}
+
+export interface TyphoonWarningSummary {
+  [key: string]: unknown;
+  headline: string | null;
+  event: string | null;
+  urgency: string | null;
+  severity: string | null;
+  certainty: string | null;
+  effective: string | null;
+  onset: string | null;
+  expires: string | null;
+  senderName: string | null;
+  areas: string[];
+  webUrl: string | null;
+  /** Freeform bulletin text/sections, passed through as-is — see the module-level comment on why this isn't deep-parsed. */
+  description: unknown;
+}
+
+export interface TyphoonWarningResult {
+  [key: string]: unknown;
+  bulletins: TyphoonWarningSummary[];
+}
+
+export const typhoonWarningEntry: DatasetEntry<TyphoonWarningParams, CwaTyphoonWarningRecords, TyphoonWarningResult> = {
   id: "cwa:W-C0034-001",
   source: "cwa",
   path: W_C0034_001_DATASET_ID,
@@ -674,69 +843,52 @@ export const typhoonWarningEntry: DatasetEntry<TyphoonWarningParams, unknown, Ty
   keywords: ["颱風警報", "海上颱風警報", "陸上颱風警報", "颱風特報", "typhoon warning"],
   paramsSchema: typhoonWarningInputShape,
   buildQueryParams: () => ({}),
-  transform: raw => ({ raw }),
+  transform: raw => ({
+    bulletins: (raw.info ?? []).map(alert => ({
+      headline: alert.headline ?? null,
+      event: alert.event ?? null,
+      urgency: alert.urgency ?? null,
+      severity: alert.severity ?? null,
+      certainty: alert.certainty ?? null,
+      effective: alert.effective ?? null,
+      onset: alert.onset ?? null,
+      expires: alert.expires ?? null,
+      senderName: alert.senderName ?? null,
+      areas: (alert.area ?? []).map(a => a.areaDesc ?? "").filter(Boolean),
+      webUrl: alert.web ?? null,
+      description: alert.description ?? null
+    }))
+  }),
   cacheTtlSeconds: TYPHOON_WARNING_CACHE_TTL_SECONDS,
-  updateFrequency: "颱風警報生效期間每小時更新一次，無警報時不定期（確切頻率未經驗證）",
+  updateFrequency: "颱風警報生效期間每小時更新一次，無警報時不定期",
   docUrl: "https://opendata.cwa.gov.tw/dataset/warning/W-C0034-001",
   notes:
-    "透過通用層（tw_query_dataset）查詢，尚無專屬工具。結構完全未驗證——" +
-    "transform 目前原樣透傳整個 records 內容（{ raw: ... }），待 fixtures-refresh.yml 首次真實抓取" +
-    "後，再依實際回應設計正式的欄位擷取邏輯。",
+    "透過通用層（tw_query_dataset）查詢，尚無專屬工具。欄位結構已於 2026-07-21 透過" +
+    "fixtures-refresh.yml 真實 API 回應確認（CAP 格式，records.info[]）。headline 是否代表" +
+    "「警報生效中」或「警報已解除」需自行判讀文字內容（例如「解除颱風警報」），本 transform 不做" +
+    "額外的 isActive 推斷。",
   sampleParams: {},
   fixtureFileName: "typhoon-warning.json"
 };
 
-// --- O-B0076-001: marine observation stations (buoy/tide) — generic-layer only, status unconfirmed ---
+// --- O-B0076-001: marine observation stations (buoy/tide) — NOT registered ---
 //
 // Confirmed to exist as a catalog listing, title "海象觀測測站資料-浮標站與
-// 潮位站測站資料" (real-time buoy/tide-station marine observations: tide
-// level, sea temperature, wave, wind, pressure, current). Retried after
-// F-A0012-001 (海面天氣預報) was dropped from this registry for being
-// served only via CWA's older /fileapi/ endpoint, incompatible with this
-// codebase's uniform /api/v1/rest/datastore/ fetch path. This dataset's own
-// category metadata is inconsistent across search results (seen tagged
-// both "forecast" and "all"), and CWA appears to run a substantial part of
-// its marine/ocean data through a *separate* platform
-// (ocean.cwa.gov.tw/ocenapi.cwa.gov.tw, its own auth and dataset-code
-// scheme, e.g. "API-Tide6haH" — nothing like the opendata.cwa.gov.tw
-// datastore convention) rather than the datastore API — a real risk this
-// entry has the same architectural incompatibility F-A0012-001 did. Not
-// resolvable by search alone (same conclusion as F-A0012-001's investigation
-// required a real dispatch to confirm), so registered as a minimal skeleton
-// and left to fixtures-refresh.yml's real dispatch to prove reachable via
-// the datastore endpoint or not. If it 404s the same way, this entry should
-// be removed the same way F-A0012-001 was.
-
-export const marineObservationInputShape = {};
-
-export type MarineObservationParams = Record<string, never>;
-
-export interface MarineObservationResult {
-  [key: string]: unknown;
-  raw: unknown;
-}
-
-export const marineObservationEntry: DatasetEntry<MarineObservationParams, unknown, MarineObservationResult> = {
-  id: "cwa:O-B0076-001",
-  source: "cwa",
-  path: O_B0076_001_DATASET_ID,
-  title: "海象觀測測站資料（浮標站與潮位站）",
-  keywords: ["海象", "海象觀測", "波浪", "浮標", "潮位站", "海溫", "海流", "marine observation", "buoy", "wave"],
-  paramsSchema: marineObservationInputShape,
-  buildQueryParams: () => ({}),
-  transform: raw => ({ raw }),
-  cacheTtlSeconds: MARINE_OBSERVATION_CACHE_TTL_SECONDS,
-  updateFrequency: "確切頻率未經驗證",
-  docUrl: "https://opendata.cwa.gov.tw/dataset/all/O-B0076-001",
-  notes:
-    "透過通用層（tw_query_dataset）查詢，尚無專屬工具。結構完全未驗證，甚至能否透過本專案統一使用的" +
-    "datastore 端點（/api/v1/rest/datastore/）取得都未確認——CWA 部分海象資料改由獨立的" +
-    "ocean.cwa.gov.tw／oceanapi.cwa.gov.tw 平台提供，認證與資料集代碼慣例完全不同，可能與" +
-    "F-A0012-001（海面天氣預報）同樣的架構不相容。待 fixtures-refresh.yml 首次真實抓取確認可行性，" +
-    "若同樣 404，比照 F-A0012-001 直接移除此 entry。",
-  sampleParams: {},
-  fixtureFileName: "marine-observation.json"
-};
+// 潮位站測站資料" (real-time buoy/tide-station marine observations), and was
+// first registered as a minimal pass-through skeleton to retry after
+// F-A0012-001 (海面天氣預報) was dropped for a similar reason. A real
+// dispatch of fixtures-refresh.yml (2026-07-21) fetched it via this
+// codebase's uniform CWA datastore endpoint (buildCwaUrl → GET
+// /api/v1/rest/datastore/O-B0076-001) and got back a real HTTP 404
+// ("Resource not found"), not a sandbox network block — confirming the
+// suspicion noted when this entry was first registered: CWA appears to run
+// much of its marine/ocean data through a separate ocean.cwa.gov.tw/
+// oceanapi.cwa.gov.tw platform with its own auth and dataset-code scheme,
+// not the datastore API every other entry in this file uses. Same
+// architectural incompatibility as F-A0012-001, same resolution: dropped
+// rather than kept as a permanently-broken skeleton (constant, cache TTL,
+// entry, tests, and fixture all removed). See the PR that added this
+// comment for the full investigation.
 
 registerEntry(weatherForecastEntry as unknown as DatasetEntry<never, unknown, unknown>);
 registerEntry(recentEarthquakesEntry as unknown as DatasetEntry<never, unknown, unknown>);
@@ -746,4 +898,3 @@ registerEntry(weatherWarningEntry as unknown as DatasetEntry<never, unknown, unk
 registerEntry(uvDailyMaxEntry as unknown as DatasetEntry<never, unknown, unknown>);
 registerEntry(typhoonNewsEntry as unknown as DatasetEntry<never, unknown, unknown>);
 registerEntry(typhoonWarningEntry as unknown as DatasetEntry<never, unknown, unknown>);
-registerEntry(marineObservationEntry as unknown as DatasetEntry<never, unknown, unknown>);
