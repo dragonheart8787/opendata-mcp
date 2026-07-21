@@ -98,7 +98,18 @@ This server has no write tools and never will (see architecture doc §0 non-goal
 - Real captured response samples, ideally byte-verbatim from production (Cloudflare Logs or a direct authenticated call), not hand-written guesses. If you only have a partial/truncated capture, use it for the fields you have and clearly comment which fields are still reconstructed placeholders (see `test/tools/air-quality.test.ts`'s fixture comment for the pattern).
 - A fixture that turns out to be wrong (wrong shape, wrong field casing) is exactly the failure mode ADR-001 exists to make cheaper to fix — when you find one, fix the fixture, the adapter/transform, and note it in the PR, don't just patch around it.
 
-## 6. What a PR must say
+## 6. Known upstream behavior patterns
+
+**CWA 與 MOENV 的政府開放資料 API，其查詢篩選參數（如 `filters`、`county`、`locationName` 等）不可信任一定生效。** 已在以下三筆資料集上獨立驗證過上游忽略篩選、回傳完整未過濾清單的情況：
+- `moenv:aqx_p_432`（空氣品質，`county`/`siteName` 篩選）
+- `cwa:F-A0021-001`（潮汐預報，`locationName` 篩選）
+- `cwa:O-A0001-001`（氣象觀測，`locationName` 篩選）
+
+**規則**：任何新增資料集的 adapter/transform，只要該資料集支援依地點/測站等條件查詢，一律不得只依賴上游篩選，必須在拿到回應後於 `transform` 或 adapter 層做 client-side 重新過濾，即使上游文件宣稱該參數有效。
+
+**測試規範**：針對有 client-side 過濾邏輯的資料集，測試裡應包含一個「上游回傳未過濾完整清單」的情境，斷言 transform 依然正確篩出目標子集——這樣以後如果有人不小心把過濾邏輯優化掉，測試會抓到（見 §4 的測試要求）。
+
+## 7. What a PR must say
 
 1. **Files touched**, grouped by layer (infra / adapters / registry / tools / docs).
 2. **New registry entries added**, if any (id, dataset, source).
