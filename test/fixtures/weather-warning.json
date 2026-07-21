@@ -1,0 +1,48 @@
+{
+  "success": "true",
+  "result": {
+    "resource_id": "W-C0033-001",
+    "fields": [
+      { "id": "locationName", "type": "String" },
+      { "id": "geocode", "type": "Double" },
+      { "id": "language", "type": "String" },
+      { "id": "phenomena", "type": "String" },
+      { "id": "significance", "type": "String" },
+      { "id": "startTime", "type": "Timestamp" },
+      { "id": "endTime", "type": "Timestamp" }
+    ]
+  },
+  "records": {
+    "location": [
+      {
+        "locationName": "臺北市",
+        "geocode": 63,
+        "hazardConditions": {
+          "hazards": [
+            {
+              "info": { "language": "zh-TW", "phenomena": "豪雨", "significance": "特報" },
+              "validTime": { "startTime": "2026-07-21 16:32:00", "endTime": "2026-07-21 23:00:00" }
+            }
+          ]
+        }
+      },
+      {
+        "locationName": "新竹市",
+        "geocode": 10018,
+        "hazardConditions": { "hazards": [] }
+      },
+      {
+        "locationName": "花蓮縣",
+        "geocode": 10015,
+        "hazardConditions": {
+          "hazards": [
+            {
+              "info": { "language": "zh-TW", "phenomena": "豪雨", "significance": "特報" },
+              "validTime": { "startTime": "2026-07-21 16:32:00", "endTime": "2026-07-21 23:00:00" }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "success": "true",
+  "result": {
+    "resource_id": "O-A0005-001",
+    "fields": [
+      { "id": "elementName", "type": "String" },
+      { "id": "Date", "type": "Date" },
+      { "id": "StationID", "type": "String" },
+      { "id": "UVIndex", "type": "Float" }
+    ]
+  },
+  "records": {
+    "weatherElement": {
+      "elementName": "氣象站每日紫外線指數最大值",
+      "location": [
+        { "StationID": "467420", "UVIndex": 8 },
+        { "StationID": "467280", "UVIndex": 13 },
+        { "StationID": "467290", "UVIndex": 11 },
+        { "StationID": "467350", "UVIndex": 13 },
+        { "StationID": "467270", "UVIndex": 12 },
+        { "StationID": "467110", "UVIndex": 11 },
+        { "StationID": "467300", "UVIndex": 12 },
+        { "StationID": "466940", "UVIndex": 12 },
+        { "StationID": "466950", "UVIndex": 13 },
+        { "StationID": "466920", "UVIndex": 8 }
+      ],
+      "Date": "2026-07-21"
+    }
+  }
+}

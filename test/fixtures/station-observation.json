@@ -1,0 +1,288 @@
+{
+  "success": "true",
+  "result": {
+    "resource_id": "O-A0001-001",
+    "fields": [
+      {
+        "id": "StationName",
+        "type": "String"
+      },
+      {
+        "id": "StationId",
+        "type": "String"
+      },
+      {
+        "id": "CoordinateName",
+        "type": "String"
+      },
+      {
+        "id": "CoordinateFormat",
+        "type": "String"
+      },
+      {
+        "id": "StationLatitude",
+        "type": "String"
+      },
+      {
+        "id": "StationLongitude",
+        "type": "String"
+      },
+      {
+        "id": "StationAltitude",
+        "type": "String"
+      },
+      {
+        "id": "CountyName",
+        "type": "String"
+      },
+      {
+        "id": "TownName",
+        "type": "String"
+      },
+      {
+        "id": "CountyCode",
+        "type": "String"
+      },
+      {
+        "id": "TownCode",
+        "type": "String"
+      },
+      {
+        "id": "Weather",
+        "type": "String"
+      },
+      {
+        "id": "Precipitation",
+        "type": "String"
+      },
+      {
+        "id": "WindDirection",
+        "type": "String"
+      },
+      {
+        "id": "WindSpeed",
+        "type": "String"
+      },
+      {
+        "id": "AirTemperature",
+        "type": "String"
+      },
+      {
+        "id": "RelativeHumidity",
+        "type": "String"
+      },
+      {
+        "id": "AirPressure",
+        "type": "String"
+      },
+      {
+        "id": "UVIndex",
+        "type": "String"
+      },
+      {
+        "id": "PeakGustSpeed",
+        "type": "String"
+      },
+      {
+        "id": "DateTime",
+        "type": "DateTime"
+      }
+    ]
+  },
+  "records": {
+    "Station": [
+      {
+        "StationName": "花蓮",
+        "StationId": "466990",
+        "ObsTime": {
+          "DateTime": "2026-07-21T19:00:00+08:00"
+        },
+        "GeoInfo": {
+          "Coordinates": [
+            {
+              "CoordinateName": "TWD67",
+              "CoordinateFormat": "decimal degrees",
+              "StationLatitude": "23.976933",
+              "StationLongitude": "121.605126"
+            },
+            {
+              "CoordinateName": "WGS84",
+              "CoordinateFormat": "decimal degrees",
+              "StationLatitude": "23.975128",
+              "StationLongitude": "121.613275"
+            }
+          ],
+          "StationAltitude": "16.1",
+          "CountyName": "花蓮縣",
+          "TownName": "花蓮市",
+          "CountyCode": "10015",
+          "TownCode": "10015010"
+        },
+        "WeatherElement": {
+          "Weather": "陰",
+          "Now": {
+            "Precipitation": "0.0"
+          },
+          "WindDirection": "180.0",
+          "WindSpeed": "1.3",
+          "AirTemperature": "29.5",
+          "RelativeHumidity": "80",
+          "AirPressure": "1008.0",
+          "GustInfo": {
+            "PeakGustSpeed": "-99",
+            "Occurred_at": {
+              "WindDirection": "-99",
+              "DateTime": "-99"
+            }
+          },
+          "DailyExtreme": {
+            "DailyHigh": {
+              "TemperatureInfo": {
+                "AirTemperature": "34.0",
+                "Occurred_at": {
+                  "DateTime": "2026-07-21T11:24:00+08:00"
+                }
+              }
+            },
+            "DailyLow": {
+              "TemperatureInfo": {
+                "AirTemperature": "26.8",
+                "Occurred_at": {
+                  "DateTime": "2026-07-21T05:02:00+08:00"
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "StationName": "臺北",
+        "StationId": "466920",
+        "ObsTime": {
+          "DateTime": "2026-07-21T19:00:00+08:00"
+        },
+        "GeoInfo": {
+          "Coordinates": [
+            {
+              "CoordinateName": "TWD67",
+              "CoordinateFormat": "decimal degrees",
+              "StationLatitude": "25.039439",
+              "StationLongitude": "121.506628"
+            },
+            {
+              "CoordinateName": "WGS84",
+              "CoordinateFormat": "decimal degrees",
+              "StationLatitude": "25.037658",
+              "StationLongitude": "121.514853"
+            }
+          ],
+          "StationAltitude": "6.3",
+          "CountyName": "臺北市",
+          "TownName": "中正區",
+          "CountyCode": "63000",
+          "TownCode": "63000050"
+        },
+        "WeatherElement": {
+          "Weather": "陰",
+          "Now": {
+            "Precipitation": "8.5"
+          },
+          "WindDirection": "190.0",
+          "WindSpeed": "0.4",
+          "AirTemperature": "26.7",
+          "RelativeHumidity": "91",
+          "AirPressure": "1006.2",
+          "GustInfo": {
+            "PeakGustSpeed": "-99",
+            "Occurred_at": {
+              "WindDirection": "-99",
+              "DateTime": "-99"
+            }
+          },
+          "DailyExtreme": {
+            "DailyHigh": {
+              "TemperatureInfo": {
+                "AirTemperature": "35.9",
+                "Occurred_at": {
+                  "DateTime": "2026-07-21T13:24:00+08:00"
+                }
+              }
+            },
+            "DailyLow": {
+              "TemperatureInfo": {
+                "AirTemperature": "26.1",
+                "Occurred_at": {
+                  "DateTime": "2026-07-21T03:57:00+08:00"
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "StationName": "合歡山",
+        "StationId": "A0Z080",
+        "ObsTime": {
+          "DateTime": "2026-07-21T19:00:00+08:00"
+        },
+        "GeoInfo": {
+          "Coordinates": [
+            {
+              "CoordinateName": "TWD67",
+              "CoordinateFormat": "decimal degrees",
+              "StationLatitude": "24.144972",
+              "StationLongitude": "121.276071"
+            },
+            {
+              "CoordinateName": "WGS84",
+              "CoordinateFormat": "decimal degrees",
+              "StationLatitude": "24.143186",
+              "StationLongitude": "121.284231"
+            }
+          ],
+          "StationAltitude": "3171.0",
+          "CountyName": "花蓮縣",
+          "TownName": "秀林鄉",
+          "CountyCode": "10015",
+          "TownCode": "10015110"
+        },
+        "WeatherElement": {
+          "Weather": "陰",
+          "Now": {
+            "Precipitation": "12.5"
+          },
+          "WindDirection": "250.0",
+          "WindSpeed": "6.5",
+          "AirTemperature": "9.5",
+          "RelativeHumidity": "90",
+          "AirPressure": "702.0",
+          "GustInfo": {
+            "PeakGustSpeed": "11.9",
+            "Occurred_at": {
+              "WindDirection": "240.0",
+              "DateTime": "2026-07-21T18:56:00+08:00"
+            }
+          },
+          "DailyExtreme": {
+            "DailyHigh": {
+              "TemperatureInfo": {
+                "AirTemperature": "19.2",
+                "Occurred_at": {
+                  "DateTime": "2026-07-21T11:01:00+08:00"
+                }
+              }
+            },
+            "DailyLow": {
+              "TemperatureInfo": {
+                "AirTemperature": "8.6",
+                "Occurred_at": {
+                  "DateTime": "2026-07-21T05:15:00+08:00"
+                }
+              }
+            }
+          }
+        }
+      }
+    ]
+  }
+}

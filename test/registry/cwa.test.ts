@@ -1,7 +1,14 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { recentEarthquakesEntry, tideForecastEntry, weatherForecastEntry } from "../../src/registry/cwa.js";
+import {
+  recentEarthquakesEntry,
+  stationObservationEntry,
+  tideForecastEntry,
+  uvDailyMaxEntry,
+  weatherForecastEntry,
+  weatherWarningEntry
+} from "../../src/registry/cwa.js";
 import { getDatasetEntry } from "../../src/registry/index.js";
 import { ToolError } from "../../src/infra/errors.js";
 
@@ -23,6 +30,24 @@ const earthquakeFixture = JSON.parse(
 // src/registry/cwa.ts, for the full provenance note).
 const tideFixture = JSON.parse(
   readFileSync(fileURLToPath(new URL("../fixtures/tide-forecast.json", import.meta.url)), "utf-8")
+);
+// Confirmed 2026-07-21 via a real dispatch of fixtures-refresh.yml against
+// the live API (trimmed to 3 of the ~874 returned stations to keep the
+// fixture small — see the module-level comment on stationObservationEntry,
+// src/registry/cwa.ts, for the full provenance note, including why an
+// earlier go-cwb-sourced version of this entry turned out stale).
+const stationObservationFixture = JSON.parse(
+  readFileSync(fileURLToPath(new URL("../fixtures/station-observation.json", import.meta.url)), "utf-8")
+);
+// Confirmed 2026-07-21 via a real dispatch of fixtures-refresh.yml against
+// the live API (weather-warning.json trimmed to 3 of the 22 returned
+// counties; uv-daily-max.json trimmed to 10 of the ~30 returned stations —
+// see each entry's module-level comment in src/registry/cwa.ts).
+const weatherWarningFixture = JSON.parse(
+  readFileSync(fileURLToPath(new URL("../fixtures/weather-warning.json", import.meta.url)), "utf-8")
+);
+const uvDailyMaxFixture = JSON.parse(
+  readFileSync(fileURLToPath(new URL("../fixtures/uv-daily-max.json", import.meta.url)), "utf-8")
 );
 
 // CWA's IssueTime / ValidTime.EndTime format, confirmed against real captured
@@ -201,5 +226,114 @@ describe("tideForecastEntry", () => {
       expect((error as ToolError).code).toBe("NOT_FOUND");
       expect((error as ToolError).message).toContain("不存在的地點");
     }
+  });
+});
+
+describe("stationObservationEntry", () => {
+  it("is registered under cwa:O-A0001-001 and matches the imported entry", () => {
+    expect(getDatasetEntry("cwa:O-A0001-001")).toBe(stationObservationEntry);
+  });
+
+  it("buildQueryParams passes locationName through verbatim", () => {
+    expect(stationObservationEntry.buildQueryParams({ locationName: "合歡山" })).toEqual({
+      locationName: "合歡山"
+    });
+  });
+
+  it("transform finds the requested station and passes weatherElement through", () => {
+    const rawStation = stationObservationFixture.records.Station[0];
+    const result = stationObservationEntry.transform(stationObservationFixture.records, {
+      locationName: rawStation.StationName
+    });
+
+    expect(result.locationName).toBe(rawStation.StationName);
+    expect(result.stationId).toBe(rawStation.StationId);
+    expect(result.obsTime).toBe(rawStation.ObsTime.DateTime);
+    expect(result.county).toBe(rawStation.GeoInfo.CountyName);
+    expect(result.town).toBe(rawStation.GeoInfo.TownName);
+    expect(result.weatherElement).toEqual(rawStation.WeatherElement);
+  });
+
+  it("transform re-filters client-side even though the fixture (like real CWA traffic) returns every station regardless of the requested locationName", () => {
+    expect(stationObservationFixture.records.Station.length).toBeGreaterThan(1);
+    const rawStation = stationObservationFixture.records.Station[1];
+    const result = stationObservationEntry.transform(stationObservationFixture.records, {
+      locationName: rawStation.StationName
+    });
+
+    expect(result.locationName).toBe(rawStation.StationName);
+  });
+
+  it("transform throws NOT_FOUND for a locationName not present in the response", () => {
+    try {
+      stationObservationEntry.transform(stationObservationFixture.records, { locationName: "不存在的測站" });
+      expect.unreachable();
+    } catch (error) {
+      expect(error).toBeInstanceOf(ToolError);
+      expect((error as ToolError).code).toBe("NOT_FOUND");
+      expect((error as ToolError).message).toContain("不存在的測站");
+    }
+  });
+});
+
+describe("weatherWarningEntry", () => {
+  it("is registered under cwa:W-C0033-001 and matches the imported entry", () => {
+    expect(getDatasetEntry("cwa:W-C0033-001")).toBe(weatherWarningEntry);
+  });
+
+  it("buildQueryParams sends no query params (real dispatch confirmed an unfiltered fetch returns every county)", () => {
+    expect(weatherWarningEntry.buildQueryParams({})).toEqual({});
+  });
+
+  it("transform returns every county when no county filter is given", () => {
+    const result = weatherWarningEntry.transform(weatherWarningFixture.records, {});
+    expect(result.counties).toHaveLength(weatherWarningFixture.records.location.length);
+  });
+
+  it("transform filters by county and maps hazards to the compact shape", () => {
+    const raw = weatherWarningFixture.records.location.find((l: any) => l.hazardConditions.hazards.length > 0);
+    const result = weatherWarningEntry.transform(weatherWarningFixture.records, { county: raw.locationName });
+
+    expect(result.query).toEqual({ county: raw.locationName });
+    expect(result.counties).toHaveLength(1);
+    expect(result.counties[0]).toEqual({
+      county: raw.locationName,
+      hazards: raw.hazardConditions.hazards.map((h: any) => ({
+        phenomena: h.info.phenomena,
+        significance: h.info.significance,
+        startTime: h.validTime.startTime,
+        endTime: h.validTime.endTime
+      }))
+    });
+  });
+
+  it("transform returns an empty hazards array (not an error) for a county with no active warning", () => {
+    const raw = weatherWarningFixture.records.location.find((l: any) => l.hazardConditions.hazards.length === 0);
+    const result = weatherWarningEntry.transform(weatherWarningFixture.records, { county: raw.locationName });
+    expect(result.counties[0].hazards).toEqual([]);
+  });
+});
+
+describe("uvDailyMaxEntry", () => {
+  it("is registered under cwa:O-A0005-001 and matches the imported entry", () => {
+    expect(getDatasetEntry("cwa:O-A0005-001")).toBe(uvDailyMaxEntry);
+  });
+
+  it("buildQueryParams sends no query params (real dispatch confirmed an unfiltered fetch returns every station)", () => {
+    expect(uvDailyMaxEntry.buildQueryParams({})).toEqual({});
+  });
+
+  it("transform returns every station and the response date when no stationId filter is given", () => {
+    const result = uvDailyMaxEntry.transform(uvDailyMaxFixture.records, {});
+    expect(result.date).toBe(uvDailyMaxFixture.records.weatherElement.Date);
+    expect(result.stations).toHaveLength(uvDailyMaxFixture.records.weatherElement.location.length);
+  });
+
+  it("transform filters by stationId and maps fields to the compact shape", () => {
+    const raw = uvDailyMaxFixture.records.weatherElement.location[0];
+    const result = uvDailyMaxEntry.transform(uvDailyMaxFixture.records, { stationId: raw.StationID });
+
+    expect(result.query).toEqual({ stationId: raw.StationID });
+    expect(result.stations).toEqual([{ stationId: raw.StationID, uvIndex: raw.UVIndex }]);
   });
 });

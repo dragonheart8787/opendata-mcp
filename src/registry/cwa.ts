@@ -3,10 +3,16 @@ import {
   E_A0015_001_DATASET_ID,
   F_A0021_001_DATASET_ID,
   F_C0032_001_DATASET_ID,
+  O_A0001_001_DATASET_ID,
+  O_A0005_001_DATASET_ID,
+  STATION_OBSERVATION_CACHE_TTL_SECONDS,
   TAIWAN_CITIES,
+  UV_DAILY_MAX_CACHE_TTL_SECONDS,
   WEATHER_CACHE_TTL_SECONDS,
   EARTHQUAKE_CACHE_TTL_SECONDS,
-  TIDE_FORECAST_CACHE_TTL_SECONDS
+  TIDE_FORECAST_CACHE_TTL_SECONDS,
+  W_C0033_001_DATASET_ID,
+  WEATHER_WARNING_CACHE_TTL_SECONDS
 } from "../constants.js";
 import { ToolError } from "../infra/errors.js";
 import type { CwaEarthquake, CwaEarthquakeRecords, CwaForecastLocation, CwaForecastRecords } from "../types.js";
@@ -288,6 +294,309 @@ export const tideForecastEntry: DatasetEntry<TideForecastParams, CwaTideRecords,
   fixtureFileName: "tide-forecast.json"
 };
 
+// --- O-A0001-001: automated weather station observations (generic-layer only) ---
+//
+// Confirmed to exist and still maintained (opendata.cwa.gov.tw/dataset/
+// observation/O-A0001-001, "自動氣象站-氣象觀測資料"／"全測站逐時氣象資料").
+// Structure below is confirmed 2026-07-21 via a real dispatch of
+// fixtures-refresh.yml against the live API. An earlier version of this
+// entry was built from real Go source code in a third-party CWA client
+// library (go-cwb, cwb/station_obs.go — a 2017-vintage capture), which
+// turned out stale the same way F-A0021-001's did: CWA has since
+// restructured this dataset's top-level response entirely
+// (`records.Station[]` now, not `records.location[]`; per-station fields
+// are `StationName`/`StationId`/`ObsTime.DateTime`/`GeoInfo`/
+// `WeatherElement` rather than the old flat elementName/elementValue
+// pairs). Also confirmed: like aqx_p_432 and F-A0021-001, the `locationName`
+// filter isn't honored upstream — the API returns all ~874 stations
+// nationwide regardless of the query param, so `transform` re-filters
+// client-side. `WeatherElement` stays a deliberately shallow pass-through
+// (Weather/AirTemperature/RelativeHumidity/WindSpeed/DailyExtreme/etc. are
+// not individually extracted) since none of it is load-bearing for any
+// curated tool yet.
+
+export const stationObservationInputShape = {
+  locationName: z
+    .string()
+    .min(1)
+    .describe(
+      "氣象測站名稱（例如「合歡山」），須與中央氣象署自動氣象站清單完全相符，" + "本伺服器未內建完整測站清單。"
+    )
+};
+
+export interface StationObservationParams {
+  locationName: string;
+}
+
+interface CwaStationObsCoordinate {
+  CoordinateName?: string;
+  CoordinateFormat?: string;
+  StationLatitude?: string;
+  StationLongitude?: string;
+}
+
+interface CwaStationObsGeoInfo {
+  Coordinates?: CwaStationObsCoordinate[];
+  StationAltitude?: string;
+  CountyName?: string;
+  TownName?: string;
+  CountyCode?: string;
+  TownCode?: string;
+}
+
+interface CwaStationObs {
+  StationName: string;
+  StationId?: string;
+  ObsTime?: { DateTime?: string };
+  GeoInfo?: CwaStationObsGeoInfo;
+  /** Nested weather measurements (Weather/AirTemperature/RelativeHumidity/WindSpeed/DailyExtreme/...), passed through as-is — see the module-level comment on why this isn't deep-extracted. */
+  WeatherElement?: unknown;
+}
+
+interface CwaStationObsRecords {
+  Station?: CwaStationObs[];
+}
+
+export interface StationObservationResult {
+  [key: string]: unknown;
+  locationName: string;
+  stationId?: string;
+  obsTime?: string;
+  county?: string;
+  town?: string;
+  /** Raw nested weather measurements, passed through as-is — see CwaStationObs.WeatherElement. */
+  weatherElement: unknown;
+}
+
+export const stationObservationEntry: DatasetEntry<StationObservationParams, CwaStationObsRecords, StationObservationResult> = {
+  id: "cwa:O-A0001-001",
+  source: "cwa",
+  path: O_A0001_001_DATASET_ID,
+  title: "自動氣象站氣象觀測資料",
+  keywords: ["氣象觀測", "自動氣象站", "即時氣象", "測站資料", "溫度", "濕度", "風速", "weather observation", "station observation"],
+  paramsSchema: stationObservationInputShape,
+  buildQueryParams: params => ({ locationName: params.locationName }),
+  transform: (raw, params) => {
+    const station = (raw.Station ?? []).find(s => s.StationName === params.locationName);
+    if (!station) {
+      throw new ToolError({
+        code: "NOT_FOUND",
+        message: `中央氣象署沒有回傳「${params.locationName}」測站的觀測資料，請確認測站名稱是否正確（例如「合歡山」）。`
+      });
+    }
+    return {
+      locationName: station.StationName,
+      stationId: station.StationId,
+      obsTime: station.ObsTime?.DateTime,
+      county: station.GeoInfo?.CountyName,
+      town: station.GeoInfo?.TownName,
+      weatherElement: station.WeatherElement ?? {}
+    };
+  },
+  cacheTtlSeconds: STATION_OBSERVATION_CACHE_TTL_SECONDS,
+  updateFrequency: "每小時整點觀測（確切發布頻率未經驗證）",
+  docUrl: "https://opendata.cwa.gov.tw/dataset/observation/O-A0001-001",
+  notes:
+    "透過通用層（tw_query_dataset）查詢，尚無專屬工具。欄位結構已於 2026-07-21 透過 fixtures-refresh.yml" +
+    "真實 API 回應確認（records.Station[].{StationName,StationId,ObsTime,GeoInfo,WeatherElement}）。與" +
+    "aqx_p_432、F-A0021-001 相同，locationName 篩選條件在上游未必生效（會回傳全國約 874 個測站），故" +
+    "transform 於前端重新篩選。",
+  sampleParams: { locationName: "合歡山" },
+  fixtureFileName: "station-observation.json"
+};
+
+// --- W-C0033-001: weather warnings (generic-layer only) ---
+//
+// Confirmed to exist and still maintained (opendata.cwa.gov.tw/dataset/
+// warning/W-C0033-001, "天氣特報-各別縣市地區目前之天氣警特報情形"). This was
+// skipped in an earlier session for lack of field evidence (go-cwb doesn't
+// implement it, and no official doc or captured sample could be found), so
+// it was first registered as a minimal pass-through skeleton and then
+// resolved via a real dispatch of fixtures-refresh.yml (2026-07-21), which
+// captured the actual shape: `records.location[]`, one entry per one of
+// Taiwan's 22 counties/cities (matching TAIWAN_CITIES exactly), each with
+// `hazardConditions.hazards[]` (empty array when no active warning for that
+// county). No filter param is sent — the real dispatch fetched with none
+// and got back all 22 counties, so `transform` filters client-side by
+// `county` rather than guessing an unconfirmed upstream filter param name.
+
+export const weatherWarningInputShape = {
+  county: z
+    .enum(TAIWAN_CITIES)
+    .optional()
+    .describe("縣市名稱（台灣 22 縣市之一），只回傳該縣市的天氣特報狀態。不填則回傳全部縣市。須用「臺」而非「台」。")
+};
+
+export interface WeatherWarningParams {
+  county?: string;
+}
+
+interface CwaWeatherWarningHazard {
+  info: { language: string; phenomena: string; significance: string };
+  validTime: { startTime: string; endTime: string };
+}
+
+interface CwaWeatherWarningLocation {
+  locationName: string;
+  geocode: number;
+  hazardConditions?: { hazards: CwaWeatherWarningHazard[] };
+}
+
+interface CwaWeatherWarningRecords {
+  location?: CwaWeatherWarningLocation[];
+}
+
+export interface WeatherWarningCounty {
+  county: string;
+  hazards: Array<{ phenomena: string; significance: string; startTime: string; endTime: string }>;
+}
+
+export interface WeatherWarningResult {
+  [key: string]: unknown;
+  query: { county?: string };
+  counties: WeatherWarningCounty[];
+}
+
+export const weatherWarningEntry: DatasetEntry<WeatherWarningParams, CwaWeatherWarningRecords, WeatherWarningResult> = {
+  id: "cwa:W-C0033-001",
+  source: "cwa",
+  path: W_C0033_001_DATASET_ID,
+  title: "天氣特報",
+  keywords: ["天氣特報", "特報", "警特報", "豪雨特報", "強風特報", "低溫特報", "陸上颱風警報", "weather warning", "weather alert"],
+  paramsSchema: weatherWarningInputShape,
+  buildQueryParams: () => ({}),
+  transform: (raw, params) => {
+    const locations = params.county ? (raw.location ?? []).filter(l => l.locationName === params.county) : (raw.location ?? []);
+    return {
+      query: params.county ? { county: params.county } : {},
+      counties: locations.map(l => ({
+        county: l.locationName,
+        hazards: (l.hazardConditions?.hazards ?? []).map(h => ({
+          phenomena: h.info.phenomena,
+          significance: h.info.significance,
+          startTime: h.validTime.startTime,
+          endTime: h.validTime.endTime
+        }))
+      }))
+    };
+  },
+  cacheTtlSeconds: WEATHER_WARNING_CACHE_TTL_SECONDS,
+  updateFrequency: "特報發布/解除時即時更新",
+  docUrl: "https://opendata.cwa.gov.tw/dataset/warning/W-C0033-001",
+  notes:
+    "透過通用層（tw_query_dataset）查詢，尚無專屬工具。欄位結構已於 2026-07-21 透過 fixtures-refresh.yml" +
+    "真實 API 回應確認。回應固定涵蓋全部 22 縣市（無論是否有生效中的特報，hazards 陣列可能為空），" +
+    "故不送任何篩選參數，一律於前端依 county 篩選。",
+  sampleParams: {},
+  fixtureFileName: "weather-warning.json"
+};
+
+// --- F-A0012-001: marine weather forecast — NOT registered ---
+//
+// Confirmed to exist as a catalog listing (opendata.cwa.gov.tw/dataset/
+// forecast/F-A0012-001; official product doc title "海象_遠海漁業／近海漁業
+// 氣象預報" — opendata.cwa.gov.tw/opendatadoc/Forecast/F-A0012.pdf), and was
+// first registered as a minimal pass-through skeleton, same as W-C0033-001.
+// A real dispatch of fixtures-refresh.yml (2026-07-21) fetched it via this
+// codebase's uniform CWA datastore endpoint (buildCwaUrl → GET
+// /api/v1/rest/datastore/F-A0012-001) and got back a real HTTP 404
+// ("Resource not found"), not a sandbox network block. Root cause: per
+// further research, this specific dataset is served through CWA's older
+// `/fileapi/v1/opendataapi/{id}` endpoint (matching its primary format
+// being a text bulletin, XML secondary), not the `/api/v1/rest/datastore/`
+// JSON REST endpoint every other entry in this file uses. Supporting it
+// would need a second, dataset-specific fetch path in the CWA adapter —
+// out of scope for a registry entry, so this candidate is deliberately
+// NOT registered rather than kept as a permanently-broken skeleton. See
+// the PR that added this comment for the full investigation.
+
+// --- O-A0005-001: daily maximum UV index (generic-layer only) ---
+//
+// Confirmed to exist (title "紫外線指數-每日紫外線指數最大值" per search-engine
+// snippets referencing opendata.cwa.gov.tw/dataset/observation/O-A0005-001).
+// This was skipped in an earlier session for lack of field/query-param
+// evidence, then registered as a minimal pass-through skeleton, then
+// resolved via a real dispatch of fixtures-refresh.yml (2026-07-21), which
+// confirmed the categorization question flagged back then: CWA's catalog
+// puts this dataset under **"observation"**, not "forecast", and the real
+// response is exactly that — a same-day snapshot (`records.weatherElement`
+// is a single object, not an array, with a `Date` field for "today" and a
+// `location[]` list of every station's running daily-max UV reading so
+// far), not a forward-looking multi-day forecast. Each station entry is
+// only `{ StationID, UVIndex }` — no station name — so filtering is by
+// `stationId`, not a human-readable location name; a real station name can
+// be cross-referenced via cwa:O-A0001-001 (自動氣象站氣象觀測資料), whose
+// `StationId` values follow the same numbering. No filter param is sent —
+// the real dispatch fetched with none and got back every station.
+
+export const uvDailyMaxInputShape = {
+  stationId: z
+    .string()
+    .min(1)
+    .optional()
+    .describe(
+      "氣象測站代碼（例如「467490」），不填則回傳所有測站當日紫外線指數最大值。" +
+        "本伺服器未內建測站代碼對照表，可另外透過 cwa:O-A0001-001（自動氣象站氣象觀測資料）查得測站清單後比對。"
+    )
+};
+
+export interface UvDailyMaxParams {
+  stationId?: string;
+}
+
+interface CwaUvDailyMaxStation {
+  StationID: string;
+  UVIndex: number;
+}
+
+interface CwaUvDailyMaxWeatherElement {
+  elementName?: string;
+  location?: CwaUvDailyMaxStation[];
+  Date?: string;
+}
+
+interface CwaUvDailyMaxRecords {
+  weatherElement?: CwaUvDailyMaxWeatherElement;
+}
+
+export interface UvDailyMaxResult {
+  [key: string]: unknown;
+  date?: string;
+  query: { stationId?: string };
+  stations: Array<{ stationId: string; uvIndex: number }>;
+}
+
+export const uvDailyMaxEntry: DatasetEntry<UvDailyMaxParams, CwaUvDailyMaxRecords, UvDailyMaxResult> = {
+  id: "cwa:O-A0005-001",
+  source: "cwa",
+  path: O_A0005_001_DATASET_ID,
+  title: "紫外線指數每日最大值",
+  keywords: ["紫外線", "紫外線指數", "UV", "UVI", "每日最大值", "daily max uv", "uv index"],
+  paramsSchema: uvDailyMaxInputShape,
+  buildQueryParams: () => ({}),
+  transform: (raw, params) => {
+    const stations = raw.weatherElement?.location ?? [];
+    const matched = params.stationId ? stations.filter(s => s.StationID === params.stationId) : stations;
+    return {
+      date: raw.weatherElement?.Date,
+      query: params.stationId ? { stationId: params.stationId } : {},
+      stations: matched.map(s => ({ stationId: s.StationID, uvIndex: s.UVIndex }))
+    };
+  },
+  cacheTtlSeconds: UV_DAILY_MAX_CACHE_TTL_SECONDS,
+  updateFrequency: "當日持續更新中的滾動最大值（官方分類為「觀測」而非「預報」，見上方模組註解）",
+  docUrl: "https://opendata.cwa.gov.tw/dataset/observation/O-A0005-001",
+  notes:
+    "透過通用層（tw_query_dataset）查詢，尚無專屬工具。欄位結構已於 2026-07-21 透過 fixtures-refresh.yml" +
+    "真實 API 回應確認。此資料集官方分類為「觀測」，回應是當日至今的滾動每日最大值快照（非未來預報），" +
+    "每筆只有測站代碼、沒有測站名稱，篩選以 stationId 而非地點名稱進行。",
+  sampleParams: {},
+  fixtureFileName: "uv-daily-max.json"
+};
+
 registerEntry(weatherForecastEntry as unknown as DatasetEntry<never, unknown, unknown>);
 registerEntry(recentEarthquakesEntry as unknown as DatasetEntry<never, unknown, unknown>);
 registerEntry(tideForecastEntry as unknown as DatasetEntry<never, unknown, unknown>);
+registerEntry(stationObservationEntry as unknown as DatasetEntry<never, unknown, unknown>);
+registerEntry(weatherWarningEntry as unknown as DatasetEntry<never, unknown, unknown>);
+registerEntry(uvDailyMaxEntry as unknown as DatasetEntry<never, unknown, unknown>);
