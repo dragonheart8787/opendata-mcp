@@ -51,6 +51,16 @@ describe("formatTyphoonText", () => {
     expect(text).toContain("轉載自中央氣象署");
   });
 
+  it("labels the latest analysis time as the report's 發布時間", async () => {
+    const result = await runTyphoon("test-key", jsonFetch(fixture));
+    const text = formatTyphoonText(result);
+    const fixes = rawCyclone.AnalysisData.Fix;
+    const latestDateTime = fixes[fixes.length - 1].DateTime;
+
+    expect(text).toContain("發布時間");
+    expect(text).toContain(latestDateTime);
+  });
+
   it("renders a named typhoon's Chinese and international names", () => {
     const text = formatTyphoonText({
       hasActiveSystem: true,

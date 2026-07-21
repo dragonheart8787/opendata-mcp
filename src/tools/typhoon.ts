@@ -19,6 +19,21 @@ export async function runTyphoon(apiKey: string | undefined, fetchImpl?: typeof 
   return typhoonNewsEntry.transform(raw, {});
 }
 
+/**
+ * The envelope's `issuedAt` is meant to be a single "as of" timestamp for the
+ * whole response. This dataset has no single top-level publish time — each
+ * active system carries its own latest analysis time — so this picks the
+ * most recent one across all systems as the report's overall "as of" time.
+ * `undefined` when there's no active system to report a time for.
+ */
+function latestIssuedAt(result: TyphoonNewsResult): string | undefined {
+  const times = result.typhoons
+    .map(typhoon => typhoon.latestPosition?.time)
+    .filter((time): time is string => Boolean(time));
+  if (times.length === 0) return undefined;
+  return times.reduce((latest, current) => (new Date(current) > new Date(latest) ? current : latest));
+}
+
 function formatTyphoonSummary(typhoon: TyphoonSummary): string[] {
   const lines: string[] = [];
   const label = typhoon.name ?? typhoon.internationalName ?? `熱帶性低氣壓（編號 ${typhoon.cwaNumber ?? "不詳"}）`;
@@ -57,7 +72,14 @@ export function formatTyphoonText(result: TyphoonNewsResult): string {
   if (!result.hasActiveSystem) {
     return "目前西北太平洋與南海沒有中央氣象署列管中的活動熱帶氣旋（含颱風與熱帶性低氣壓）。";
   }
-  const lines = ["# 西北太平洋與南海活動中熱帶氣旋", "", "以下內容轉載自中央氣象署颱風消息，非本伺服器自行預測或判斷。", ""];
+  const issuedAt = latestIssuedAt(result);
+  const lines = [
+    "# 西北太平洋與南海活動中熱帶氣旋",
+    "",
+    "以下內容轉載自中央氣象署颱風消息，非本伺服器自行預測或判斷。",
+    `發布時間（各系統最近一次分析時間中最新者）：${issuedAt ?? "無資料"}`,
+    ""
+  ];
   for (const typhoon of result.typhoons) {
     lines.push(...formatTyphoonSummary(typhoon));
   }
@@ -73,6 +95,7 @@ export async function handleTyphoonTool(env: Env, fetchImpl?: typeof fetch): Pro
     const envelope = buildSuccessEnvelope({
       source: "中央氣象署",
       dataset: typhoonNewsEntry.path,
+      issuedAt: latestIssuedAt(data),
       cached,
       updateFrequency: typhoonNewsEntry.updateFrequency,
       data
