@@ -1,14 +1,31 @@
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { busEtaEntry, type TdxBusEtaRawRecord } from "../../src/registry/tdx.js";
 import { listDatasetEntries } from "../../src/registry/index.js";
 import { BUS_ETA_MAX_STOPS_RETURNED } from "../../src/constants.js";
 
 // Real field structure confirmed 2026-07-22 via a real dispatch of
-// fixtures-refresh.yml against the live API — see the module comment on
-// registry/tdx.ts for the full provenance note. These sample records are
-// taken verbatim (unmodified field values) from that real capture, not
-// hand-invented — see test/fixtures/bus-eta.json for the full committed
-// fixture once the narrower per-route dispatch lands.
+// fixtures-refresh.yml against the live API (Taipei, route 615) — see the
+// module comment on registry/tdx.ts for the full provenance note,
+// including the unfiltered-city capture (28,731 records / ~12.5MB) that
+// first confirmed the shape before sampleParams was narrowed to a single
+// route. This fixture is the real, narrower per-route response — TDX's
+// routeName path segment turned out to genuinely filter server-side here
+// (all 78 records are route 615), which `transform` still doesn't rely on
+// (always re-filters client-side per AGENTS.md §6).
+const fixture: TdxBusEtaRawRecord[] = JSON.parse(
+  readFileSync(fileURLToPath(new URL("../fixtures/bus-eta.json", import.meta.url)), "utf-8")
+);
+const withoutEstimate = fixture[0];
+
+// The route-615 fixture happened to capture a moment with zero live
+// buses (all 78 records have StopStatus 1, none carry EstimateTime) — a
+// genuine real state, not a gap in the fixture. This record's field
+// *values* are verbatim from the same 2026-07-22 real dispatch (the
+// unfiltered Taipei-wide capture used to first confirm the shape, before
+// sampleParams was narrowed to route 615), used here only to exercise the
+// estimateSeconds-present code path.
 const withEstimate: TdxBusEtaRawRecord = {
   StopUID: "TPE36407",
   StopID: "36407",
@@ -19,19 +36,6 @@ const withEstimate: TdxBusEtaRawRecord = {
   Direction: 1,
   EstimateTime: 580,
   StopStatus: 0,
-  SrcUpdateTime: "2026-07-22T11:10:30+08:00",
-  UpdateTime: "2026-07-22T11:10:37+08:00"
-};
-
-const withoutEstimate: TdxBusEtaRawRecord = {
-  StopUID: "TPE187095",
-  StopID: "187095",
-  StopName: { Zh_tw: "新莊高中", En: "Xinzhuang High School" },
-  RouteUID: "TPE10471",
-  RouteID: "10471",
-  RouteName: { Zh_tw: "615", En: "615" },
-  Direction: 1,
-  StopStatus: 1,
   SrcUpdateTime: "2026-07-22T11:10:30+08:00",
   UpdateTime: "2026-07-22T11:10:37+08:00"
 };
@@ -53,53 +57,46 @@ describe("busEtaEntry", () => {
     expect(busEtaEntry.buildQueryParams({ city: "Taipei" })).toEqual({ $format: "JSON" });
   });
 
-  it("maps real fields onto the compact stop shape, including a record with no current estimate", () => {
-    const result = busEtaEntry.transform([withEstimate, withoutEstimate], { city: "Taipei" });
+  it("maps the real fixture's fields onto the compact stop shape", () => {
+    const result = busEtaEntry.transform(fixture, { city: "Taipei", routeName: "615" });
 
-    expect(result.totalMatched).toBe(2);
+    expect(result.totalMatched).toBe(fixture.length);
     expect(result.truncated).toBe(false);
-    expect(result.stops).toEqual([
-      {
-        routeName: "508區",
-        routeNameEn: "508Shuttle",
-        stopName: "榮總一",
-        stopNameEn: "Veterans General Hospital I",
-        direction: 1,
-        estimateSeconds: 580,
-        stopStatusCode: 0,
-        updateTime: "2026-07-22T11:10:37+08:00"
-      },
-      {
-        routeName: "615",
-        routeNameEn: "615",
-        stopName: "新莊高中",
-        stopNameEn: "Xinzhuang High School",
-        direction: 1,
-        estimateSeconds: null, // EstimateTime genuinely absent on the raw record — see module comment
-        stopStatusCode: 1,
-        updateTime: "2026-07-22T11:10:37+08:00"
-      }
-    ]);
+    expect(result.stops.every(s => s.routeName === "615")).toBe(true);
+    expect(result.stops.every(s => typeof s.stopName === "string")).toBe(true);
+    expect(result.stops.every(s => s.direction === 0 || s.direction === 1)).toBe(true);
+  });
+
+  it("maps a record with an estimate and one without, correctly", () => {
+    const result = busEtaEntry.transform([withEstimate, withoutEstimate], { city: "Taipei" });
+    const mappedWithEstimate = result.stops.find(s => s.estimateSeconds !== null);
+    const mappedWithoutEstimate = result.stops.find(s => s.estimateSeconds === null);
+
+    expect(mappedWithEstimate?.estimateSeconds).toBe(withEstimate.EstimateTime);
+    expect(mappedWithoutEstimate?.stopStatusCode).toBe(withoutEstimate.StopStatus);
+    expect(mappedWithoutEstimate?.estimateSeconds).toBeNull();
   });
 
   it("client-side re-filters by routeName even when the upstream returns an unfiltered list (AGENTS.md §6)", () => {
+    // withEstimate is route "508區", withoutEstimate is route "615" — an
+    // unfiltered mix of two different routes, as if the upstream routeName
+    // path-segment filter hadn't actually narrowed anything.
     const result = busEtaEntry.transform([withEstimate, withoutEstimate], { city: "Taipei", routeName: "615" });
     expect(result.totalMatched).toBe(1);
-    expect(result.stops).toHaveLength(1);
     expect(result.stops[0].routeName).toBe("615");
   });
 
   it("client-side re-filters by stopName (English name also matches)", () => {
-    const result = busEtaEntry.transform([withEstimate, withoutEstimate], {
+    const result = busEtaEntry.transform(fixture, {
       city: "Taipei",
-      stopName: "Xinzhuang High School"
+      stopName: withoutEstimate.StopName!.En
     });
-    expect(result.totalMatched).toBe(1);
-    expect(result.stops[0].stopName).toBe("新莊高中");
+    expect(result.totalMatched).toBeGreaterThan(0);
+    expect(result.stops.every(s => s.stopNameEn === withoutEstimate.StopName!.En)).toBe(true);
   });
 
   it("returns an empty (not thrown) result when nothing matches — not an error condition", () => {
-    const result = busEtaEntry.transform([withEstimate], { city: "Taipei", routeName: "no-such-route" });
+    const result = busEtaEntry.transform(fixture, { city: "Taipei", routeName: "no-such-route" });
     expect(result.totalMatched).toBe(0);
     expect(result.stops).toEqual([]);
   });

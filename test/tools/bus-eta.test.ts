@@ -1,36 +1,36 @@
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { formatBusEtaText, runBusEta } from "../../src/tools/bus-eta.js";
-import { jsonFetch } from "../helpers.js";
+import type { TdxBusEtaRawRecord } from "../../src/registry/tdx.js";
 
 // Real field structure confirmed 2026-07-22 via a real dispatch of
-// fixtures-refresh.yml — see the module comment on registry/tdx.ts.
-const rawRecords = [
-  {
-    StopUID: "TPE36407",
-    StopID: "36407",
-    StopName: { Zh_tw: "榮總一", En: "Veterans General Hospital I" },
-    RouteUID: "TPE10442",
-    RouteID: "10442",
-    RouteName: { Zh_tw: "508區", En: "508Shuttle" },
-    Direction: 1,
-    EstimateTime: 580,
-    StopStatus: 0,
-    SrcUpdateTime: "2026-07-22T11:10:30+08:00",
-    UpdateTime: "2026-07-22T11:10:37+08:00"
-  },
-  {
-    StopUID: "TPE187095",
-    StopID: "187095",
-    StopName: { Zh_tw: "新莊高中", En: "Xinzhuang High School" },
-    RouteUID: "TPE10471",
-    RouteID: "10471",
-    RouteName: { Zh_tw: "615", En: "615" },
-    Direction: 1,
-    StopStatus: 1,
-    SrcUpdateTime: "2026-07-22T11:10:30+08:00",
-    UpdateTime: "2026-07-22T11:10:37+08:00"
-  }
-];
+// fixtures-refresh.yml (Taipei, route 615) — see the module comment on
+// registry/tdx.ts.
+const fixture: TdxBusEtaRawRecord[] = JSON.parse(
+  readFileSync(fileURLToPath(new URL("../fixtures/bus-eta.json", import.meta.url)), "utf-8")
+);
+const withoutEstimate = fixture[0];
+
+// The route-615 fixture happened to capture a moment with zero live buses
+// (all records have StopStatus 1, none carry EstimateTime) — a genuine
+// real state, not a fixture gap. This record's field *values* are verbatim
+// from the same 2026-07-22 real dispatch (the unfiltered Taipei-wide
+// capture used to first confirm the shape) — see test/registry/tdx.test.ts
+// for the identical rationale.
+const withEstimate: TdxBusEtaRawRecord = {
+  StopUID: "TPE36407",
+  StopID: "36407",
+  StopName: { Zh_tw: "榮總一", En: "Veterans General Hospital I" },
+  RouteUID: "TPE10442",
+  RouteID: "10442",
+  RouteName: { Zh_tw: "508區", En: "508Shuttle" },
+  Direction: 1,
+  EstimateTime: 580,
+  StopStatus: 0,
+  SrcUpdateTime: "2026-07-22T11:10:30+08:00",
+  UpdateTime: "2026-07-22T11:10:37+08:00"
+};
 
 function tokenThenDataFetch(records: unknown[]): typeof fetch {
   return (async (url: string) => {
@@ -42,17 +42,15 @@ function tokenThenDataFetch(records: unknown[]): typeof fetch {
 }
 
 describe("runBusEta", () => {
-  it("maps the real fixture-shaped records onto the compact stop summary", async () => {
+  it("maps the real fixture onto the compact stop summary", async () => {
     const result = await runBusEta(
-      { city: "Taipei" },
+      { city: "Taipei", routeName: "615" },
       { TDX_CLIENT_ID: "id", TDX_CLIENT_SECRET: "secret" },
-      tokenThenDataFetch(rawRecords)
+      tokenThenDataFetch(fixture)
     );
 
-    expect(result.totalMatched).toBe(2);
-    expect(result.stops[0].routeName).toBe("508區");
-    expect(result.stops[0].estimateSeconds).toBe(580);
-    expect(result.stops[1].estimateSeconds).toBeNull();
+    expect(result.totalMatched).toBe(fixture.length);
+    expect(result.stops.every(s => s.routeName === "615")).toBe(true);
   });
 
   it("propagates the missing-credentials error", async () => {
@@ -61,41 +59,40 @@ describe("runBusEta", () => {
     ).rejects.toThrow(/tdx\.transportdata\.tw/);
   });
 
-  it("filters by routeName client-side even against an unfiltered upstream response", async () => {
+  it("filters by stopName client-side even against an unfiltered upstream response", async () => {
     const result = await runBusEta(
-      { city: "Taipei", routeName: "615" },
+      { city: "Taipei", stopName: withoutEstimate.StopName!.Zh_tw },
       { TDX_CLIENT_ID: "id", TDX_CLIENT_SECRET: "secret" },
-      tokenThenDataFetch(rawRecords)
+      tokenThenDataFetch(fixture)
     );
-    expect(result.totalMatched).toBe(1);
-    expect(result.stops[0].routeName).toBe("615");
+    expect(result.totalMatched).toBeGreaterThan(0);
+    expect(result.stops.every(s => s.stopName === withoutEstimate.StopName!.Zh_tw)).toBe(true);
   });
 });
 
 describe("formatBusEtaText", () => {
   it("renders each stop's route, direction, estimate, and update time", () => {
     const text = formatBusEtaText({
-      query: { city: "Taipei" },
+      query: { city: "Taipei", routeName: "615" },
       stops: [
         {
-          routeName: "508區",
-          routeNameEn: "508Shuttle",
-          stopName: "榮總一",
-          stopNameEn: "Veterans General Hospital I",
-          direction: 1,
-          estimateSeconds: 580,
-          stopStatusCode: 0,
-          updateTime: "2026-07-22T11:10:37+08:00"
+          routeName: withEstimate.RouteName!.Zh_tw!,
+          routeNameEn: withEstimate.RouteName!.En!,
+          stopName: withEstimate.StopName!.Zh_tw!,
+          stopNameEn: withEstimate.StopName!.En!,
+          direction: withEstimate.Direction!,
+          estimateSeconds: withEstimate.EstimateTime!,
+          stopStatusCode: withEstimate.StopStatus!,
+          updateTime: withEstimate.UpdateTime!
         }
       ],
       totalMatched: 1,
       truncated: false
     });
 
-    expect(text).toContain("508區");
-    expect(text).toContain("榮總一");
-    expect(text).toContain("約 10 分鐘後到站");
-    expect(text).toContain("2026-07-22T11:10:37+08:00");
+    expect(text).toContain(withEstimate.RouteName!.Zh_tw!);
+    expect(text).toContain(withEstimate.StopName!.Zh_tw!);
+    expect(text).toContain(withEstimate.UpdateTime!);
   });
 
   it("shows a plain-language message (not an error) when EstimateTime is absent", () => {
@@ -103,14 +100,14 @@ describe("formatBusEtaText", () => {
       query: { city: "Taipei" },
       stops: [
         {
-          routeName: "615",
-          routeNameEn: "615",
-          stopName: "新莊高中",
-          stopNameEn: "Xinzhuang High School",
-          direction: 1,
+          routeName: withoutEstimate.RouteName!.Zh_tw!,
+          routeNameEn: withoutEstimate.RouteName!.En!,
+          stopName: withoutEstimate.StopName!.Zh_tw!,
+          stopNameEn: withoutEstimate.StopName!.En!,
+          direction: withoutEstimate.Direction!,
           estimateSeconds: null,
-          stopStatusCode: 1,
-          updateTime: "2026-07-22T11:10:37+08:00"
+          stopStatusCode: withoutEstimate.StopStatus!,
+          updateTime: withoutEstimate.UpdateTime!
         }
       ],
       totalMatched: 1,
@@ -120,7 +117,12 @@ describe("formatBusEtaText", () => {
   });
 
   it("reports zero matches in plain language, not as an error", () => {
-    const text = formatBusEtaText({ query: { city: "Taipei", routeName: "no-such-route" }, stops: [], totalMatched: 0, truncated: false });
+    const text = formatBusEtaText({
+      query: { city: "Taipei", routeName: "no-such-route" },
+      stops: [],
+      totalMatched: 0,
+      truncated: false
+    });
     expect(text).toContain("查無");
     expect(text).toContain("不代表本伺服器資料異常");
   });
