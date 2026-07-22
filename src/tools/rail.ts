@@ -1,6 +1,10 @@
 import { z } from "zod";
 import { tdxAdapter } from "../adapters/tdx.js";
-import { RAIL_LIVEBOARD_MAX_TRAINS_RETURNED, RAIL_STATION_AMBIGUOUS_CANDIDATES_SHOWN } from "../constants.js";
+import {
+  RAIL_LIVEBOARD_DELAY_NOTICE,
+  RAIL_LIVEBOARD_MAX_TRAINS_RETURNED,
+  RAIL_STATION_AMBIGUOUS_CANDIDATES_SHOWN
+} from "../constants.js";
 import { withCacheTracked } from "../infra/cache.js";
 import { buildFailureEnvelope, buildSuccessEnvelope } from "../infra/envelope.js";
 import { ToolError, toToolError } from "../infra/errors.js";
@@ -63,6 +67,13 @@ export interface RailResult {
   truncated: boolean;
   /** Batch-level UpdateTime shared by this fetch's train records (TDX republishes LiveBoard as one batch per station, confirmed in the real capture) — null when there were no trains to read it from. */
   dataUpdateTime: string | null;
+  /**
+   * The ~2-minute-delay / platform-display disclosure, fixed text, present
+   * on every call (including zero-match results) — part of the response
+   * DATA itself (see RAIL_LIVEBOARD_DELAY_NOTICE's comment in constants.ts
+   * for why this can't live only in the tool description or formatted text).
+   */
+  delayNotice: string;
 }
 
 function matchesStationName(record: TdxRailTraStationRawRecord, needle: string): boolean {
@@ -174,7 +185,8 @@ export async function runRail(params: RailParams, env: Env, fetchImpl?: typeof f
     trains: matched.slice(0, RAIL_LIVEBOARD_MAX_TRAINS_RETURNED).map(summarizeTrain),
     totalMatched: matched.length,
     truncated,
-    dataUpdateTime: forThisStation[0]?.UpdateTime ?? null
+    dataUpdateTime: forThisStation[0]?.UpdateTime ?? null,
+    delayNotice: RAIL_LIVEBOARD_DELAY_NOTICE
   };
 }
 
@@ -191,15 +203,23 @@ function formatTrainLine(train: RailTrainSummary): string {
 export function formatRailText(result: RailResult): string {
   const stationLabel = result.station.stationName ?? result.query.stationName;
 
+  // The delay notice leads every response — including the zero-match case
+  // — rather than trailing after a (possibly long) train list, so it isn't
+  // the part most likely to get truncated or skimmed past. Sourced from
+  // `result.delayNotice` (not a separate literal here) so the formatted
+  // text and the structured data can never drift apart — see
+  // RAIL_LIVEBOARD_DELAY_NOTICE's comment in constants.ts for why this must
+  // be part of the response data at all, not just the tool description.
   if (result.trains.length === 0) {
     return (
+      `${result.delayNotice}\n\n` +
       `目前查無「${stationLabel}」符合條件的台鐵即時到離站車次` +
       `${result.query.destinationStationName ? `（開往「${result.query.destinationStationName}」方向）` : ""}。` +
       "可能是該時段確實沒有相符車次（例如末班車已過、非尖峰時段班次較少），不代表本伺服器查詢失敗。"
     );
   }
 
-  const lines = [`# 台鐵即時到離站看板（${stationLabel}）`, ""];
+  const lines = [result.delayNotice, "", `# 台鐵即時到離站看板（${stationLabel}）`, ""];
   for (const train of result.trains) {
     lines.push(formatTrainLine(train));
   }
@@ -209,10 +229,6 @@ export function formatRailText(result: RailResult): string {
   }
   lines.push("");
   lines.push(`資料更新時間：${result.dataUpdateTime ?? "無資料"}`);
-  lines.push(
-    "⚠️ 本資料為交通部 TDX 轉載之台鐵即時到離站看板，官方文件註明約有 2 分鐘延遲，" +
-      "且不保證與車站月台實際看板（TIDS）完全一致，實際到離站狀況請以車站月台顯示為準。"
-  );
   return lines.join("\n").trimEnd() + "\n";
 }
 

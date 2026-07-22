@@ -43,7 +43,7 @@ GitHub Actions 的網路不受這個沙盒的政策限制，所以這三件事�
 新增 `.github/workflows/fixtures-refresh.yml`，用 `schedule`（建議每週一次，例如 `0 3 * * 1`）加 `workflow_dispatch`（方便手動觸發）：
 
 1. 用 repo secrets `CWA_API_KEY`、`MOENV_API_KEY`（**這組要另外在 GitHub repo Settings → Secrets 新增**，跟 Cloudflare Workers 上設定的是同一組值但不同存放處——這是你要做的事，不是這個 session 能做的）對現有三個 registry entry 各打一次真實 API
-2. **去敏**：抓回來的原始回應在寫入 fixture 前，先確認沒有把 `api_key`/`Authorization` 参数值原樣寫進檔案（這兩個資料集本身不會在 response body 裡回顯金鑰，但流程上還是要有這道檢查，避免未來新資料來源踩到）
+2. **去敏**：抓回來的原始回應在寫入 fixture 前，先確認沒有把 `api_key`/`Authorization` 參數值原樣寫進檔案（這兩個資料集本身不會在 response body 裡回顯金鑰，但流程上還是要有這道檢查，避免未來新資料來源踩到）
 3. 跟 `test/fixtures/` 現有檔案做結構化 diff（比對欄位名稱、巢狀結構，不比對數值本身——數值本來就會變）：
    - 無結構性差異 → 不動作，結束
    - 有結構性差異 → 自動開一個 PR（更新 fixture + 標記哪些欄位變了），並開一個 issue 標記 `schema-drift` label，issue 內容附上 diff 摘要

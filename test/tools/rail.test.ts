@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { formatRailText, handleRailTool, runRail } from "../../src/tools/rail.js";
 import type { TdxRailTraLiveboardRawRecord, TdxRailTraStationRawRecord } from "../../src/registry/tdx.js";
+import { RAIL_LIVEBOARD_DELAY_NOTICE } from "../../src/constants.js";
 
 const stationFixture: TdxRailTraStationRawRecord[] = JSON.parse(
   readFileSync(fileURLToPath(new URL("../fixtures/rail-tra-station.json", import.meta.url)), "utf-8")
@@ -64,6 +65,12 @@ describe("runRail", () => {
     expect(result.trains[0].trainNo).toBe(liveboardFixture[0].TrainNo);
     expect(result.trains[0].delayMinutes).toBe(liveboardFixture[0].DelayTime);
     expect(result.dataUpdateTime).toBe(liveboardFixture[0].UpdateTime);
+    // The ~2-minute-delay disclosure must be part of the returned DATA
+    // itself (not only the tool description or formatted text) — this is
+    // what a caller reading structuredContent/data actually sees, and this
+    // was previously missing from that representation entirely.
+    expect(result.delayNotice).toContain("2 分鐘延遲");
+    expect(result.delayNotice).toContain("車站月台顯示為準");
   });
 
   it("resolves a unique substring match that isn't any station's full name", async () => {
@@ -120,6 +127,9 @@ describe("runRail", () => {
     );
     expect(result.totalMatched).toBe(0);
     expect(result.trains).toEqual([]);
+    // Zero matches is still a real, non-error response carrying real data
+    // (the resolved station) — the delay notice must still be present.
+    expect(result.delayNotice).toContain("2 分鐘延遲");
   });
 
   it("propagates the missing-credentials error", async () => {
@@ -188,7 +198,8 @@ describe("formatRailText", () => {
       ],
       totalMatched: 1,
       truncated: false,
-      dataUpdateTime: "2026-07-22T15:42:04+08:00"
+      dataUpdateTime: "2026-07-22T15:42:04+08:00",
+      delayNotice: RAIL_LIVEBOARD_DELAY_NOTICE
     });
 
     expect(text).toContain("221");
@@ -197,6 +208,31 @@ describe("formatRailText", () => {
     expect(text).toContain("誤點約 1 分鐘");
     expect(text).toContain("2 分鐘延遲");
     expect(text).toContain("車站月台顯示為準");
+  });
+
+  it("puts the delay notice at the very start of the text, not just trailing after the train list", () => {
+    const text = formatRailText({
+      query: { stationName: "臺北" },
+      station: { stationId: "1000", stationName: "臺北", stationNameEn: "Taipei" },
+      trains: [
+        {
+          trainNo: "221",
+          trainTypeName: "自強",
+          trainTypeNameEn: "Tze-Chiang Express",
+          direction: 1,
+          endingStationName: "樹林",
+          endingStationNameEn: "Shulin",
+          scheduledArrivalTime: "15:45:00",
+          scheduledDepartureTime: "15:48:00",
+          delayMinutes: 1
+        }
+      ],
+      totalMatched: 1,
+      truncated: false,
+      dataUpdateTime: "2026-07-22T15:42:04+08:00",
+      delayNotice: RAIL_LIVEBOARD_DELAY_NOTICE
+    });
+    expect(text.startsWith(RAIL_LIVEBOARD_DELAY_NOTICE)).toBe(true);
   });
 
   it("shows 準點 (on time) when delayMinutes is 0, not blank", () => {
@@ -218,22 +254,27 @@ describe("formatRailText", () => {
       ],
       totalMatched: 1,
       truncated: false,
-      dataUpdateTime: "2026-07-22T15:42:04+08:00"
+      dataUpdateTime: "2026-07-22T15:42:04+08:00",
+      delayNotice: RAIL_LIVEBOARD_DELAY_NOTICE
     });
     expect(text).toContain("準點");
   });
 
-  it("reports zero matches in plain language, not as an error", () => {
+  it("reports zero matches in plain language, not as an error, and still includes the delay notice", () => {
     const text = formatRailText({
       query: { stationName: "臺北", destinationStationName: "不存在" },
       station: { stationId: "1000", stationName: "臺北", stationNameEn: "Taipei" },
       trains: [],
       totalMatched: 0,
       truncated: false,
-      dataUpdateTime: null
+      dataUpdateTime: null,
+      delayNotice: RAIL_LIVEBOARD_DELAY_NOTICE
     });
     expect(text).toContain("查無");
     expect(text).toContain("不代表本伺服器查詢失敗");
+    // The zero-match case is exactly the branch that previously skipped the
+    // notice entirely — must not regress.
+    expect(text).toContain("2 分鐘延遲");
   });
 
   it("warns when the result was truncated", () => {
@@ -254,7 +295,8 @@ describe("formatRailText", () => {
       trains: manyTrains,
       totalMatched: 200,
       truncated: true,
-      dataUpdateTime: "2026-07-22T15:42:04+08:00"
+      dataUpdateTime: "2026-07-22T15:42:04+08:00",
+      delayNotice: RAIL_LIVEBOARD_DELAY_NOTICE
     });
     expect(text).toContain("200");
   });
