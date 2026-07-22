@@ -63,6 +63,19 @@ export const TDX_BUS_ETA_PATH_PREFIX = "v2/Bus/EstimatedTimeOfArrival/City";
 export const TDX_BIKE_AVAILABILITY_PATH_PREFIX = "v2/Bike/Availability/City";
 
 /**
+ * Path prefix for the public bike-sharing STATION METADATA dataset
+ * (name/address/coordinates/capacity) — a separate endpoint from
+ * availability, confirmed necessary by a real dispatch of the Availability
+ * endpoint above: its response has no station name at all, only
+ * StationUID/StationID + numeric counts (see registry/tdx.ts's module
+ * comment on youBikeEntry for the full story). Assumed to follow the same
+ * `.../City/{City}` convention confirmed for both bus ETA and bike
+ * availability — pending its own real-dispatch confirmation before this
+ * stops being a skeleton assumption.
+ */
+export const TDX_BIKE_STATION_PATH_PREFIX = "v2/Bike/Station/City";
+
+/**
  * TDX's English city/county path-segment codes. The six special
  * municipalities (Taipei/NewTaipei/Taoyuan/Taichung/Tainan/Kaohsiung) are
  * confirmed with high confidence — identical spelling appeared across every
@@ -173,15 +186,28 @@ export const BUS_ETA_CACHE_TTL_SECONDS = 30;
 export const BUS_ETA_MAX_STOPS_RETURNED = 100;
 
 /**
- * Placeholder cache TTL for the YouBike/bike-availability skeleton entry —
- * NOT yet evidence-based (no real UpdateTime data captured yet). Replaced
- * with a value derived from the real fixture's update-timestamp gap once
- * fixtures-refresh.yml confirms the actual response shape and cadence, same
- * process used for BUS_ETA_CACHE_TTL_SECONDS.
+ * Placeholder cache TTL for the bike-station-metadata skeleton entry (still
+ * unconfirmed against a real response) — NOT the final availability TTL,
+ * see YOUBIKE_CACHE_TTL_SECONDS below for that.
  */
 export const YOUBIKE_CACHE_TTL_SECONDS_SKELETON = 60;
 
-/** Cap on how many matched stations a single tw_youbike call returns — same response-budget reasoning as BUS_ETA_MAX_STOPS_RETURNED, exact number to be revisited once real per-city station counts are known. */
+/**
+ * Evidence-based TTL for bike availability (tdx:youbike-availability),
+ * derived the same way as BUS_ETA_CACHE_TTL_SECONDS but landing on a
+ * different number because the real evidence itself differs: a real
+ * capture (Taipei, 1,775 stations) showed TDX republishes this dataset in
+ * one batch (every currently-in-service station shared one identical
+ * `UpdateTime`), with a median 153s gap between each station's own
+ * `SrcUpdateTime` and that shared `UpdateTime` — consistent with YouBike's
+ * commonly documented ~1-minute refresh cadence. Coarser than bus ETA's
+ * observed ~7s SrcUpdateTime-to-UpdateTime gap (TTL 30s), so this is set
+ * higher — see registry/tdx.ts's module comment on youBikeAvailabilityEntry
+ * for the full reasoning.
+ */
+export const YOUBIKE_CACHE_TTL_SECONDS = 60;
+
+/** Cap on how many matched stations a single tw_youbike call returns — same response-budget reasoning as BUS_ETA_MAX_STOPS_RETURNED. Taipei alone has 1,775 real stations (confirmed via dispatch), so an unfiltered/broad query needs this cap. */
 export const YOUBIKE_MAX_STATIONS_RETURNED = 100;
 
 /**

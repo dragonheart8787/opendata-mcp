@@ -3,10 +3,11 @@ import {
   BUS_ETA_CACHE_TTL_SECONDS,
   BUS_ETA_MAX_STOPS_RETURNED,
   TDX_BIKE_AVAILABILITY_PATH_PREFIX,
+  TDX_BIKE_STATION_PATH_PREFIX,
   TDX_BUS_ETA_PATH_PREFIX,
   TDX_CITIES,
-  YOUBIKE_CACHE_TTL_SECONDS_SKELETON,
-  YOUBIKE_MAX_STATIONS_RETURNED
+  YOUBIKE_CACHE_TTL_SECONDS,
+  YOUBIKE_CACHE_TTL_SECONDS_SKELETON
 } from "../constants.js";
 import { registerEntry, type DatasetEntry } from "./index.js";
 
@@ -177,38 +178,54 @@ export const busEtaEntry: DatasetEntry<BusEtaParams, TdxBusEtaRawRecord[], BusEt
 
 registerEntry(busEtaEntry as unknown as DatasetEntry<never, unknown, unknown>);
 
-// --- Bike/Availability/City/{City}: public bike-sharing (YouBike etc.) real-time availability (SKELETON) ---
+// --- Bike/Availability/City/{City} + Bike/Station/City/{City}: public bike-sharing (YouBike etc.) ---
 //
 // Path corrected 2026-07-22 after a real dispatch of fixtures-refresh.yml
-// disproved the initial WebSearch-derived guess (`.../Availability/{City}`,
-// no "City/" segment) with a genuine HTTP 404 — see
-// TDX_BIKE_AVAILABILITY_PATH_PREFIX's comment in constants.ts for the full
-// story. Corrected to match bus ETA's convention
-// (`.../Availability/City/{City}`), itself still pending re-confirmation
-// via another real dispatch before this stops being a skeleton.
+// disproved the initial WebSearch-derived guess for Availability
+// (`.../Availability/{City}`, no "City/" segment) with a genuine HTTP 404
+// — see TDX_BIKE_AVAILABILITY_PATH_PREFIX's comment in constants.ts.
+// Corrected to `.../Availability/City/{City}`, matching bus ETA's
+// convention, and confirmed via a second real dispatch.
 //
-// The response FIELD structure is NOT yet confirmed against a real API
-// response (same sandbox network restriction as every other TDX/CWA/MOENV
-// entry in this project) — this follows the established "skeleton +
-// fixtures-refresh.yml dispatch" methodology proven out for bus ETA:
-// register with a pass-through transform now, get a real capture via a
-// dispatched Actions run, then rewrite `transform`/`TdxYouBikeRawRecord` to
-// match reality before this ships in a tool description that promises
-// specific fields.
+// Availability's real response (confirmed via that same dispatch) is a
+// bare JSON array of:
+//   { StationUID, StationID, ServiceStatus, ServiceType,
+//     AvailableRentBikes, AvailableReturnBikes, SrcUpdateTime, UpdateTime,
+//     AvailableRentBikesDetail: { GeneralBikes, ElectricBikes } }
+// Critically — and this is exactly the kind of gap the skeleton+dispatch
+// process exists to catch — **there is no station name field at all**.
+// TDX splits bike-sharing data across two endpoints: Availability (dynamic
+// counts only) and Station (static metadata: name/address/coordinates/
+// capacity), the same "static vs. dynamic" split GTFS-realtime uses. A
+// tool that promised "站名" per the task's requirement can't be built on
+// Availability alone, so `youBikeStationEntry` below registers the
+// metadata endpoint too (path assumed to follow the same confirmed
+// `.../City/{City}` convention as bus ETA and bike availability — still a
+// skeleton pending its own real-dispatch confirmation), and the curated
+// `tw_youbike` tool (tools/bike.ts) fetches BOTH and joins them client-side
+// by StationUID — a new pattern in this codebase (every prior curated tool
+// wraps exactly one registry entry), disclosed here and in the PR per
+// AGENTS.md §7.3.
 //
-// Per WebSearch, TDX's bike endpoints document OData `$filter` support
-// (e.g. `$filter=StationName eq '...'`) for station-level filtering —
-// unlike bus ETA's routeName, which uses a URL path segment. This is a
-// QUERY PARAMETER, not a path segment, so per AGENTS.md §6 ("upstream
-// filters aren't guaranteed to work") this skeleton deliberately does NOT
-// attempt to send a $filter this round — the exact field path/syntax
-// TDX's OData parser expects isn't confirmed, and a malformed $filter
-// value risks a 400 from TDX instead of silently degrading to
-// "return everything," which is the whole reason to be cautious here.
-// Whether an upstream $filter is worth attempting (and whether it's
-// trustworthy if so) is exactly what this round's real dispatch is meant
-// to help decide — see the follow-up commit's module comment for the
-// resolution once real data is in hand.
+// Neither entry attempts an upstream $filter (TDX's bike endpoints
+// document OData `$filter` support, e.g. `$filter=StationName eq '...'`,
+// but the exact field path/syntax wasn't independently confirmed this
+// session, and a malformed $filter risks a 400 rather than a safe no-op)
+// — `stationName` filtering happens entirely client-side in the tool layer
+// after the join, per AGENTS.md §6.
+//
+// TTL evidence (from the real Availability capture, Taipei, 1,775
+// stations): all 1,750 currently-in-service (ServiceStatus=1) stations
+// shared the exact same `UpdateTime` value — TDX republishes this dataset
+// as one batch, not per-station. The per-station `SrcUpdateTime` (each
+// operator's own last-report time) to `UpdateTime` (TDX's batch time) gap
+// had a median of 153s (~2.5 min), consistent with YouBike's own commonly
+// documented ~1-minute refresh cadence. This is a coarser cadence than bus
+// ETA's (~7s SrcUpdateTime-UpdateTime gap, TTL 30s) — evidence-based
+// YOUBIKE_CACHE_TTL_SECONDS is set accordingly, not copied from bus ETA.
+// (The 25 ServiceStatus=0 "not in service" stations had gaps up to ~510
+// days — clearly stale/decommissioned entries, excluded from this
+// reasoning as not representative of live cadence.)
 
 export const youBikeInputShape = {
   city: z
@@ -233,45 +250,93 @@ export interface YouBikeParams {
   stationName?: string;
 }
 
-/**
- * SKELETON raw record type — deliberately `Record<string, unknown>` rather
- * than named fields, since the real field names/casing aren't confirmed yet
- * (see module comment above). Do not build a tool description around
- * specific fields until this has been replaced post-dispatch.
- */
-export type TdxYouBikeRawRecord = Record<string, unknown>;
-
-export interface YouBikeResult {
-  [key: string]: unknown;
-  query: { city: string; stationName?: string };
-  raw: TdxYouBikeRawRecord[];
+export interface TdxBikeAvailabilityRawRecord {
+  StationUID?: string;
+  StationID?: string;
+  /** 0 = 非營運中／已停用, 1 = 正常營運中— confirmed present in the real capture (both values seen), TDX's documented meaning not independently re-derived this session. */
+  ServiceStatus?: number;
+  /** Only value `2` observed in the real capture — meaning not confirmed, kept as an opaque passthrough rather than interpreted. */
+  ServiceType?: number;
+  AvailableRentBikes?: number;
+  AvailableReturnBikes?: number;
+  SrcUpdateTime?: string;
+  UpdateTime?: string;
+  AvailableRentBikesDetail?: { GeneralBikes?: number; ElectricBikes?: number };
 }
 
-export const youBikeEntry: DatasetEntry<YouBikeParams, TdxYouBikeRawRecord[], YouBikeResult> = {
-  id: "tdx:youbike",
+export interface YouBikeAvailabilityResult {
+  [key: string]: unknown;
+  query: { city: string };
+  stations: TdxBikeAvailabilityRawRecord[];
+}
+
+export const youBikeAvailabilityEntry: DatasetEntry<
+  { city: string },
+  TdxBikeAvailabilityRawRecord[],
+  YouBikeAvailabilityResult
+> = {
+  id: "tdx:youbike-availability",
   source: "tdx",
   path: TDX_BIKE_AVAILABILITY_PATH_PREFIX,
-  title: "公共自行車（YouBike 等）即時車柱資訊",
+  title: "公共自行車（YouBike 等）即時車柱可借還數量",
   keywords: ["youbike", "公共自行車", "腳踏車", "共享單車", "還有車嗎", "還有位子嗎", "bike availability", "bike sharing"],
-  paramsSchema: youBikeInputShape,
+  paramsSchema: { city: youBikeInputShape.city },
   buildQueryParams: () => ({ "$format": "JSON" }),
   buildPathSegments: params => [params.city],
-  // SKELETON transform: pass the raw array straight through, tagged with
-  // the query that produced it. Replaced with real field mapping + the
-  // client-side filter required by AGENTS.md §6 once a real dispatch of
-  // fixtures-refresh.yml confirms the actual response shape.
-  transform: (raw, params) => ({
-    query: { city: params.city, stationName: params.stationName },
-    raw
-  }),
-  cacheTtlSeconds: YOUBIKE_CACHE_TTL_SECONDS_SKELETON,
-  updateFrequency: "動態即時資料，確切更新頻率待真實 dispatch 確認",
+  // No station name in this endpoint's own data (see module comment) — no
+  // client-side name filter is possible here; tw_youbike (tools/bike.ts)
+  // is where stationName filtering actually happens, after joining with
+  // youBikeStationEntry.
+  transform: (raw, params) => ({ query: { city: params.city }, stations: raw }),
+  cacheTtlSeconds: YOUBIKE_CACHE_TTL_SECONDS,
+  updateFrequency: "動態即時資料，TDX 以整批方式重新發布，實測批次時間間隔約 1-3 分鐘等級（詳見上方模組註解的證據）",
   docUrl: "https://tdx.transportdata.tw/api-service/swagger/basic",
   notes:
-    "SKELETON — 欄位結構尚未經真實 API 回應驗證，transform 目前僅原樣轉出 raw 陣列。" +
-    "id 使用描述性 slug（tdx:youbike）而非官方資料集代碼，同 tdx:bus-eta 的理由。",
+    "欄位結構已於 2026-07-22 透過 fixtures-refresh.yml 真實 API 回應確認（Taipei，1,775 站）。" +
+    "此資料集本身不含站名——站名要透過 tdx:youbike-station 依 StationUID 對應，" +
+    "tw_youbike 精選工具會自動 join 兩個資料集；本 entry 單獨透過 tw_query_dataset 查詢時只會拿到" +
+    "車柱 ID 與可借還數量，不含站名。",
   sampleParams: { city: "Taipei" },
-  fixtureFileName: "youbike.json"
+  fixtureFileName: "youbike-availability.json"
 };
 
-registerEntry(youBikeEntry as unknown as DatasetEntry<never, unknown, unknown>);
+registerEntry(youBikeAvailabilityEntry as unknown as DatasetEntry<never, unknown, unknown>);
+
+// --- Bike/Station/City/{City}: public bike-sharing station metadata (SKELETON) ---
+//
+// Path ASSUMED to follow the same `.../City/{City}` convention confirmed
+// for bus ETA and bike availability (see TDX_BIKE_STATION_PATH_PREFIX's
+// comment in constants.ts) — not yet independently confirmed via a real
+// dispatch. Field structure is entirely unconfirmed (skeleton pass-through
+// transform) pending that dispatch.
+
+export interface TdxBikeStationRawRecord {
+  [key: string]: unknown;
+}
+
+export interface YouBikeStationResult {
+  [key: string]: unknown;
+  query: { city: string };
+  raw: TdxBikeStationRawRecord[];
+}
+
+export const youBikeStationEntry: DatasetEntry<{ city: string }, TdxBikeStationRawRecord[], YouBikeStationResult> = {
+  id: "tdx:youbike-station",
+  source: "tdx",
+  path: TDX_BIKE_STATION_PATH_PREFIX,
+  title: "公共自行車（YouBike 等）站點基本資料",
+  keywords: ["youbike 站點", "自行車站", "bike station", "youbike station"],
+  paramsSchema: { city: youBikeInputShape.city },
+  buildQueryParams: () => ({ "$format": "JSON" }),
+  buildPathSegments: params => [params.city],
+  // SKELETON transform — see module comment above.
+  transform: (raw, params) => ({ query: { city: params.city }, raw }),
+  cacheTtlSeconds: YOUBIKE_CACHE_TTL_SECONDS_SKELETON,
+  updateFrequency: "站點基本資料，變動極少（新增/停用站點時才會變化）",
+  docUrl: "https://tdx.transportdata.tw/api-service/swagger/basic",
+  notes: "SKELETON — 欄位結構尚未經真實 API 回應驗證，transform 目前僅原樣轉出 raw 陣列。",
+  sampleParams: { city: "Taipei" },
+  fixtureFileName: "youbike-station.json"
+};
+
+registerEntry(youBikeStationEntry as unknown as DatasetEntry<never, unknown, unknown>);
