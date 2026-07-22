@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { formatYouBikeText, runYouBike } from "../../src/tools/bike.js";
+import { formatYouBikeText, handleYouBikeTool, runYouBike } from "../../src/tools/bike.js";
 import type { TdxBikeAvailabilityRawRecord, TdxBikeStationRawRecord } from "../../src/registry/tdx.js";
 import { YOUBIKE_MAX_STATIONS_RETURNED } from "../../src/constants.js";
 
@@ -12,15 +12,43 @@ const stationFixture: TdxBikeStationRawRecord[] = JSON.parse(
   readFileSync(fileURLToPath(new URL("../fixtures/youbike-station.json", import.meta.url)), "utf-8")
 );
 
+const TOKEN_URL = "https://tdx.transportdata.tw/auth/realms/TDXConnect/protocol/openid-connect/token";
+
 function tokenThenDataFetch(availability: unknown[], station: unknown[]): typeof fetch {
   return (async (url: string) => {
-    if (url === "https://tdx.transportdata.tw/auth/realms/TDXConnect/protocol/openid-connect/token") {
+    if (url === TOKEN_URL) {
       return new Response(JSON.stringify({ access_token: "test-token", expires_in: 3600 }), { status: 200 });
     }
     if (url.includes("Bike/Station")) {
       return new Response(JSON.stringify(station), { status: 200 });
     }
     return new Response(JSON.stringify(availability), { status: 200 });
+  }) as unknown as typeof fetch;
+}
+
+/** Availability succeeds; the Station endpoint returns a real HTTP error — the boundary case runYouBike must degrade on, not fail on. */
+function fetchWithStationFailure(availability: unknown[]): typeof fetch {
+  return (async (url: string) => {
+    if (url === TOKEN_URL) {
+      return new Response(JSON.stringify({ access_token: "test-token", expires_in: 3600 }), { status: 200 });
+    }
+    if (url.includes("Bike/Station")) {
+      return new Response("station endpoint down", { status: 500 });
+    }
+    return new Response(JSON.stringify(availability), { status: 200 });
+  }) as unknown as typeof fetch;
+}
+
+/** The reverse boundary case: Availability fails — there's no bike-count data to show, so this must still fail the whole call even though Station would have succeeded. */
+function fetchWithAvailabilityFailure(station: unknown[]): typeof fetch {
+  return (async (url: string) => {
+    if (url === TOKEN_URL) {
+      return new Response(JSON.stringify({ access_token: "test-token", expires_in: 3600 }), { status: 200 });
+    }
+    if (url.includes("Bike/Station")) {
+      return new Response(JSON.stringify(station), { status: 200 });
+    }
+    return new Response("availability endpoint down", { status: 500 });
   }) as unknown as typeof fetch;
 }
 
@@ -82,6 +110,73 @@ describe("runYouBike", () => {
     expect(result.stations).toHaveLength(YOUBIKE_MAX_STATIONS_RETURNED);
     expect(result.truncated).toBe(true);
   });
+
+  describe("partial upstream failure (two-entry join boundary case)", () => {
+    it("degrades to StationUID-only output when station metadata fails but availability succeeds", async () => {
+      const result = await runYouBike(
+        { city: "Taipei" },
+        { TDX_CLIENT_ID: "id", TDX_CLIENT_SECRET: "secret" },
+        fetchWithStationFailure(availabilityFixture)
+      );
+
+      expect(result.stationMetadataUnavailable).toBe(true);
+      // The bike counts — the actual point of this tool — still come through.
+      expect(result.totalMatched).toBe(availabilityFixture.length);
+      expect(result.stations[0].stationUid).toBe(availabilityFixture[0].StationUID);
+      expect(result.stations[0].availableRentBikes).toBe(availabilityFixture[0].AvailableRentBikes);
+      // No name to give, so it stays null (formatYouBikeText falls back to
+      // the StationUID for display) rather than a fabricated placeholder.
+      expect(result.stations.every(s => s.stationName === null && s.totalCapacity === null)).toBe(true);
+    });
+
+    it("ignores an unhonorable stationName filter when station metadata is unavailable, instead of reporting zero matches", async () => {
+      const result = await runYouBike(
+        { city: "Taipei", stationName: "some real station name" },
+        { TDX_CLIENT_ID: "id", TDX_CLIENT_SECRET: "secret" },
+        fetchWithStationFailure(availabilityFixture)
+      );
+
+      expect(result.stationMetadataUnavailable).toBe(true);
+      // Nothing has a name to match against, so the filter is skipped
+      // rather than silently matching zero and looking like "no such
+      // station" — the query still records what the caller asked for.
+      expect(result.totalMatched).toBe(availabilityFixture.length);
+      expect(result.query.stationName).toBe("some real station name");
+    });
+
+    it("fails the whole call when availability itself fails, even though station metadata would have succeeded", async () => {
+      await expect(
+        runYouBike(
+          { city: "Taipei" },
+          { TDX_CLIENT_ID: "id", TDX_CLIENT_SECRET: "secret" },
+          fetchWithAvailabilityFailure(stationFixture)
+        )
+      ).rejects.toThrow();
+    });
+
+    it("handleYouBikeTool still returns a successful (non-error) MCP result when only station metadata failed", async () => {
+      const result = await handleYouBikeTool(
+        { city: "Taipei" },
+        { TDX_CLIENT_ID: "id", TDX_CLIENT_SECRET: "secret" },
+        fetchWithStationFailure(availabilityFixture)
+      );
+
+      expect(result.isError).toBeUndefined();
+      expect((result.structuredContent as { ok?: boolean }).ok).toBe(true);
+      expect(result.content[0]?.text).toContain("站點基本資料");
+    });
+
+    it("handleYouBikeTool returns an error MCP result when availability fails", async () => {
+      const result = await handleYouBikeTool(
+        { city: "Taipei" },
+        { TDX_CLIENT_ID: "id", TDX_CLIENT_SECRET: "secret" },
+        fetchWithAvailabilityFailure(stationFixture)
+      );
+
+      expect(result.isError).toBe(true);
+      expect((result.structuredContent as { ok?: boolean }).ok).toBe(false);
+    });
+  });
 });
 
 describe("formatYouBikeText", () => {
@@ -105,7 +200,8 @@ describe("formatYouBikeText", () => {
         }
       ],
       totalMatched: 1,
-      truncated: false
+      truncated: false,
+      stationMetadataUnavailable: false
     });
 
     expect(text).toContain("YouBike2.0_測試站");
@@ -118,7 +214,13 @@ describe("formatYouBikeText", () => {
   });
 
   it("reports zero matches in plain language, not as an error", () => {
-    const text = formatYouBikeText({ query: { city: "Taipei", stationName: "no-such-station" }, stations: [], totalMatched: 0, truncated: false });
+    const text = formatYouBikeText({
+      query: { city: "Taipei", stationName: "no-such-station" },
+      stations: [],
+      totalMatched: 0,
+      truncated: false,
+      stationMetadataUnavailable: false
+    });
     expect(text).toContain("查無");
     expect(text).toContain("不代表本伺服器資料異常");
   });
@@ -143,9 +245,39 @@ describe("formatYouBikeText", () => {
         }
       ],
       totalMatched: 2000,
-      truncated: true
+      truncated: true,
+      stationMetadataUnavailable: false
     });
     expect(text).toContain("2000");
     expect(text).toContain("stationName");
+  });
+
+  it("shows a degraded-data warning, and falls back to StationUID as the display name, when station metadata is unavailable", () => {
+    const text = formatYouBikeText({
+      query: { city: "Taipei", stationName: "somewhere" },
+      stations: [
+        {
+          stationUid: "TPE500101001",
+          stationName: null,
+          stationNameEn: null,
+          address: null,
+          latitude: null,
+          longitude: null,
+          availableRentBikes: 3,
+          availableGeneralBikes: null,
+          availableElectricBikes: null,
+          availableReturnBikes: 5,
+          totalCapacity: null,
+          updateTime: null
+        }
+      ],
+      totalMatched: 1,
+      truncated: false,
+      stationMetadataUnavailable: true
+    });
+
+    expect(text).toContain("站點基本資料");
+    expect(text).toContain("TPE500101001");
+    expect(text).toContain("忽略 stationName");
   });
 });

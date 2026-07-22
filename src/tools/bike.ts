@@ -37,6 +37,12 @@ export interface YouBikeResult {
   stations: YouBikeStationSummary[];
   totalMatched: number;
   truncated: boolean;
+  /**
+   * true when the station-metadata fetch (name/address/capacity) failed
+   * but availability (bike counts) still succeeded — see runYouBike's doc
+   * comment for why this degrades instead of failing the whole call.
+   */
+  stationMetadataUnavailable: boolean;
 }
 
 function matchesStationName(station: YouBikeStationSummary, keyword: string | undefined): boolean {
@@ -53,12 +59,30 @@ function matchesStationName(station: YouBikeStationSummary, keyword: string | un
  * splits this dataset in two) — disclosed in the PR per AGENTS.md §7.3.
  * Directly unit-testable against a mocked `fetchImpl`, same pattern as the
  * other curated tools.
+ *
+ * The two fetches are NOT symmetric on failure. Availability carries the
+ * actual answer to what this tool exists for (bike counts) — if it fails,
+ * there's nothing useful to return, so that failure propagates and fails
+ * the whole call, same as any other curated tool. Station metadata is
+ * enrichment (name/address/capacity) — if only *that* fetch fails,
+ * degrading to StationUID-only output (still real counts, just unnamed)
+ * is more useful than discarding a successful Availability response over
+ * an unrelated endpoint's outage. This also means a `stationName` filter
+ * can't be honored when station metadata is unavailable (nothing has a
+ * name to match against) — silently returning zero matches would be
+ * misread as "no stations exist," so the filter is skipped instead and
+ * `stationMetadataUnavailable` tells the caller why.
  */
 export async function runYouBike(params: YouBikeParams, env: Env, fetchImpl?: typeof fetch): Promise<YouBikeResult> {
-  const [availabilityResult, stationResult] = await Promise.all([
-    tdxAdapter.fetchDataset(youBikeAvailabilityEntry, { city: params.city }, env, fetchImpl),
-    tdxAdapter.fetchDataset(youBikeStationEntry, { city: params.city }, env, fetchImpl)
-  ]);
+  const availabilityResult = await tdxAdapter.fetchDataset(youBikeAvailabilityEntry, { city: params.city }, env, fetchImpl);
+
+  let stationResult: TdxBikeStationRawRecord[] = [];
+  let stationMetadataUnavailable = false;
+  try {
+    stationResult = await tdxAdapter.fetchDataset(youBikeStationEntry, { city: params.city }, env, fetchImpl);
+  } catch {
+    stationMetadataUnavailable = true;
+  }
 
   const stationByUid = new Map<string, TdxBikeStationRawRecord>();
   for (const station of stationResult) {
@@ -89,14 +113,16 @@ export async function runYouBike(params: YouBikeParams, env: Env, fetchImpl?: ty
   // since Availability alone has no name to filter by (see registry/tdx.ts)
   // — and per AGENTS.md §6, done unconditionally rather than trusting an
   // upstream filter this codebase never even attempts to send here.
-  const matched = joined.filter(station => matchesStationName(station, params.stationName));
+  const effectiveStationNameFilter = stationMetadataUnavailable ? undefined : params.stationName;
+  const matched = joined.filter(station => matchesStationName(station, effectiveStationNameFilter));
   const truncated = matched.length > YOUBIKE_MAX_STATIONS_RETURNED;
 
   return {
     query: { city: params.city, stationName: params.stationName },
     stations: matched.slice(0, YOUBIKE_MAX_STATIONS_RETURNED),
     totalMatched: matched.length,
-    truncated
+    truncated,
+    stationMetadataUnavailable
   };
 }
 
@@ -121,6 +147,13 @@ export function formatYouBikeText(result: YouBikeResult): string {
   }
 
   const lines = [`# YouBike 站點即時資訊（${result.query.city}）`, ""];
+  if (result.stationMetadataUnavailable) {
+    lines.push(
+      "⚠️ 站點基本資料（站名/地址/總車位數）目前無法取得，以下僅顯示車柱代碼（StationUID）與即時可借還數量" +
+        (result.query.stationName ? "；由於沒有站名可比對，本次查詢已忽略 stationName 篩選條件。" : "。")
+    );
+    lines.push("");
+  }
   for (const station of result.stations) {
     const name = station.stationName ?? station.stationUid ?? "（未知站點）";
     lines.push(`- ${name}：${formatAvailability(station)}（更新時間：${station.updateTime ?? "無資料"}）`);
