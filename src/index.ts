@@ -4,6 +4,7 @@ import { CfWorkerJsonSchemaValidator } from "@modelcontextprotocol/sdk/validatio
 
 import type { CacheStore } from "./infra/cache.js";
 import { airQualityInputShape, handleAirQualityTool } from "./tools/air-quality.js";
+import { busEtaInputShape, handleBusEtaTool } from "./tools/bus-eta.js";
 import { handleRecentEarthquakesTool, recentEarthquakesInputShape } from "./tools/earthquake.js";
 import { handleQueryDatasetTool, handleSearchDatasetsTool, queryDatasetInputShape, searchDatasetsInputShape } from "./tools/generic.js";
 import { handleTyphoonTool, typhoonNewsInputShape } from "./tools/typhoon.js";
@@ -14,10 +15,16 @@ export interface Env {
   CWA_API_KEY?: string;
   /** MOENV open data platform API key. Set via `wrangler secret put MOENV_API_KEY`, never committed. */
   MOENV_API_KEY?: string;
+  /** TDX (交通部運輸資料流通服務) OAuth2 client id. Set via `wrangler secret put TDX_CLIENT_ID`, never committed. */
+  TDX_CLIENT_ID?: string;
+  /** TDX OAuth2 client secret, paired with TDX_CLIENT_ID. Set via `wrangler secret put TDX_CLIENT_SECRET`, never committed. */
+  TDX_CLIENT_SECRET?: string;
   /**
    * Cloudflare KV namespace used as a short-TTL response cache (binding name
    * `CACHE` in wrangler.toml). Optional — tools work without it, every call
-   * just hits the upstream API directly.
+   * just hits the upstream API directly. Also used by `adapters/tdx.ts` to
+   * cache the OAuth2 access token (key `tdx:access_token`) — same store,
+   * different key namespace, no dedicated binding needed.
    */
   CACHE?: CacheStore;
 }
@@ -135,6 +142,36 @@ function createServer(env: Env): McpServer {
   );
 
   server.registerTool(
+    "tw_bus_eta",
+    {
+      title: "台灣公車動態預估到站時間（交通部 TDX）",
+      description:
+        "查詢交通部運輸資料流通服務（TDX）「公車動態預估到站時間」，" +
+        "回傳指定縣市（可加路線/站牌篩選）目前的公車動態資料：路線名稱、站牌名稱、行駛方向、" +
+        "預估幾秒後到站（若目前無預估資料則不提供，不代表資料異常）、資料更新時間。\n\n" +
+        "參數：\n" +
+        "- city：必填，TDX 標準縣市英文代碼（例如「Taipei」「NewTaipei」「Taichung」「Kaohsiung」），" +
+        "**不是**中文全形縣市名稱。\n" +
+        "- routeName：選填但強烈建議提供（例如「615」「藍29」「重慶幹線」）——不填會查詢整個縣市所有路線，" +
+        "資料量非常大，回應只會回傳前面一部分結果並提示縮小查詢範圍。\n" +
+        "- stopName：選填，進一步篩選特定站牌（例如「板橋車站」）。\n\n" +
+        "適用情境：使用者詢問「某路線公車還有幾分鐘到站」「某站牌現在有哪些公車動態」。\n" +
+        "不適用：本工具不提供路網規劃、轉乘建議、票價查詢，也不提供公車即時位置地圖座標；" +
+        "只回傳官方到站預估與站牌/路線基本資訊。\n\n" +
+        "資料範圍限制：僅涵蓋 TDX 平台已串接的縣市公車業者，部分偏遠路線或非固定班次業者可能未涵蓋；" +
+        "「目前無預估到站時間」是真實常見情況（例如末班車已過、今日未營運等），不代表本伺服器查詢失敗。",
+      inputSchema: busEtaInputShape,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true
+      }
+    },
+    ({ city, routeName, stopName }) => handleBusEtaTool({ city, routeName, stopName }, env)
+  );
+
+  server.registerTool(
     "tw_search_datasets",
     {
       title: "搜尋本伺服器已登記的資料集",
@@ -143,7 +180,7 @@ function createServer(env: Env): McpServer {
         "**只搜尋本伺服器已收錄的資料集，不是搜尋整個政府開放資料平台**。\n\n" +
         "參數：\n" +
         "- query：搜尋關鍵字，比對資料集標題與關鍵字標籤（例如「地震」「空氣品質」「溫度」）。\n" +
-        "- source：選填，只搜尋特定機關（cwa＝中央氣象署，moenv＝環境部），不填則搜尋所有機關。\n\n" +
+        "- source：選填，只搜尋特定機關（cwa＝中央氣象署，moenv＝環境部，tdx＝交通部運輸資料流通服務），不填則搜尋所有機關。\n\n" +
         "適用情境：不確定要用哪個精選工具查某項資料、或想知道除了 tw_weather_forecast／tw_recent_earthquakes／" +
         "tw_air_quality 之外還有哪些資料集可以透過 tw_query_dataset 查詢時。\n" +
         "不適用：查詢資料集的實際內容（找到 datasetId 後請改用 tw_query_dataset）。\n\n" +

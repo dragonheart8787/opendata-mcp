@@ -32,6 +32,7 @@ import { fileURLToPath } from "node:url";
 
 import { buildCwaUrl } from "../../src/adapters/cwa.js";
 import { buildMoenvUrl } from "../../src/adapters/moenv.js";
+import { getAccessToken, buildTdxUrl } from "../../src/adapters/tdx.js";
 import { httpGet } from "../../src/infra/http.js";
 import { listDatasetEntries } from "../../src/registry/index.js";
 import { diffShapesFromValues, formatShapeDiff } from "./shape-diff.js";
@@ -41,11 +42,14 @@ import { diffShapesFromValues, formatShapeDiff } from "./shape-diff.js";
 // their registry module imported here too, same as src/index.ts does.
 import "../../src/registry/cwa.js";
 import "../../src/registry/moenv.js";
+import "../../src/registry/tdx.js";
 
 const FIXTURES_DIR = path.resolve(fileURLToPath(new URL(".", import.meta.url)), "../../test/fixtures");
 
 const CWA_API_KEY = process.env.CWA_API_KEY;
 const MOENV_API_KEY = process.env.MOENV_API_KEY;
+const TDX_CLIENT_ID = process.env.TDX_CLIENT_ID;
+const TDX_CLIENT_SECRET = process.env.TDX_CLIENT_SECRET;
 
 /** Defensive: strip any literal occurrence of the API key out of a captured response before it's ever written to disk. */
 function redact(text: string, secret: string | undefined): string {
@@ -53,8 +57,8 @@ function redact(text: string, secret: string | undefined): string {
   return text.split(secret).join("[REDACTED]");
 }
 
-async function fetchRawJson(url: URL, secret: string | undefined): Promise<unknown> {
-  const response = await httpGet(url.toString(), { headers: { accept: "application/json" } });
+async function fetchRawJson(url: URL, secret: string | undefined, extraHeaders?: Record<string, string>): Promise<unknown> {
+  const response = await httpGet(url.toString(), { headers: { accept: "application/json", ...extraHeaders } });
   const text = await response.text();
   if (!response.ok) {
     throw new Error(
@@ -82,6 +86,16 @@ function buildChecks(): DatasetCheck[] {
 
   const checks: DatasetCheck[] = [];
 
+  // Deliberately no upfront "TDX_CLIENT_ID/TDX_CLIENT_SECRET must be set"
+  // throw here, unlike the CWA/MOENV check above: those two are assumed
+  // permanently configured (this script has always required them). TDX is
+  // brand new — its secrets may not exist in this repo yet — and a missing
+  // TDX credential must not abort the whole run and lose CWA/MOENV
+  // verification along with it. If TDX_CLIENT_ID/TDX_CLIENT_SECRET are
+  // unset, getAccessToken() below throws its normal AUTH_MISSING ToolError,
+  // which the per-check try/catch in main() already handles the same way
+  // it handles any other per-dataset fetch failure (e.g. O-B0076-001's real
+  // 404) — logged and surfaced in the summary, not a hard abort.
   for (const entry of listDatasetEntries()) {
     if (entry.sampleParams === undefined) {
       console.log(`Skipping ${entry.id} (${entry.title}) — no sampleParams declared, can't safely build a request.`);
@@ -94,12 +108,19 @@ function buildChecks(): DatasetCheck[] {
     checks.push({
       name: `${entry.title} (${entry.id})`,
       fixturePath: path.join(FIXTURES_DIR, fixtureFileName),
-      fetch: () => {
+      fetch: async () => {
         if (entry.source === "cwa") {
           return fetchRawJson(buildCwaUrl(entry, sampleParams, CWA_API_KEY!), CWA_API_KEY);
         }
         if (entry.source === "moenv") {
           return fetchRawJson(buildMoenvUrl(entry, sampleParams, MOENV_API_KEY!), MOENV_API_KEY);
+        }
+        if (entry.source === "tdx") {
+          // No KV in this standalone script, so no token caching — each run
+          // fetches its own token, which is fine for a scheduled/on-demand
+          // fixtures refresh (nowhere near TDX's per-IP rate limit).
+          const accessToken = await getAccessToken({ TDX_CLIENT_ID, TDX_CLIENT_SECRET, CACHE: undefined }, fetch);
+          return fetchRawJson(buildTdxUrl(entry, sampleParams), undefined, { authorization: `Bearer ${accessToken}` });
         }
         throw new Error(`No fixtures-refresh fetch strategy for source "${entry.source}" (dataset ${entry.id}).`);
       }

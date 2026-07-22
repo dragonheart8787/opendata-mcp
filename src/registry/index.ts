@@ -25,7 +25,7 @@ import type { ZodTypeAny } from "zod";
 export interface DatasetEntry<TParams = never, TRaw = unknown, TResult = unknown> {
   /** e.g. "cwa:F-C0032-001" */
   id: string;
-  source: "cwa" | "moenv";
+  source: "cwa" | "moenv" | "tdx";
   /** Dataset id/path used by the adapter to build the upstream URL. */
   path: string;
   title: string;
@@ -44,6 +44,20 @@ export interface DatasetEntry<TParams = never, TRaw = unknown, TResult = unknown
    */
   validateParams?: (params: TParams) => void;
   buildQueryParams: (params: TParams) => Record<string, string | undefined>;
+  /**
+   * Optional additional URL path segments to append after `path`, computed
+   * from params. Needed by TDX: its REST paths embed the primary selector
+   * as a path segment rather than a query parameter (e.g.
+   * `Bus/EstimatedTimeOfArrival/City/{city}`), unlike CWA/MOENV which
+   * always use a fixed dataset `path` plus query-string params for
+   * everything variable. Each returned segment is URL-encoded individually
+   * by the adapter (`adapters/tdx.ts`'s `buildTdxUrl`). Undefined/omitted
+   * for CWA/MOENV entries, which don't need it — a third extension beyond
+   * the two already disclosed above (`validateParams`, `buildQueryParams`
+   * taking `(raw, params)`), added and disclosed in the PR that introduced
+   * the TDX adapter.
+   */
+  buildPathSegments?: (params: TParams) => string[];
   transform: (raw: TRaw, params: TParams) => TResult;
   cacheTtlSeconds: number;
   /** Human-readable update cadence, surfaced in the response envelope (e.g. "每小時"). */

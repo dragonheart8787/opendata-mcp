@@ -18,6 +18,82 @@ export const W_C0034_005_DATASET_ID = "W-C0034-005";
 /** Typhoon warning (颱風消息與警報-颱風警報) — generic-layer only, see registry/cwa.ts. */
 export const W_C0034_001_DATASET_ID = "W-C0034-001";
 
+/**
+ * TDX (交通部運輸資料流通服務) OAuth2 client_credentials token endpoint.
+ * Confirmed via the task's own pre-verified spec (not re-searched this
+ * session) and cross-checked against TDX's official onboarding docs during
+ * research: HTTP POST, application/x-www-form-urlencoded body with
+ * grant_type=client_credentials + client_id + client_secret.
+ */
+export const TDX_TOKEN_URL = "https://tdx.transportdata.tw/auth/realms/TDXConnect/protocol/openid-connect/token";
+
+/** TDX's "basic" data API base — confirmed via WebSearch against the official Swagger docs (tdx.transportdata.tw/api-service/swagger), not memory. */
+export const TDX_API_BASE_URL = "https://tdx.transportdata.tw/api/basic";
+
+/** TDX member portal — where to register and create a client id/secret pair. */
+export const TDX_SIGNUP_URL = "https://tdx.transportdata.tw/register";
+
+/**
+ * Path prefix for the bus estimated-time-of-arrival dataset, including the
+ * `v2` API version segment TDX's basic data API uses for this resource
+ * group (confirmed via multiple real example URLs found by WebSearch, e.g.
+ * `tdx.transportdata.tw/api/basic/v2/Bus/EstimatedTimeOfArrival/City/
+ * Taipei/202?$format=JSON` — not assumed from TDX_API_BASE_URL alone).
+ * Full documented path: `/v2/Bus/EstimatedTimeOfArrival/City/{City}`
+ * (city as a required URL path segment, not a query param — unlike CWA/
+ * MOENV). The `{City}` segment itself is supplied per-request by
+ * `busEtaEntry.buildPathSegments` (see registry/tdx.ts), not baked in here.
+ */
+export const TDX_BUS_ETA_PATH_PREFIX = "v2/Bus/EstimatedTimeOfArrival/City";
+
+/**
+ * TDX's English city/county path-segment codes. The six special
+ * municipalities (Taipei/NewTaipei/Taoyuan/Taichung/Tainan/Kaohsiung) are
+ * confirmed with high confidence — identical spelling appeared across every
+ * independent source checked. The remaining counties/cities are confirmed
+ * with moderate confidence (consistent across sources found, but TDX's own
+ * Swagger/city-code reference page could not be fetched directly — blocked
+ * by the sites queried returning 403 to automated fetches). Hsinchu and
+ * Chiayi are the two names most likely to be wrong if this list has an
+ * error (city vs. county naming: "Hsinchu"/"Chiayi" for the cities,
+ * "HsinchuCounty"/"ChiayiCounty" for the counties) — this wasn't
+ * independently re-verified via a real TDX response in this session (only
+ * "Taipei", used as sampleParams, was), so a wrong entry here would surface
+ * as a normal empty-result/404 for that one city, not a systemic failure.
+ */
+export const TDX_CITIES = [
+  "Taipei",
+  "NewTaipei",
+  "Taoyuan",
+  "Taichung",
+  "Tainan",
+  "Kaohsiung",
+  "Keelung",
+  "Hsinchu",
+  "HsinchuCounty",
+  "MiaoliCounty",
+  "ChanghuaCounty",
+  "NantouCounty",
+  "YunlinCounty",
+  "Chiayi",
+  "ChiayiCounty",
+  "PingtungCounty",
+  "YilanCounty",
+  "HualienCounty",
+  "TaitungCounty",
+  "PenghuCounty",
+  "KinmenCounty",
+  "LienchiangCounty"
+] as const;
+
+export type TdxCity = (typeof TDX_CITIES)[number];
+
+/** TDX access tokens are reported to last ~1 day; refresh this much earlier than the upstream `expires_in` to avoid a request landing right at the boundary. */
+export const TDX_TOKEN_EXPIRY_BUFFER_SECONDS = 60;
+
+/** Cloudflare Workers KV's documented minimum TTL for `expirationTtl` — a computed token-cache TTL below this would make the KV `put` call fail. */
+export const KV_MIN_TTL_SECONDS = 60;
+
 export const MOENV_API_BASE_URL = "https://data.moenv.gov.tw/api/v2";
 
 /** MOENV open data platform home — register here, then copy the API key from the member area. */
@@ -64,6 +140,21 @@ export const UV_DAILY_MAX_CACHE_TTL_SECONDS = 30 * 60;
 export const TYPHOON_NEWS_CACHE_TTL_SECONDS = 10 * 60;
 /** W-C0034-001 is issued hourly once a typhoon warning is in effect — same urgency class as weather warnings. */
 export const TYPHOON_WARNING_CACHE_TTL_SECONDS = 10 * 60;
+/** Bus ETA is genuinely real-time (TDX's own dataset description calls it "動態資料"); a short TTL matters more than for any other dataset in this server. */
+export const BUS_ETA_CACHE_TTL_SECONDS = 30;
+
+/**
+ * Cap on how many matched stops a single tw_bus_eta call returns. Confirmed
+ * via a real dispatch of fixtures-refresh.yml that an unfiltered city query
+ * (no routeName/stopName) can return tens of thousands of records for a
+ * major city (Taipei alone: 28,731) — without a cap this would blow the
+ * response-size budget (docs/ARCHITECTURE.md §2.3: "單次工具回應目標 ≤
+ * 2,000 tokens") and be useless to a caller anyway. Chosen generously above
+ * what a single real route's stop count looks like in practice (a real
+ * captured route, "615", had 78 records across both directions) while
+ * still bounding the worst case of an unfiltered city query.
+ */
+export const BUS_ETA_MAX_STOPS_RETURNED = 100;
 
 /**
  * Taiwan's 22 counties/cities as used by CWA's `locationName` parameter.
