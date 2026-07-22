@@ -13,7 +13,7 @@ describe("youBikeEntry", () => {
     expect(listDatasetEntries().some(e => e.id === "tdx:youbike")).toBe(true);
   });
 
-  it("builds only the city as a path segment (no literal 'City/' prefix, unlike bus ETA)", () => {
+  it("builds only the city as a path segment", () => {
     expect(youBikeEntry.buildPathSegments?.({ city: "Taipei" })).toEqual(["Taipei"]);
   });
 

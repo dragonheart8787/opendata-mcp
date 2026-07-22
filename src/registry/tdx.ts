@@ -177,14 +177,15 @@ export const busEtaEntry: DatasetEntry<BusEtaParams, TdxBusEtaRawRecord[], BusEt
 
 registerEntry(busEtaEntry as unknown as DatasetEntry<never, unknown, unknown>);
 
-// --- Bike/Availability/{City}: public bike-sharing (YouBike etc.) real-time availability (SKELETON) ---
+// --- Bike/Availability/City/{City}: public bike-sharing (YouBike etc.) real-time availability (SKELETON) ---
 //
-// Path confirmed via WebSearch against TDX's official Swagger docs and
-// independent integration guides this session (see
-// TDX_BIKE_AVAILABILITY_PATH_PREFIX's comment in constants.ts) — not
-// guessed from memory. Note the shape difference from bus ETA: no literal
-// "City/" segment before the city value (`.../Availability/{City}`, not
-// `.../Availability/City/{City}`).
+// Path corrected 2026-07-22 after a real dispatch of fixtures-refresh.yml
+// disproved the initial WebSearch-derived guess (`.../Availability/{City}`,
+// no "City/" segment) with a genuine HTTP 404 — see
+// TDX_BIKE_AVAILABILITY_PATH_PREFIX's comment in constants.ts for the full
+// story. Corrected to match bus ETA's convention
+// (`.../Availability/City/{City}`), itself still pending re-confirmation
+// via another real dispatch before this stops being a skeleton.
 //
 // The response FIELD structure is NOT yet confirmed against a real API
 // response (same sandbox network restriction as every other TDX/CWA/MOENV

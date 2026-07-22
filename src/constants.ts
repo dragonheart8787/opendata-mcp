@@ -48,16 +48,19 @@ export const TDX_BUS_ETA_PATH_PREFIX = "v2/Bus/EstimatedTimeOfArrival/City";
 
 /**
  * Path prefix for the public bike-sharing (YouBike etc.) real-time
- * availability dataset. Confirmed via WebSearch against TDX's official
- * Swagger docs and independent integration guides — full documented path:
- * `/v2/Bike/Availability/{City}` (city as a required URL path segment).
- * Note the shape difference from bus ETA: there's no literal "City/"
- * segment before the city value here (bus ETA has
- * `.../EstimatedTimeOfArrival/City/{City}`, bike availability has
- * `.../Availability/{City}` directly) — confirmed from multiple
- * independent real example URLs, not assumed by analogy to bus ETA.
+ * availability dataset.
+ *
+ * WebSearch initially suggested `/v2/Bike/Availability/{City}` (no literal
+ * "City/" segment before the city value, unlike bus ETA's `.../City/
+ * {City}`) — a REAL dispatch of fixtures-refresh.yml disproved this with a
+ * genuine HTTP 404 (`{"message":"Resouce Not Found"}`, upstream's own
+ * typo). Corrected to include the "City/" segment, matching bus ETA's
+ * convention (`.../Availability/City/{City}`), pending re-confirmation via
+ * another real dispatch — exactly the "don't trust research-derived paths
+ * without a real response" discipline AGENTS.md already establishes for
+ * field *shapes*, now shown to apply to URL *paths* too.
  */
-export const TDX_BIKE_AVAILABILITY_PATH_PREFIX = "v2/Bike/Availability";
+export const TDX_BIKE_AVAILABILITY_PATH_PREFIX = "v2/Bike/Availability/City";
 
 /**
  * TDX's English city/county path-segment codes. The six special
