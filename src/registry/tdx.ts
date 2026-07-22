@@ -180,7 +180,7 @@ export const busEtaEntry: DatasetEntry<BusEtaParams, TdxBusEtaRawRecord[], BusEt
     "id 使用描述性 slug（tdx:bus-eta）而非官方資料集代碼，因為 TDX 的 API 是以路徑組織，" +
     "不像 CWA/MOENV 有統一的單一資料集代碼可用。StopStatus 數值代碼未轉譯為文字說明——" +
     "真實資料顯示 EstimateTime 是否存在與 StopStatus 數值沒有簡單對應關係，避免臆測語意。",
-  sampleParams: { city: "Taipei", routeName: "615" },
+  sampleParams: undefined, // TEMP: isolating tdx:metro-alert to diagnose a persistent 429, see AGENTS.md §6 — restore after
   fixtureFileName: "bus-eta.json"
 };
 
@@ -304,7 +304,7 @@ export const youBikeAvailabilityEntry: DatasetEntry<
     "此資料集本身不含站名——站名要透過 tdx:youbike-station 依 StationUID 對應，" +
     "tw_youbike 精選工具會自動 join 兩個資料集；本 entry 單獨透過 tw_query_dataset 查詢時只會拿到" +
     "車柱 ID 與可借還數量，不含站名。",
-  sampleParams: { city: "Taipei" },
+  sampleParams: undefined, // TEMP: isolating tdx:metro-alert to diagnose a persistent 429, see AGENTS.md §6 — restore after
   fixtureFileName: "youbike-availability.json"
 };
 
@@ -366,7 +366,7 @@ export const youBikeStationEntry: DatasetEntry<{ city: string }, TdxBikeStationR
     "欄位結構已於 2026-07-22 透過 fixtures-refresh.yml 真實 API 回應確認（Taipei，1,775 站）。" +
     "站名、地址、座標、總車位數皆在此資料集，即時可借還數量在 tdx:youbike-availability，" +
     "tw_youbike 精選工具會自動 join 兩者（依 StationUID）。",
-  sampleParams: { city: "Taipei" },
+  sampleParams: undefined, // TEMP: isolating tdx:metro-alert to diagnose a persistent 429, see AGENTS.md §6 — restore after
   fixtureFileName: "youbike-station.json"
 };
 
@@ -467,7 +467,7 @@ export const railTraStationEntry: DatasetEntry<RailStationParams, TdxRailTraStat
     "欄位結構已於 2026-07-22 透過 fixtures-refresh.yml 真實 API 回應確認（全國 245 站）。" +
     "StationAddress/StationPhone 在部分站點（例如無人招呼站）真的不存在，非欄位遺漏。" +
     "tw_rail 精選工具用此資料集把使用者輸入的車站名稱解析成 LiveBoard 端點需要的 StationID。",
-  sampleParams: {},
+  sampleParams: undefined, // TEMP: isolating tdx:metro-alert to diagnose a persistent 429, see AGENTS.md §6 — restore after
   fixtureFileName: "rail-tra-station.json"
 };
 
@@ -536,7 +536,7 @@ export const railTraLiveboardEntry: DatasetEntry<
     "官方文件註明資料約有 2 分鐘延遲，且不保證與車站月台實際看板完全一致。",
   // "1000" (Taipei Station) confirmed correct by the real dispatch — see
   // module comment above.
-  sampleParams: { stationId: "1000" },
+  sampleParams: undefined, // TEMP: isolating tdx:metro-alert to diagnose a persistent 429, see AGENTS.md §6 — restore after
   fixtureFileName: "rail-tra-liveboard.json"
 };
 
