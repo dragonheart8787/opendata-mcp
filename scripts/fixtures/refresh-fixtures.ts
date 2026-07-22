@@ -46,6 +46,27 @@ import "../../src/registry/tdx.js";
 
 const FIXTURES_DIR = path.resolve(fileURLToPath(new URL(".", import.meta.url)), "../../test/fixtures");
 
+/**
+ * Delay between each dataset check. Added after a real dispatch hit a
+ * genuine TDX HTTP 429 ("API rate limit exceeded") on the 6th TDX entry
+ * checked in one run — this script fires every check back-to-back with no
+ * pacing at all, and every TDX check does its own token fetch AND data
+ * fetch (see `getAccessToken` below), so 6 TDX entries means ~12 rapid
+ * requests to tdx.transportdata.tw before this delay existed. This
+ * disproves an earlier comment on this file's TDX branch that assumed
+ * "nowhere near TDX's per-IP rate limit" — that assumption held only while
+ * there were few enough TDX entries to not notice. 750ms keeps the whole
+ * run's added latency modest (well under 20 real API keys' worth) while
+ * giving TDX's short-window limiter room to breathe; CWA/MOENV haven't
+ * shown any rate-limit symptoms, so this applies uniformly rather than
+ * special-casing one source.
+ */
+const INTER_CHECK_DELAY_MS = 750;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 const CWA_API_KEY = process.env.CWA_API_KEY;
 const MOENV_API_KEY = process.env.MOENV_API_KEY;
 const TDX_CLIENT_ID = process.env.TDX_CLIENT_ID;
@@ -117,8 +138,11 @@ function buildChecks(): DatasetCheck[] {
         }
         if (entry.source === "tdx") {
           // No KV in this standalone script, so no token caching — each run
-          // fetches its own token, which is fine for a scheduled/on-demand
-          // fixtures refresh (nowhere near TDX's per-IP rate limit).
+          // fetches its own token. A real dispatch showed this (plus the
+          // lack of any inter-check delay — see INTER_CHECK_DELAY_MS above)
+          // CAN hit TDX's rate limit once there are enough TDX entries in a
+          // single run; the delay between checks is what keeps this safe
+          // now, not an assumption that TDX's limit is generous.
           const accessToken = await getAccessToken({ TDX_CLIENT_ID, TDX_CLIENT_SECRET, CACHE: undefined }, fetch);
           return fetchRawJson(buildTdxUrl(entry, sampleParams), undefined, { authorization: `Bearer ${accessToken}` });
         }
@@ -136,7 +160,11 @@ async function main(): Promise<void> {
   const summarySections: string[] = [];
   let hadFetchFailure = false;
 
-  for (const check of checks) {
+  for (const [index, check] of checks.entries()) {
+    if (index > 0) {
+      await sleep(INTER_CHECK_DELAY_MS);
+    }
+
     console.log(`Fetching ${check.name}...`);
 
     let fresh: unknown;
