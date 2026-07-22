@@ -117,7 +117,9 @@ This server has no write tools and never will (see architecture doc §0 non-goal
 
 **CWA 海象類資料集（浮標站、波浪、潮位）已知與本專案統一使用的 `/api/v1/rest/datastore/` 端點不相容。** `F-A0012-001` 與 `O-B0076-001` 兩次獨立嘗試皆在真實 dispatch 中回傳真實 HTTP 404，研判這類資料是走獨立的 `ocean.cwa.gov.tw`／`oceanapi.cwa.gov.tw` 平台（不同的認證與資料集代碼格式）。**除非未來發現該平台有相容的 API 形式，否則不要再嘗試接入海象類資料集**——重複嘗試已驗證過兩次的失敗模式，不會有新結果。
 
-**TDX 平台會回傳真實 HTTP 429（`API rate limit exceeded`）**，觀察到的一次情境是同一個 `fixtures-refresh.yml` 執行內短時間對多個 TDX 端點連續打請求時，其中一個端點被打了 429。這**不代表**端點路徑錯誤或資料集不存在——429 是配額問題，不是 404。遇到 429 時：直接記錄下來、稍待一段時間後重新 dispatch 即可，不要因為 429 就懷疑或改寫端點路徑（那是 404 該做的事，兩種失敗模式不要混淆）。
+**TDX 平台會回傳真實 HTTP 429（`API rate limit exceeded`）**，觀察到的一次情境是同一個 `fixtures-refresh.yml` 執行內短時間對多個 TDX 端點連續打請求時，其中一個端點被打了 429。這**不代表**端點路徑錯誤或資料集不存在——429 是配額問題，不是 404。遇到 429 時：直接記錄下來、稍待一段時間後重新 dispatch 即可，不要因為 429 就懷疑或改寫端點路徑（那是 404 該做的事，兩種失敗模式不要混淆）。`scripts/fixtures/refresh-fixtures.ts` 現在每筆 check 之間有 750ms 延遲（`INTER_CHECK_DELAY_MS`），是在同一 session 內連續踩到三次 429 之後加上的緩解措施，但同一天內密集重複 dispatch（例如反覆診斷同一個新端點）仍可能再次踩到——遇到時的優先處理方式是「記錄、等、換一個獨立情境測試（例如暫時停用其他 entry 的 sampleParams 做隔離測試）」，而不是無限重試同一個完整 dispatch。
+
+**同樣密集使用下，TDX 的 OAuth token 端點本身也觀察過回傳真實 HTTP 500（不是資料端點，是認證伺服器）**，且會讓同一次 dispatch 內「每一個」TDX entry 同時失敗（因為每個 TDX entry 都各自獨立打一次 token）。這也**不代表**任何一個資料集路徑或欄位有問題——如果同一次 dispatch 裡所有 TDX entry 同時、同樣地失敗，先假設是 TDX 認證伺服器暫時性問題（很可能與當天稍早對同一組 TDX_CLIENT_ID 的高頻使用有關），不要逐一排查每個資料集的路徑。
 
 **shape-diff.ts 的 `shapeOf` 只檢查陣列第一筆元素的結構，這在真實世界資料波動時會造成「假陽性」的欄位增減提示。** 已至少在兩個獨立資料集上重複驗證過這個現象：`tdx:bus-eta` 的 `EstimateTime`（有/無公車即時預估，純粹取決於抓取當下路線上是否真的有車在跑）與 `cwa:W-C0034-005` 的 `MovingPrediction`（取決於當下第一筆 `Fix` 記錄是否恰好帶有移動預測文字）都曾經在不同次 dispatch 之間互相「新增」又「移除」，但欄位本身在程式碼裡本來就是（且應該維持）optional，不是真的 schema 變動。**規範**：(1) 任何依賴這類欄位的測試，斷言用的樣本資料必須手寫（引用真實欄位值即可）而非依賴 fixture 陣列的固定位置索引（例如 `fixture[0]`），否則下一次 fixture 被真實資料重新整理時測試會脆弱地壞掉——這正是 tw_rail 那次 delay-notice 修復連帶發現、修掉的問題；(2) 看到這類欄位在 schema-drift PR 裡「新增」或「移除」時，先確認程式碼是否已經把它當 optional 處理，若是，只需要更新 fixture 本身，不需要當作真正的結構變動去修 transform。
 
