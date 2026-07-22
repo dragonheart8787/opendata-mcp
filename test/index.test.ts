@@ -33,7 +33,7 @@ describe("worker fetch routing", () => {
     expect(res.status).toBe(405);
   });
 
-  it("completes an MCP initialize handshake and lists all five tools", async () => {
+  it("completes an MCP initialize handshake and lists all registered tools", async () => {
     const initRes = await worker.fetch(
       mcpRequest({
         jsonrpc: "2.0",
@@ -66,6 +66,7 @@ describe("worker fetch routing", () => {
         "tw_air_quality",
         "tw_bus_eta",
         "tw_youbike",
+        "tw_rail",
         "tw_search_datasets",
         "tw_query_dataset"
       ])

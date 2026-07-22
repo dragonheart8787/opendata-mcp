@@ -76,6 +76,43 @@ export const TDX_BIKE_AVAILABILITY_PATH_PREFIX = "v2/Bike/Availability/City";
 export const TDX_BIKE_STATION_PATH_PREFIX = "v2/Bike/Station/City";
 
 /**
+ * Path for the nationwide TRA (台鐵) station list — confirmed via WebSearch
+ * against TDX's official Swagger docs and independent real example URLs
+ * (e.g. `tdx.transportdata.tw/api/basic/v2/Rail/TRA/Station?
+ * $select=StationID,StationAddress`). Unlike bus/bike, this is a single
+ * nationwide list with no per-city or per-station path segment — the whole
+ * point of this entry is to let `tw_rail` resolve a station NAME (what a
+ * caller would actually type) to the StationID the LiveBoard endpoint
+ * requires.
+ */
+export const TDX_RAIL_TRA_STATION_PATH = "v2/Rail/TRA/Station";
+
+/**
+ * Path prefix for TRA's real-time arrival/departure board (LiveBoard) —
+ * confirmed via WebSearch against TDX's official Swagger docs and multiple
+ * independent real example URLs (e.g. `tdx.transportdata.tw/api/basic/v2/
+ * Rail/TRA/LiveBoard/Station/1000?$filter=Direction eq 1&$format=JSON`).
+ * StationID is a required path segment, supplied per-request by
+ * `railTraLiveboardEntry.buildPathSegments` (registry/tdx.ts) — not a
+ * station NAME, which is why `tw_rail` needs `railTraStationEntry` above to
+ * resolve one to the other first.
+ *
+ * TDX's own documentation (per the task that specified this session's
+ * scope, already confirmed — not re-searched) states this LiveBoard has a
+ * known ~2 minute latency and is not guaranteed to exactly match a
+ * station's own physical platform display (TIDS) — this must be disclosed
+ * in tw_rail's tool description, not just this code comment.
+ *
+ * THSR (高鐵) does NOT get an equivalent entry this session: WebSearch
+ * found no THSR endpoint matching this "live delay board" shape — THSR's
+ * TDX endpoints found were DailyTimetable (scheduled, not live) and
+ * AvailableSeatStatus (seat inventory), structurally different from what
+ * this session's task asked for (即時到離站看板 + 誤點分鐘數). Scoped out
+ * rather than forced to fit — see the PR for the full reasoning.
+ */
+export const TDX_RAIL_TRA_LIVEBOARD_PATH_PREFIX = "v2/Rail/TRA/LiveBoard/Station";
+
+/**
  * TDX's English city/county path-segment codes. The six special
  * municipalities (Taipei/NewTaipei/Taoyuan/Taichung/Tainan/Kaohsiung) are
  * confirmed with high confidence — identical spelling appeared across every
@@ -216,6 +253,31 @@ export const YOUBIKE_CACHE_TTL_SECONDS = 60;
 
 /** Cap on how many matched stations a single tw_youbike call returns — same response-budget reasoning as BUS_ETA_MAX_STOPS_RETURNED. Taipei alone has 1,775 real stations (confirmed via dispatch), so an unfiltered/broad query needs this cap. */
 export const YOUBIKE_MAX_STATIONS_RETURNED = 100;
+
+/** Nationwide TRA station list — near-static (station name/location essentially never changes between polls), same reasoning as YOUBIKE_STATION_CACHE_TTL_SECONDS. */
+export const RAIL_TRA_STATION_CACHE_TTL_SECONDS = 24 * 60 * 60;
+
+/**
+ * Cache TTL for TRA LiveBoard. A real capture (Taipei Station, 8 trains)
+ * showed all 8 sharing one identical `UpdateTime` (one batch snapshot) with
+ * per-train `SrcUpdateTime` trailing it by roughly 25s-7min — a single
+ * snapshot can't directly show the batch's own republish interval, so this
+ * doesn't derive a tighter number from that gap the way
+ * BUS_ETA_CACHE_TTL_SECONDS/YOUBIKE_CACHE_TTL_SECONDS did. Instead this
+ * stays at the task's own explicit hard ceiling: TDX's LiveBoard already
+ * carries a documented ~2 minute latency of its own, so this server's cache
+ * must not stack meaningfully more staleness on top of that — 60s max,
+ * consistent with the module comment on railTraLiveboardEntry
+ * (registry/tdx.ts) and the 2-minute-delay disclosure required in tw_rail's
+ * tool description.
+ */
+export const RAIL_LIVEBOARD_CACHE_TTL_SECONDS = 60;
+
+/** Cap on how many trains a single tw_rail call returns for one station's board — same response-budget reasoning as BUS_ETA_MAX_STOPS_RETURNED/YOUBIKE_MAX_STATIONS_RETURNED, though a real per-station capture (Taipei, 8 trains) suggests this is generous headroom rather than a commonly-hit limit. */
+export const RAIL_LIVEBOARD_MAX_TRAINS_RETURNED = 50;
+
+/** How many candidate station names tw_rail's ambiguous-match error lists, so the caller can pick a more specific one without the error message itself becoming huge. */
+export const RAIL_STATION_AMBIGUOUS_CANDIDATES_SHOWN = 10;
 
 /**
  * Taiwan's 22 counties/cities as used by CWA's `locationName` parameter.

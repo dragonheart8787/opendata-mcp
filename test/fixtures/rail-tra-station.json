@@ -1,0 +1,688 @@
+[
+  {
+    "StationUID": "TRA-1000",
+    "StationID": "1000",
+    "StationName": {
+      "Zh_tw": "臺北",
+      "En": "Taipei"
+    },
+    "StationAddress": "100230臺北市中正區黎明里北平西路 3 號",
+    "StationPhone": "02-23713558",
+    "OperatorID": "TRA",
+    "StationClass": "0",
+    "StationPosition": {
+      "PositionLon": 121.51711,
+      "PositionLat": 25.04775,
+      "GeoHash": "wsqqmpy19"
+    },
+    "LocationCity": "臺北市",
+    "LocationCityCode": "TPE",
+    "LocationTown": "中正區",
+    "LocationTownCode": "63000050",
+    "UpdateTime": "2026-07-22T06:55:09+08:00",
+    "VersionID": 1709
+  },
+  {
+    "StationUID": "TRA-1001",
+    "StationID": "1001",
+    "StationName": {
+      "Zh_tw": "臺北-環島",
+      "En": "Taipei Surround Island"
+    },
+    "StationAddress": "100230臺北市中正區",
+    "OperatorID": "TRA",
+    "StationClass": "4",
+    "StationPosition": {
+      "PositionLon": 121.51711,
+      "PositionLat": 25.04774,
+      "GeoHash": "wsqqmpy19"
+    },
+    "LocationCity": "臺北市",
+    "LocationCityCode": "TPE",
+    "LocationTown": "中正區",
+    "LocationTownCode": "63000050",
+    "UpdateTime": "2026-07-22T06:55:09+08:00",
+    "VersionID": 1709
+  },
+  {
+    "StationUID": "TRA-1998",
+    "StationID": "1998",
+    "StationName": {
+      "Zh_tw": "樹林調車場",
+      "En": "Shulin Rail Yard"
+    },
+    "OperatorID": "TRA",
+    "StationClass": "B",
+    "StationPosition": {
+      "PositionLon": 121.40554,
+      "PositionLat": 24.97992,
+      "GeoHash": "wsqq4ekyd"
+    },
+    "LocationCity": "新北市",
+    "LocationCityCode": "NWT",
+    "LocationTown": "樹林區",
+    "LocationTownCode": "65000070",
+    "UpdateTime": "2026-07-22T06:55:09+08:00",
+    "VersionID": 1709
+  },
+  {
+    "StationUID": "TRA-0900",
+    "StationID": "0900",
+    "StationName": {
+      "Zh_tw": "基隆",
+      "En": "Keelung"
+    },
+    "StationAddress": "203001基隆市中山區中山一路 16 之 1 號",
+    "StationPhone": "02-24263743",
+    "OperatorID": "TRA",
+    "StationClass": "1",
+    "StationPosition": {
+      "PositionLon": 121.73837,
+      "PositionLat": 25.13191,
+      "GeoHash": "wsqwfpp5v"
+    },
+    "LocationCity": "基隆市",
+    "LocationCityCode": "KEE",
+    "LocationTown": "中山區",
+    "LocationTownCode": "10017050",
+    "UpdateTime": "2026-07-22T06:55:09+08:00",
+    "VersionID": 1709
+  },
+  {
+    "StationUID": "TRA-0990",
+    "StationID": "0990",
+    "StationName": {
+      "Zh_tw": "松山",
+      "En": "Songshan"
+    },
+    "StationAddress": "110417臺北市信義區松山路 11 號B1",
+    "StationPhone": "02-27673819",
+    "OperatorID": "TRA",
+    "StationClass": "1",
+    "StationPosition": {
+      "PositionLon": 121.57906,
+      "PositionLat": 25.04927,
+      "GeoHash": "wsqqw854t"
+    },
+    "LocationCity": "臺北市",
+    "LocationCityCode": "TPE",
+    "LocationTown": "松山區",
+    "LocationTownCode": "63000010",
+    "UpdateTime": "2026-07-22T06:55:09+08:00",
+    "VersionID": 1709
+  },
+  {
+    "StationUID": "TRA-1070",
+    "StationID": "1070",
+    "StationName": {
+      "Zh_tw": "鶯歌",
+      "En": "Yingge"
+    },
+    "StationAddress": "239005新北市鶯歌區東鶯里文化路 68-1號",
+    "StationPhone": "02-26792004",
+    "OperatorID": "TRA",
+    "StationClass": "2",
+    "StationPosition": {
+      "PositionLon": 121.35517,
+      "PositionLat": 24.95455,
+      "GeoHash": "wsqmcwb4u"
+    },
+    "LocationCity": "新北市",
+    "LocationCityCode": "NWT",
+    "LocationTown": "鶯歌區",
+    "LocationTownCode": "65000080",
+    "UpdateTime": "2026-07-22T06:55:09+08:00",
+    "VersionID": 1709
+  },
+  {
+    "StationUID": "TRA-1150",
+    "StationID": "1150",
+    "StationName": {
+      "Zh_tw": "北湖",
+      "En": "Beihu"
+    },
+    "StationAddress": "303118新竹縣湖口鄉東興村北湖路 1 號",
+    "StationPhone": "03-5993850",
+    "OperatorID": "TRA",
+    "StationClass": "4",
+    "StationPosition": {
+      "PositionLon": 121.05575,
+      "PositionLat": 24.92218,
+      "GeoHash": "wsqjf8yn5"
+    },
+    "LocationCity": "新竹縣",
+    "LocationCityCode": "HSQ",
+    "LocationTown": "湖口鄉",
+    "LocationTownCode": "10004050",
+    "UpdateTime": "2026-07-22T06:55:09+08:00",
+    "VersionID": 1709
+  },
+  {
+    "StationUID": "TRA-1201",
+    "StationID": "1201",
+    "StationName": {
+      "Zh_tw": "上員",
+      "En": "Shangyuan"
+    },
+    "StationAddress": "310021新竹縣竹東鎮上員里光明路 (無站房)",
+    "StationPhone": "03-5962042",
+    "OperatorID": "TRA",
+    "StationClass": "5",
+    "StationPosition": {
+      "PositionLon": 121.05582,
+      "PositionLat": 24.77776,
+      "GeoHash": "wsqhfwwhv"
+    },
+    "LocationCity": "新竹縣",
+    "LocationCityCode": "HSQ",
+    "LocationTown": "竹東鎮",
+    "LocationTownCode": "10004020",
+    "UpdateTime": "2026-07-22T06:55:09+08:00",
+    "VersionID": 1709
+  },
+  {
+    "StationUID": "TRA-1220",
+    "StationID": "1220",
+    "StationName": {
+      "Zh_tw": "三姓橋",
+      "En": "Sanxingqiao"
+    },
+    "StationAddress": "300109新竹市 香山區香山里元培街 32 巷 30 號",
+    "StationPhone": "03-5237441",
+    "OperatorID": "TRA",
+    "StationClass": "4",
+    "StationPosition": {
+      "PositionLon": 120.92844,
+      "PositionLat": 24.78731,
+      "GeoHash": "wsmvpb3ks"
+    },
+    "LocationCity": "新竹市",
+    "LocationCityCode": "HSZ",
+    "LocationTown": "香山區",
+    "LocationTownCode": "10018030",
+    "UpdateTime": "2026-07-22T06:55:09+08:00",
+    "VersionID": 1709
+  },
+  {
+    "StationUID": "TRA-2150",
+    "StationID": "2150",
+    "StationName": {
+      "Zh_tw": "白沙屯",
+      "En": "Baishatun"
+    },
+    "StationAddress": "35742苗栗縣通霄鎮白西里白西 131 號",
+    "StationPhone": "037-793066",
+    "OperatorID": "TRA",
+    "StationClass": "3",
+    "StationPosition": {
+      "PositionLon": 120.70824,
+      "PositionLat": 24.56481,
+      "GeoHash": "wsmgdzch3"
+    },
+    "LocationCity": "苗栗縣",
+    "LocationCityCode": "MIA",
+    "LocationTown": "通霄鎮",
+    "LocationTownCode": "10005030",
+    "UpdateTime": "2026-07-22T06:55:09+08:00",
+    "VersionID": 1709
+  },
+  {
+    "StationUID": "TRA-2240",
+    "StationID": "2240",
+    "StationName": {
+      "Zh_tw": "龍井",
+      "En": "Longjing"
+    },
+    "StationAddress": "43450臺中市龍井區龍泉里龍新路 1 號",
+    "StationPhone": "04-26355578",
+    "OperatorID": "TRA",
+    "StationClass": "3",
+    "StationPosition": {
+      "PositionLon": 120.54335,
+      "PositionLat": 24.19748,
+      "GeoHash": "wsm9xj0bx"
+    },
+    "LocationCity": "臺中市",
+    "LocationCityCode": "TXG",
+    "LocationTown": "龍井區",
+    "LocationTownCode": "66000250",
+    "UpdateTime": "2026-07-22T06:55:09+08:00",
+    "VersionID": 1709
+  },
+  {
+    "StationUID": "TRA-3210",
+    "StationID": "3210",
+    "StationName": {
+      "Zh_tw": "泰安",
+      "En": "Tai'an"
+    },
+    "StationAddress": "42156臺中市后里區泰安里安眉路 37 之 12 號",
+    "StationPhone": "04-25586540",
+    "OperatorID": "TRA",
+    "StationClass": "4",
+    "StationPosition": {
+      "PositionLon": 120.74181,
+      "PositionLat": 24.33146,
+      "GeoHash": "wsmf7t3t0"
+    },
+    "LocationCity": "臺中市",
+    "LocationCityCode": "TXG",
+    "LocationTown": "后里區",
+    "LocationTownCode": "66000150",
+    "UpdateTime": "2026-07-22T06:55:09+08:00",
+    "VersionID": 1709
+  },
+  {
+    "StationUID": "TRA-3300",
+    "StationID": "3300",
+    "StationName": {
+      "Zh_tw": "臺中",
+      "En": "Taichung"
+    },
+    "StationAddress": "400005臺中市中區綠川里臺灣大道一段 1 號",
+    "StationPhone": "04-22227236",
+    "OperatorID": "TRA",
+    "StationClass": "0",
+    "StationPosition": {
+      "PositionLon": 120.68691,
+      "PositionLat": 24.13728,
+      "GeoHash": "wsmc6619b"
+    },
+    "LocationCity": "臺中市",
+    "LocationCityCode": "TXG",
+    "LocationTown": "東區",
+    "LocationTownCode": "66000020",
+    "UpdateTime": "2026-07-22T06:55:09+08:00",
+    "VersionID": 1709
+  },
+  {
+    "StationUID": "TRA-3390",
+    "StationID": "3390",
+    "StationName": {
+      "Zh_tw": "員林",
+      "En": "Yuanlin"
+    },
+    "StationAddress": "510001彰化縣員林市和平里民權街 55 號",
+    "StationPhone": "04-8320544#14",
+    "OperatorID": "TRA",
+    "StationClass": "1",
+    "StationPosition": {
+      "PositionLon": 120.56977,
+      "PositionLat": 23.95947,
+      "GeoHash": "wsm8r9snp"
+    },
+    "LocationCity": "彰化縣",
+    "LocationCityCode": "CHA",
+    "LocationTown": "員林市",
+    "LocationTownCode": "10007100",
+    "UpdateTime": "2026-07-22T06:55:09+08:00",
+    "VersionID": 1709
+  },
+  {
+    "StationUID": "TRA-3435",
+    "StationID": "3435",
+    "StationName": {
+      "Zh_tw": "水里",
+      "En": "Shuili"
+    },
+    "StationAddress": "553001南投縣水里鄉水里村民生路 440 號",
+    "StationPhone": "049-2770015",
+    "OperatorID": "TRA",
+    "StationClass": "4",
+    "StationPosition": {
+      "PositionLon": 120.85332,
+      "PositionLat": 23.81845,
+      "GeoHash": "wsjzw048w"
+    },
+    "LocationCity": "南投縣",
+    "LocationCityCode": "NAN",
+    "LocationTown": "水里鄉",
+    "LocationTownCode": "10008110",
+    "UpdateTime": "2026-07-22T06:55:09+08:00",
+    "VersionID": 1709
+  },
+  {
+    "StationUID": "TRA-4070",
+    "StationID": "4070",
+    "StationName": {
+      "Zh_tw": "嘉北",
+      "En": "Jiabei"
+    },
+    "StationAddress": "600050嘉義市 東區後湖里保建街 110 號",
+    "StationPhone": "05-2334584",
+    "OperatorID": "TRA",
+    "StationClass": "4",
+    "StationPosition": {
+      "PositionLon": 120.44851,
+      "PositionLat": 23.49981,
+      "GeoHash": "wsjtsy5bm"
+    },
+    "LocationCity": "嘉義市",
+    "LocationCityCode": "CYI",
+    "LocationTown": "東區",
+    "LocationTownCode": "10020010",
+    "UpdateTime": "2026-07-22T06:55:09+08:00",
+    "VersionID": 1709
+  },
+  {
+    "StationUID": "TRA-4160",
+    "StationID": "4160",
+    "StationName": {
+      "Zh_tw": "拔林",
+      "En": "Balin"
+    },
+    "StationAddress": "720004臺南市官田區拔林里拔子林 83 之 1 號",
+    "StationPhone": "06-5791664",
+    "OperatorID": "TRA",
+    "StationClass": "5",
+    "StationPosition": {
+      "PositionLon": 120.32125,
+      "PositionLat": 23.17284,
+      "GeoHash": "wsjecfrr8"
+    },
+    "LocationCity": "臺南市",
+    "LocationCityCode": "TNN",
+    "LocationTown": "官田區",
+    "LocationTownCode": "67000100",
+    "UpdateTime": "2026-07-22T06:55:09+08:00",
+    "VersionID": 1709
+  },
+  {
+    "StationUID": "TRA-4270",
+    "StationID": "4270",
+    "StationName": {
+      "Zh_tw": "中洲",
+      "En": "Zhongzhou"
+    },
+    "StationAddress": "717014臺南市仁德區中洲五街236號",
+    "StationPhone": "06-2667191",
+    "OperatorID": "TRA",
+    "StationClass": "2",
+    "StationPosition": {
+      "PositionLon": 120.25284,
+      "PositionLat": 22.90446,
+      "GeoHash": "wsjd23tkn"
+    },
+    "LocationCity": "臺南市",
+    "LocationCityCode": "TNN",
+    "LocationTown": "仁德區",
+    "LocationTownCode": "67000270",
+    "UpdateTime": "2026-07-22T06:55:09+08:00",
+    "VersionID": 1709
+  },
+  {
+    "StationUID": "TRA-4350",
+    "StationID": "4350",
+    "StationName": {
+      "Zh_tw": "左營",
+      "En": "Zuoying"
+    },
+    "StationAddress": "813014高雄市左營區翠華路1050號地下1層",
+    "StationPhone": "07-5887835",
+    "OperatorID": "TRA",
+    "StationClass": "4",
+    "StationPosition": {
+      "PositionLon": 120.29401,
+      "PositionLat": 22.67445,
+      "GeoHash": "wsj8crg2j"
+    },
+    "LocationCity": "高雄市",
+    "LocationCityCode": "KHH",
+    "LocationTown": "左營區",
+    "LocationTownCode": "64000030",
+    "UpdateTime": "2026-07-22T06:55:09+08:00",
+    "VersionID": 1709
+  },
+  {
+    "StationUID": "TRA-4440",
+    "StationID": "4440",
+    "StationName": {
+      "Zh_tw": "鳳山",
+      "En": "Fongshan"
+    },
+    "StationAddress": "830025高雄市鳳山區曹公里曹公路 137 號",
+    "StationPhone": "07-7460423",
+    "OperatorID": "TRA",
+    "StationClass": "2",
+    "StationPosition": {
+      "PositionLon": 120.35745,
+      "PositionLat": 22.63145,
+      "GeoHash": "wsj8dzctg"
+    },
+    "LocationCity": "高雄市",
+    "LocationCityCode": "KHH",
+    "LocationTown": "鳳山區",
+    "LocationTownCode": "64000120",
+    "UpdateTime": "2026-07-22T06:55:09+08:00",
+    "VersionID": 1709
+  },
+  {
+    "StationUID": "TRA-5050",
+    "StationID": "5050",
+    "StationName": {
+      "Zh_tw": "潮州",
+      "En": "Chaozhou"
+    },
+    "StationAddress": "920004屏東縣潮州鎮新榮里信義路 111 號",
+    "StationPhone": "08-7882739",
+    "OperatorID": "TRA",
+    "StationClass": "1",
+    "StationPosition": {
+      "PositionLon": 120.53604,
+      "PositionLat": 22.55008,
+      "GeoHash": "wsj8qc5et"
+    },
+    "LocationCity": "屏東縣",
+    "LocationCityCode": "PIF",
+    "LocationTown": "潮州鎮",
+    "LocationTownCode": "10013020",
+    "UpdateTime": "2026-07-22T06:55:09+08:00",
+    "VersionID": 1709
+  },
+  {
+    "StationUID": "TRA-5140",
+    "StationID": "5140",
+    "StationName": {
+      "Zh_tw": "內獅",
+      "En": "Neishi"
+    },
+    "StationAddress": "941010屏東縣枋山鄉加祿村南和 43 號",
+    "StationPhone": "08-8720791",
+    "OperatorID": "TRA",
+    "StationClass": "5",
+    "StationPosition": {
+      "PositionLon": 120.64331,
+      "PositionLat": 22.30617,
+      "GeoHash": "wevyck9yb"
+    },
+    "LocationCity": "屏東縣",
+    "LocationCityCode": "PIF",
+    "LocationTown": "枋山鄉",
+    "LocationTownCode": "10013250",
+    "UpdateTime": "2026-07-22T06:55:09+08:00",
+    "VersionID": 1709
+  },
+  {
+    "StationUID": "TRA-5998",
+    "StationID": "5998",
+    "StationName": {
+      "Zh_tw": "南方小站",
+      "En": "South"
+    },
+    "StationAddress": "92013屏東縣潮州鎮光復路 461 號",
+    "OperatorID": "TRA",
+    "StationClass": "4",
+    "StationPosition": {
+      "PositionLon": 120.53658,
+      "PositionLat": 22.52755,
+      "GeoHash": "wsj8nvh03"
+    },
+    "LocationCity": "屏東縣",
+    "LocationCityCode": "PIF",
+    "LocationTown": "潮州鎮",
+    "LocationTownCode": "10013020",
+    "UpdateTime": "2026-07-22T06:55:09+08:00",
+    "VersionID": 1709
+  },
+  {
+    "StationUID": "TRA-6070",
+    "StationID": "6070",
+    "StationName": {
+      "Zh_tw": "池上",
+      "En": "Chishang"
+    },
+    "StationAddress": "958003臺東縣池上鄉福文村鐵花路 30 號",
+    "StationPhone": "089-862097",
+    "OperatorID": "TRA",
+    "StationClass": "3",
+    "StationPosition": {
+      "PositionLon": 121.21949,
+      "PositionLat": 23.12613,
+      "GeoHash": "wsn5w3vr6"
+    },
+    "LocationCity": "臺東縣",
+    "LocationCityCode": "TTT",
+    "LocationTown": "池上鄉",
+    "LocationTownCode": "10014060",
+    "UpdateTime": "2026-07-22T06:55:09+08:00",
+    "VersionID": 1709
+  },
+  {
+    "StationUID": "TRA-6160",
+    "StationID": "6160",
+    "StationName": {
+      "Zh_tw": "光復",
+      "En": "Guangfu"
+    },
+    "StationAddress": "976007花蓮縣光復鄉大安村中正路一段 2 之 1 號",
+    "StationPhone": "03-8704143",
+    "OperatorID": "TRA",
+    "StationClass": "3",
+    "StationPosition": {
+      "PositionLon": 121.42117,
+      "PositionLat": 23.66631,
+      "GeoHash": "wsnqeh24n"
+    },
+    "LocationCity": "花蓮縣",
+    "LocationCityCode": "HUA",
+    "LocationTown": "光復鄉",
+    "LocationTownCode": "10015070",
+    "UpdateTime": "2026-07-22T06:55:09+08:00",
+    "VersionID": 1709
+  },
+  {
+    "StationUID": "TRA-6250",
+    "StationID": "6250",
+    "StationName": {
+      "Zh_tw": "吉安",
+      "En": "Ji'an"
+    },
+    "StationAddress": "973039花蓮縣吉安鄉南昌村南昌路1號",
+    "StationPhone": "03-8539423",
+    "OperatorID": "TRA",
+    "StationClass": "3",
+    "StationPosition": {
+      "PositionLon": 121.58266,
+      "PositionLat": 23.96823,
+      "GeoHash": "wsq2qemc1"
+    },
+    "LocationCity": "花蓮縣",
+    "LocationCityCode": "HUA",
+    "LocationTown": "吉安鄉",
+    "LocationTownCode": "10015050",
+    "UpdateTime": "2026-07-22T06:55:09+08:00",
+    "VersionID": 1709
+  },
+  {
+    "StationUID": "TRA-7080",
+    "StationID": "7080",
+    "StationName": {
+      "Zh_tw": "武塔",
+      "En": "Wuta"
+    },
+    "StationAddress": "272017宜蘭縣南澳鄉武塔村新溪路 18 號",
+    "StationPhone": "03-9981971",
+    "OperatorID": "TRA",
+    "StationClass": "4",
+    "StationPosition": {
+      "PositionLon": 121.77601,
+      "PositionLat": 24.44879,
+      "GeoHash": "wsqe54f8d"
+    },
+    "LocationCity": "宜蘭縣",
+    "LocationCityCode": "ILA",
+    "LocationTown": "南澳鄉",
+    "LocationTownCode": "10002120",
+    "UpdateTime": "2026-07-22T06:55:09+08:00",
+    "VersionID": 1709
+  },
+  {
+    "StationUID": "TRA-7170",
+    "StationID": "7170",
+    "StationName": {
+      "Zh_tw": "中里",
+      "En": "Zhongli_Yilan"
+    },
+    "StationAddress": "268018宜蘭縣五結鄉中里路",
+    "StationPhone": "03-9542117",
+    "OperatorID": "TRA",
+    "StationClass": "5",
+    "StationPosition": {
+      "PositionLon": 121.77526,
+      "PositionLat": 24.69415,
+      "GeoHash": "wsqs7p6jc"
+    },
+    "LocationCity": "宜蘭縣",
+    "LocationCityCode": "ILA",
+    "LocationTown": "五結鄉",
+    "LocationTownCode": "10002090",
+    "UpdateTime": "2026-07-22T06:55:09+08:00",
+    "VersionID": 1709
+  },
+  {
+    "StationUID": "TRA-7260",
+    "StationID": "7260",
+    "StationName": {
+      "Zh_tw": "大溪",
+      "En": "Daxi"
+    },
+    "StationAddress": "261005宜蘭縣頭城鎮濱海路五段 63 號",
+    "StationPhone": "03-9771429",
+    "OperatorID": "TRA",
+    "StationClass": "5",
+    "StationPosition": {
+      "PositionLon": 121.88983,
+      "PositionLat": 24.93836,
+      "GeoHash": "wsqtvevkq"
+    },
+    "LocationCity": "宜蘭縣",
+    "LocationCityCode": "ILA",
+    "LocationTown": "頭城鎮",
+    "LocationTownCode": "10002040",
+    "UpdateTime": "2026-07-22T06:55:09+08:00",
+    "VersionID": 1709
+  },
+  {
+    "StationUID": "TRA-7332",
+    "StationID": "7332",
+    "StationName": {
+      "Zh_tw": "十分",
+      "En": "Shifen"
+    },
+    "StationAddress": "226003新北市平溪區十分里十分街 51 號",
+    "StationPhone": "02-24958307",
+    "OperatorID": "TRA",
+    "StationClass": "4",
+    "StationPosition": {
+      "PositionLon": 121.77514,
+      "PositionLat": 25.04111,
+      "GeoHash": "wsqw7n9gn"
+    },
+    "LocationCity": "新北市",
+    "LocationCityCode": "NWT",
+    "LocationTown": "平溪區",
+    "LocationTownCode": "65000240",
+    "UpdateTime": "2026-07-22T06:55:09+08:00",
+    "VersionID": 1709
+  }
+]

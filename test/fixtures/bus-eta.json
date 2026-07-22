@@ -2,1405 +2,1015 @@
   {
     "StopUID": "TPE187095",
     "StopID": "187095",
-    "StopName": {
-      "Zh_tw": "新莊高中",
-      "En": "Xinzhuang High School"
-    },
+    "StopName": { "Zh_tw": "新莊高中", "En": "Xinzhuang High School" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 1,
+    "EstimateTime": 10039,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE187094",
     "StopID": "187094",
-    "StopName": {
-      "Zh_tw": "新莊高中",
-      "En": "Xinzhuang High School"
-    },
+    "StopName": { "Zh_tw": "新莊高中", "En": "Xinzhuang High School" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 0,
+    "EstimateTime": 4267,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE22008",
     "StopID": "22008",
-    "StopName": {
-      "Zh_tw": "新北大道中華路口",
-      "En": "New Taipei Blvd. & Zhonghua Intersection"
-    },
+    "StopName": { "Zh_tw": "新北大道中華路口", "En": "New Taipei Blvd. & Zhonghua Intersection" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 0,
+    "EstimateTime": 5706,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE22009",
     "StopID": "22009",
-    "StopName": {
-      "Zh_tw": "聯合醫院中興院區",
-      "En": "TCUH Zhongxin Branch"
-    },
+    "StopName": { "Zh_tw": "聯合醫院中興院區", "En": "TCUH Zhongxin Branch" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 0,
+    "EstimateTime": 6276,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE22000",
     "StopID": "22000",
-    "StopName": {
-      "Zh_tw": "中原里",
-      "En": "Zhongyuan Village"
-    },
+    "StopName": { "Zh_tw": "中原里", "En": "Zhongyuan Village" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 0,
+    "EstimateTime": 4687,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE22001",
     "StopID": "22001",
-    "StopName": {
-      "Zh_tw": "中原路一",
-      "En": "Zhongyuan Rd. 1"
-    },
+    "StopName": { "Zh_tw": "中原路一", "En": "Zhongyuan Rd. 1" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 0,
+    "EstimateTime": 4807,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE22002",
     "StopID": "22002",
-    "StopName": {
-      "Zh_tw": "頭前國中(中原路)",
-      "En": "Touqian Junior High School(Zhongyuan Rd.)"
-    },
+    "StopName": { "Zh_tw": "頭前國中(中原路)", "En": "Touqian Junior High School(Zhongyuan Rd.)" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 0,
+    "EstimateTime": 4883,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE22003",
     "StopID": "22003",
-    "StopName": {
-      "Zh_tw": "中原東路",
-      "En": "Zhongyuan E. Rd."
-    },
+    "StopName": { "Zh_tw": "中原東路", "En": "Zhongyuan E. Rd." },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 0,
+    "EstimateTime": 5184,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE22004",
     "StopID": "22004",
-    "StopName": {
-      "Zh_tw": "善導庵",
-      "En": "Shandao Temple"
-    },
+    "StopName": { "Zh_tw": "善導庵", "En": "Shandao Temple" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 0,
+    "EstimateTime": 5259,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE22005",
     "StopID": "22005",
-    "StopName": {
-      "Zh_tw": "頭前庄",
-      "En": "Touqianzhuang"
-    },
+    "StopName": { "Zh_tw": "頭前庄", "En": "Touqianzhuang" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 0,
+    "EstimateTime": 5317,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE22006",
     "StopID": "22006",
-    "StopName": {
-      "Zh_tw": "新北大道化成路口",
-      "En": "New Taipei Blvd. & Huacheng Intersection"
-    },
+    "StopName": { "Zh_tw": "新北大道化成路口", "En": "New Taipei Blvd. & Huacheng Intersection" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 0,
+    "EstimateTime": 5439,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE22007",
     "StopID": "22007",
-    "StopName": {
-      "Zh_tw": "新北大道中興路口",
-      "En": "Zhongshan Rd and Zhongxing Rd Intersection"
-    },
+    "StopName": { "Zh_tw": "新北大道中興路口", "En": "Zhongshan Rd and Zhongxing Rd Intersection" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 0,
+    "EstimateTime": 5522,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE22033",
     "StopID": "22033",
-    "StopName": {
-      "Zh_tw": "公園一路",
-      "En": "Gongyuan 1st Rd."
-    },
+    "StopName": { "Zh_tw": "公園一路", "En": "Gongyuan 1st Rd." },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 1,
+    "EstimateTime": 10526,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE22034",
     "StopID": "22034",
-    "StopName": {
-      "Zh_tw": "盲人重建院",
-      "En": "Institute for the Blind"
-    },
+    "StopName": { "Zh_tw": "盲人重建院", "En": "Institute for the Blind" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 1,
+    "EstimateTime": 10674,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE22035",
     "StopID": "22035",
-    "StopName": {
-      "Zh_tw": "捷運輔大站(建國一路)",
-      "En": "MRT Fu Jen University Station(Jianguo 1st. Rd.)"
-    },
+    "StopName": { "Zh_tw": "捷運輔大站(建國一路)", "En": "MRT Fu Jen University Station(Jianguo 1st. Rd.)" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 1,
+    "EstimateTime": 10891,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE22036",
     "StopID": "22036",
-    "StopName": {
-      "Zh_tw": "建國一路",
-      "En": "Jianguo 1st. Rd."
-    },
+    "StopName": { "Zh_tw": "建國一路", "En": "Jianguo 1st. Rd." },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 1,
+    "EstimateTime": 10930,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE22037",
     "StopID": "22037",
-    "StopName": {
-      "Zh_tw": "後港一路",
-      "En": "Hougang 1st. Rd."
-    },
+    "StopName": { "Zh_tw": "後港一路", "En": "Hougang 1st. Rd." },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 1,
+    "EstimateTime": 11000,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE22038",
     "StopID": "22038",
-    "StopName": {
-      "Zh_tw": "建安街口",
-      "En": "Jianan St. Entrance"
-    },
+    "StopName": { "Zh_tw": "建安街口", "En": "Jianan St. Entrance" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 1,
+    "EstimateTime": 11080,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE22039",
     "StopID": "22039",
-    "StopName": {
-      "Zh_tw": "建福路口",
-      "En": "Jianfu Rd. Entrance"
-    },
+    "StopName": { "Zh_tw": "建福路口", "En": "Jianfu Rd. Entrance" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 1,
+    "EstimateTime": 11156,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE22030",
     "StopID": "22030",
-    "StopName": {
-      "Zh_tw": "新泰復興路口",
-      "En": "Xintai & Fuxing Intersection"
-    },
+    "StopName": { "Zh_tw": "新泰復興路口", "En": "Xintai & Fuxing Intersection" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 1,
+    "EstimateTime": 10292,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE22031",
     "StopID": "22031",
-    "StopName": {
-      "Zh_tw": "材試所",
-      "En": "Materials Testing Laboratory"
-    },
+    "StopName": { "Zh_tw": "材試所", "En": "Materials Testing Laboratory" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 1,
+    "EstimateTime": 10363,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE22032",
     "StopID": "22032",
-    "StopName": {
-      "Zh_tw": "新泰國小(新泰公園)",
-      "En": "Xintai Elementary School(Xintai Park)"
-    },
+    "StopName": { "Zh_tw": "新泰國小(新泰公園)", "En": "Xintai Elementary School(Xintai Park)" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 1,
+    "EstimateTime": 10471,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE22044",
     "StopID": "22044",
-    "StopName": {
-      "Zh_tw": "丹鳳派出所",
-      "En": "Danfeng Police Station"
-    },
+    "StopName": { "Zh_tw": "丹鳳派出所", "En": "Danfeng Police Station" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 1,
+    "EstimateTime": 11571,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE22045",
     "StopID": "22045",
-    "StopName": {
-      "Zh_tw": "鳳山街口",
-      "En": "Fengshan St. Entrance"
-    },
+    "StopName": { "Zh_tw": "鳳山街口", "En": "Fengshan St. Entrance" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 1,
+    "EstimateTime": 11755,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE22046",
     "StopID": "22046",
-    "StopName": {
-      "Zh_tw": "捷運迴龍站",
-      "En": "MRT Huilong Station"
-    },
+    "StopName": { "Zh_tw": "捷運迴龍站", "En": "MRT Huilong Station" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 1,
+    "EstimateTime": 11876,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE22040",
     "StopID": "22040",
-    "StopName": {
-      "Zh_tw": "後港社區",
-      "En": "Hougang Community"
-    },
+    "StopName": { "Zh_tw": "後港社區", "En": "Hougang Community" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 1,
+    "EstimateTime": 11188,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE22041",
     "StopID": "22041",
-    "StopName": {
-      "Zh_tw": "福營國中",
-      "En": "Fuying Junior High School"
-    },
+    "StopName": { "Zh_tw": "福營國中", "En": "Fuying Junior High School" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 1,
+    "EstimateTime": 11271,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE22042",
     "StopID": "22042",
-    "StopName": {
-      "Zh_tw": "富國路口",
-      "En": "Fuguo Rd. Entrance"
-    },
+    "StopName": { "Zh_tw": "富國路口", "En": "Fuguo Rd. Entrance" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 1,
+    "EstimateTime": 11400,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE22019",
     "StopID": "22019",
-    "StopName": {
-      "Zh_tw": "化成新北大道路口",
-      "En": "Huacheng & New Taipei Blvd Intersection"
-    },
+    "StopName": { "Zh_tw": "化成新北大道路口", "En": "Huacheng & New Taipei Blvd Intersection" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 1,
+    "EstimateTime": 8927,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE22011",
     "StopID": "22011",
-    "StopName": {
-      "Zh_tw": "行政院",
-      "En": "Executive Yuan"
-    },
+    "StopName": { "Zh_tw": "行政院", "En": "Executive Yuan" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 0,
+    "EstimateTime": 6825,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE22013",
     "StopID": "22013",
-    "StopName": {
-      "Zh_tw": "臺大醫院",
-      "En": "NTU Hospital"
-    },
+    "StopName": { "Zh_tw": "臺大醫院", "En": "NTU Hospital" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 0,
+    "EstimateTime": 6953,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE22014",
     "StopID": "22014",
-    "StopName": {
-      "Zh_tw": "開南中學",
-      "En": "Taipei Kainan High School"
-    },
+    "StopName": { "Zh_tw": "開南中學", "En": "Taipei Kainan High School" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 1,
+    "EstimateTime": 7372,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE22015",
     "StopID": "22015",
-    "StopName": {
-      "Zh_tw": "成功中學(林森)",
-      "En": "Chenggong High School (Linsen)"
-    },
+    "StopName": { "Zh_tw": "成功中學(林森)", "En": "Chenggong High School (Linsen)" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 1,
+    "EstimateTime": 7435,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE22017",
     "StopID": "22017",
-    "StopName": {
-      "Zh_tw": "新北大道中華路口",
-      "En": "New Taipei Blvd. & Zhonghua Intersection"
-    },
+    "StopName": { "Zh_tw": "新北大道中華路口", "En": "New Taipei Blvd. & Zhonghua Intersection" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 1,
+    "EstimateTime": 8577,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE22018",
     "StopID": "22018",
-    "StopName": {
-      "Zh_tw": "新北大道重光街口",
-      "En": "New Taipei Blvd. & Chongguang Intersection"
-    },
+    "StopName": { "Zh_tw": "新北大道重光街口", "En": "New Taipei Blvd. & Chongguang Intersection" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 1,
+    "EstimateTime": 8787,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE22010",
     "StopID": "22010",
-    "StopName": {
-      "Zh_tw": "臺北車站(鄭州)",
-      "En": "Taipei Main Sta. (Zhengzhou)"
-    },
+    "StopName": { "Zh_tw": "臺北車站(鄭州)", "En": "Taipei Main Sta. (Zhengzhou)" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 0,
+    "EstimateTime": 6564,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE22022",
     "StopID": "22022",
-    "StopName": {
-      "Zh_tw": "中原東路",
-      "En": "Zhongyuan E. Rd."
-    },
+    "StopName": { "Zh_tw": "中原東路", "En": "Zhongyuan E. Rd." },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 1,
+    "EstimateTime": 9079,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE22023",
     "StopID": "22023",
-    "StopName": {
-      "Zh_tw": "頭前國中(中原路)",
-      "En": "Touqian Junior High School(Zhongyuan Rd.)"
-    },
+    "StopName": { "Zh_tw": "頭前國中(中原路)", "En": "Touqian Junior High School(Zhongyuan Rd.)" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 1,
+    "EstimateTime": 9334,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE22024",
     "StopID": "22024",
-    "StopName": {
-      "Zh_tw": "中原路一",
-      "En": "Zhongyuan Rd. 1"
-    },
+    "StopName": { "Zh_tw": "中原路一", "En": "Zhongyuan Rd. 1" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 1,
+    "EstimateTime": 9414,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE22025",
     "StopID": "22025",
-    "StopName": {
-      "Zh_tw": "中原里",
-      "En": "Zhongyuan Village"
-    },
+    "StopName": { "Zh_tw": "中原里", "En": "Zhongyuan Village" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 1,
+    "EstimateTime": 9517,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE22026",
     "StopID": "22026",
-    "StopName": {
-      "Zh_tw": "中原路",
-      "En": "Zhongyuan Rd."
-    },
+    "StopName": { "Zh_tw": "中原路", "En": "Zhongyuan Rd." },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 1,
+    "EstimateTime": 9621,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE22027",
     "StopID": "22027",
-    "StopName": {
-      "Zh_tw": "中平國中",
-      "En": "Zhongping Junior High School"
-    },
+    "StopName": { "Zh_tw": "中平國中", "En": "Zhongping Junior High School" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 1,
+    "EstimateTime": 9863,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE22028",
     "StopID": "22028",
-    "StopName": {
-      "Zh_tw": "新莊高中(新莊文藝中心)",
-      "En": "Xinzhuang High School(Xinzhuang Culture & Arts Center)"
-    },
+    "StopName": { "Zh_tw": "新莊高中(新莊文藝中心)", "En": "Xinzhuang High School(Xinzhuang Culture & Arts Center)" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 1,
+    "EstimateTime": 9934,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE22029",
     "StopID": "22029",
-    "StopName": {
-      "Zh_tw": "中平路",
-      "En": "Zhongping Rd."
-    },
+    "StopName": { "Zh_tw": "中平路", "En": "Zhongping Rd." },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 1,
+    "EstimateTime": 10122,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE22020",
     "StopID": "22020",
-    "StopName": {
-      "Zh_tw": "頭前庄",
-      "En": "Touqianzhuang"
-    },
+    "StopName": { "Zh_tw": "頭前庄", "En": "Touqianzhuang" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 1,
+    "EstimateTime": 8967,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE22021",
     "StopID": "22021",
-    "StopName": {
-      "Zh_tw": "善導庵",
-      "En": "Shandao Temple"
-    },
+    "StopName": { "Zh_tw": "善導庵", "En": "Shandao Temple" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 1,
+    "EstimateTime": 9012,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE222545",
     "StopID": "222545",
-    "StopName": {
-      "Zh_tw": "丹鳳國小(新北大道)",
-      "En": "Danfeng Elementary School(New Taipei Blvd.)"
-    },
+    "StopName": { "Zh_tw": "丹鳳國小(新北大道)", "En": "Danfeng Elementary School(New Taipei Blvd.)" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 0,
+    "EstimateTime": 2333,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE129785",
     "StopID": "129785",
-    "StopName": {
-      "Zh_tw": "行政院",
-      "En": "ExecutiveYuan"
-    },
+    "StopName": { "Zh_tw": "行政院", "En": "ExecutiveYuan" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 1,
+    "EstimateTime": 7676,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE130144",
     "StopID": "130144",
-    "StopName": {
-      "Zh_tw": "雙鳳福德宮",
-      "En": "Shuangfeng Fude Temple"
-    },
+    "StopName": { "Zh_tw": "雙鳳福德宮", "En": "Shuangfeng Fude Temple" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 0,
+    "EstimateTime": 2563,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE130145",
     "StopID": "130145",
-    "StopName": {
-      "Zh_tw": "雙鳳福德宮",
-      "En": "Shuangfeng Fude Temple"
-    },
+    "StopName": { "Zh_tw": "雙鳳福德宮", "En": "Shuangfeng Fude Temple" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 1,
+    "EstimateTime": 11612,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE134857",
     "StopID": "134857",
-    "StopName": {
-      "Zh_tw": "捷運輔大站",
-      "En": "MRT Fu Jen University Station"
-    },
+    "StopName": { "Zh_tw": "捷運輔大站", "En": "MRT Fu Jen University Station" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 1,
+    "EstimateTime": 10731,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE224416",
     "StopID": "224416",
-    "StopName": {
-      "Zh_tw": "臺大醫院",
-      "En": "NTU Hospital"
-    },
+    "StopName": { "Zh_tw": "臺大醫院", "En": "NTU Hospital" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 1,
+    "EstimateTime": 7271,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE224100",
     "StopID": "224100",
-    "StopName": {
-      "Zh_tw": "臺北車站(忠孝)",
-      "En": "Taipei Main Sta. (Zhongxiao)"
-    },
+    "StopName": { "Zh_tw": "臺北車站(忠孝)", "En": "Taipei Main Sta. (Zhongxiao)" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 1,
+    "EstimateTime": 7971,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE170268",
     "StopID": "170268",
-    "StopName": {
-      "Zh_tw": "中原中平路口",
-      "En": "Zhongyuan & Zhongping Intersection"
-    },
+    "StopName": { "Zh_tw": "中原中平路口", "En": "Zhongyuan & Zhongping Intersection" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 1,
+    "EstimateTime": 9718,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE170767",
     "StopID": "170767",
-    "StopName": {
-      "Zh_tw": "丹鳳國小(新北大道)",
-      "En": "Danfeng Elementary School(New Taipei Blvd.)"
-    },
+    "StopName": { "Zh_tw": "丹鳳國小(新北大道)", "En": "Danfeng Elementary School(New Taipei Blvd.)" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 1,
+    "EstimateTime": 11788,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE170766",
     "StopID": "170766",
-    "StopName": {
-      "Zh_tw": "青山路口",
-      "En": "Qingshan Rd. Entrance"
-    },
+    "StopName": { "Zh_tw": "青山路口", "En": "Qingshan Rd. Entrance" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 1,
+    "EstimateTime": 11663,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE170765",
     "StopID": "170765",
-    "StopName": {
-      "Zh_tw": "青山路口",
-      "En": "Qingshan Rd. Entrance"
-    },
+    "StopName": { "Zh_tw": "青山路口", "En": "Qingshan Rd. Entrance" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 0,
+    "EstimateTime": 2495,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE21985",
     "StopID": "21985",
-    "StopName": {
-      "Zh_tw": "後港社區",
-      "En": "Hougang Community"
-    },
+    "StopName": { "Zh_tw": "後港社區", "En": "Hougang Community" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 0,
+    "EstimateTime": 2951,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE21984",
     "StopID": "21984",
-    "StopName": {
-      "Zh_tw": "福營國中",
-      "En": "Fuying Junior High School"
-    },
+    "StopName": { "Zh_tw": "福營國中", "En": "Fuying Junior High School" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 0,
+    "EstimateTime": 2898,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE21983",
     "StopID": "21983",
-    "StopName": {
-      "Zh_tw": "富國路口",
-      "En": "Fuguo Rd. Entrance"
-    },
+    "StopName": { "Zh_tw": "富國路口", "En": "Fuguo Rd. Entrance" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 0,
+    "EstimateTime": 2770,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE21981",
     "StopID": "21981",
-    "StopName": {
-      "Zh_tw": "丹鳳派出所",
-      "En": "Danfeng Police Station"
-    },
+    "StopName": { "Zh_tw": "丹鳳派出所", "En": "Danfeng Police Station" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 0,
+    "EstimateTime": 2618,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE21980",
     "StopID": "21980",
-    "StopName": {
-      "Zh_tw": "鳳山街口",
-      "En": "Fengshan St. Entrance"
-    },
+    "StopName": { "Zh_tw": "鳳山街口", "En": "Fengshan St. Entrance" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 0,
+    "EstimateTime": 2431,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE21989",
     "StopID": "21989",
-    "StopName": {
-      "Zh_tw": "建國一路",
-      "En": "Jianguo 1st. Rd."
-    },
+    "StopName": { "Zh_tw": "建國一路", "En": "Jianguo 1st. Rd." },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 0,
+    "EstimateTime": 3355,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE21988",
     "StopID": "21988",
-    "StopName": {
-      "Zh_tw": "後港一路",
-      "En": "Hougang 1st. Rd."
-    },
+    "StopName": { "Zh_tw": "後港一路", "En": "Hougang 1st. Rd." },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 0,
+    "EstimateTime": 3200,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE21987",
     "StopID": "21987",
-    "StopName": {
-      "Zh_tw": "建安街口",
-      "En": "Jianan St. Entrance"
-    },
+    "StopName": { "Zh_tw": "建安街口", "En": "Jianan St. Entrance" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 0,
+    "EstimateTime": 3121,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE21986",
     "StopID": "21986",
-    "StopName": {
-      "Zh_tw": "建福路口",
-      "En": "Jianfu Rd. Entrance"
-    },
+    "StopName": { "Zh_tw": "建福路口", "En": "Jianfu Rd. Entrance" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 0,
+    "EstimateTime": 3038,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE21996",
     "StopID": "21996",
-    "StopName": {
-      "Zh_tw": "中平路",
-      "En": "Zhongping Rd."
-    },
+    "StopName": { "Zh_tw": "中平路", "En": "Zhongping Rd." },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 0,
+    "EstimateTime": 4195,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE21995",
     "StopID": "21995",
-    "StopName": {
-      "Zh_tw": "新泰國中南站",
-      "En": "Xintai Junior High School South Stop"
-    },
+    "StopName": { "Zh_tw": "新泰國中南站", "En": "Xintai Junior High School South Stop" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 0,
+    "EstimateTime": 4036,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE21994",
     "StopID": "21994",
-    "StopName": {
-      "Zh_tw": "材試所",
-      "En": "Materials Testing Laboratory"
-    },
+    "StopName": { "Zh_tw": "材試所", "En": "Materials Testing Laboratory" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 0,
+    "EstimateTime": 3933,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE21993",
     "StopID": "21993",
-    "StopName": {
-      "Zh_tw": "新泰國小(新泰公園)",
-      "En": "Xintai Elementary School(Xintai Park)"
-    },
+    "StopName": { "Zh_tw": "新泰國小(新泰公園)", "En": "Xintai Elementary School(Xintai Park)" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 0,
+    "EstimateTime": 3895,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE21992",
     "StopID": "21992",
-    "StopName": {
-      "Zh_tw": "公園一路",
-      "En": "Gongyuan 1st Rd."
-    },
+    "StopName": { "Zh_tw": "公園一路", "En": "Gongyuan 1st Rd." },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 0,
+    "EstimateTime": 3826,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE21991",
     "StopID": "21991",
-    "StopName": {
-      "Zh_tw": "盲人重建院",
-      "En": "Institute for the Blind"
-    },
+    "StopName": { "Zh_tw": "盲人重建院", "En": "Institute for the Blind" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 0,
+    "EstimateTime": 3726,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE21990",
     "StopID": "21990",
-    "StopName": {
-      "Zh_tw": "捷運輔大站(建國一路)",
-      "En": "MRT Fu Jen University Station(Jianguo 1st. Rd.)"
-    },
+    "StopName": { "Zh_tw": "捷運輔大站(建國一路)", "En": "MRT Fu Jen University Station(Jianguo 1st. Rd.)" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 0,
+    "EstimateTime": 3389,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE21999",
     "StopID": "21999",
-    "StopName": {
-      "Zh_tw": "中原路",
-      "En": "Zhongyuan Rd."
-    },
+    "StopName": { "Zh_tw": "中原路", "En": "Zhongyuan Rd." },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 0,
+    "EstimateTime": 4593,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE21998",
     "StopID": "21998",
-    "StopName": {
-      "Zh_tw": "中平國中",
-      "En": "Zhongping Junior High School"
-    },
+    "StopName": { "Zh_tw": "中平國中", "En": "Zhongping Junior High School" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 0,
+    "EstimateTime": 4463,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE21997",
     "StopID": "21997",
-    "StopName": {
-      "Zh_tw": "新莊高中(新莊文藝中心)",
-      "En": "Xinzhuang High School(Xinzhuang Culture & Arts Center)"
-    },
+    "StopName": { "Zh_tw": "新莊高中(新莊文藝中心)", "En": "Xinzhuang High School(Xinzhuang Culture & Arts Center)" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 0,
+    "EstimateTime": 4395,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE21979",
     "StopID": "21979",
-    "StopName": {
-      "Zh_tw": "捷運迴龍站",
-      "En": "MRT Huilong Station"
-    },
+    "StopName": { "Zh_tw": "捷運迴龍站", "En": "MRT Huilong Station" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 0,
+    "EstimateTime": 2308,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   },
   {
     "StopUID": "TPE181706",
     "StopID": "181706",
-    "StopName": {
-      "Zh_tw": "捷運輔大站",
-      "En": "MRT Fu Jen University Station"
-    },
+    "StopName": { "Zh_tw": "捷運輔大站", "En": "MRT Fu Jen University Station" },
     "RouteUID": "TPE10471",
     "RouteID": "10471",
-    "RouteName": {
-      "Zh_tw": "615",
-      "En": "615"
-    },
+    "RouteName": { "Zh_tw": "615", "En": "615" },
     "Direction": 0,
+    "EstimateTime": 3514,
     "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-22T11:18:30+08:00",
-    "UpdateTime": "2026-07-22T11:18:32+08:00"
+    "SrcUpdateTime": "2026-07-22T15:42:10+08:00",
+    "UpdateTime": "2026-07-22T15:42:14+08:00"
   }
 ]

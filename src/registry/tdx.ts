@@ -2,10 +2,14 @@ import { z } from "zod";
 import {
   BUS_ETA_CACHE_TTL_SECONDS,
   BUS_ETA_MAX_STOPS_RETURNED,
+  RAIL_LIVEBOARD_CACHE_TTL_SECONDS,
+  RAIL_TRA_STATION_CACHE_TTL_SECONDS,
   TDX_BIKE_AVAILABILITY_PATH_PREFIX,
   TDX_BIKE_STATION_PATH_PREFIX,
   TDX_BUS_ETA_PATH_PREFIX,
   TDX_CITIES,
+  TDX_RAIL_TRA_LIVEBOARD_PATH_PREFIX,
+  TDX_RAIL_TRA_STATION_PATH,
   YOUBIKE_CACHE_TTL_SECONDS,
   YOUBIKE_STATION_CACHE_TTL_SECONDS
 } from "../constants.js";
@@ -363,3 +367,169 @@ export const youBikeStationEntry: DatasetEntry<{ city: string }, TdxBikeStationR
 };
 
 registerEntry(youBikeStationEntry as unknown as DatasetEntry<never, unknown, unknown>);
+
+// --- Rail/TRA/Station + Rail/TRA/LiveBoard/Station/{StationID}: TRA (台鐵) real-time arrival/departure board ---
+//
+// Both paths confirmed via WebSearch against TDX's official Swagger docs
+// and independent integration guides this session — not guessed from
+// memory (see TDX_RAIL_TRA_STATION_PATH / TDX_RAIL_TRA_LIVEBOARD_PATH_PREFIX
+// comments in constants.ts). Response FIELD structure confirmed 2026-07-22
+// via a real dispatch of fixtures-refresh.yml (Taipei Station StationID
+// "1000" for LiveBoard, no params for the nationwide Station list — both
+// sampleParams guesses worked on the first try, no 404s).
+//
+// Why two entries: LiveBoard's URL requires a numeric StationID
+// (`/LiveBoard/Station/{StationID}`), not the station NAME a caller would
+// actually type (e.g. "臺北"). `railTraStationEntry` is the nationwide
+// name->ID lookup tw_rail (tools/rail.ts) resolves against first — but
+// unlike tw_youbike's join (registry/index.ts's §2 note in AGENTS.md),
+// this is NOT an optional-enrichment join: the station list isn't
+// decorating an already-useful Availability response, it's a hard
+// prerequisite for even knowing which StationID to ask LiveBoard for. If
+// either fetch fails, tw_rail has nothing to degrade to — both failures
+// propagate and fail the whole call, unlike youBikeAvailabilityEntry/
+// youBikeStationEntry's asymmetric handling.
+//
+// THSR (高鐵) is deliberately NOT covered this session — see
+// TDX_RAIL_TRA_LIVEBOARD_PATH_PREFIX's comment in constants.ts for why
+// (no equivalent live delay-board endpoint found; THSR's TDX endpoints are
+// structurally different — scheduled DailyTimetable + seat inventory, not
+// a real-time delay board).
+//
+// TDX's own documentation states TRA LiveBoard carries a known ~2 minute
+// latency and isn't guaranteed to exactly match a station's own physical
+// platform display (TIDS) — already confirmed by the task that scoped
+// this session, not re-searched. This MUST be disclosed in tw_rail's tool
+// description (docs/ARCHITECTURE.md §0's "忠實轉載，不誇大即時性" spirit,
+// same compliance discipline as the typhoon/weather-warning tools), not
+// just noted here.
+//
+// Real LiveBoard capture (Taipei Station, 8 trains) confirms there is NO
+// platform/月台 field in this response at all — TDX's LiveBoard only
+// carries schedule/delay/direction data, not platform assignment. tw_rail's
+// description must not promise platform info this endpoint doesn't have.
+
+export const railStationInputShape = {};
+
+export type RailStationParams = Record<string, never>;
+
+interface TdxRailStationPosition {
+  PositionLon?: number;
+  PositionLat?: number;
+  GeoHash?: string;
+}
+
+/** Confirmed via the real capture (245 nationwide TRA stations): StationAddress and StationPhone are genuinely absent (not empty string) on some records — e.g. unstaffed halts like 三坑/1998 樹林調車場. */
+export interface TdxRailTraStationRawRecord {
+  StationUID?: string;
+  StationID?: string;
+  StationName?: TdxBilingualName;
+  StationAddress?: string;
+  StationPhone?: string;
+  OperatorID?: string;
+  StationClass?: string;
+  StationPosition?: TdxRailStationPosition;
+  LocationCity?: string;
+  LocationCityCode?: string;
+  LocationTown?: string;
+  LocationTownCode?: string;
+  UpdateTime?: string;
+  VersionID?: number;
+}
+
+export interface RailTraStationResult {
+  [key: string]: unknown;
+  stations: TdxRailTraStationRawRecord[];
+}
+
+export const railTraStationEntry: DatasetEntry<RailStationParams, TdxRailTraStationRawRecord[], RailTraStationResult> = {
+  id: "tdx:rail-tra-station",
+  source: "tdx",
+  path: TDX_RAIL_TRA_STATION_PATH,
+  title: "台鐵車站基本資料",
+  keywords: ["台鐵車站", "火車站", "tra station", "rail station"],
+  paramsSchema: railStationInputShape,
+  buildQueryParams: () => ({ "$format": "JSON" }),
+  // No buildPathSegments — this is a single nationwide list, no per-request path segment.
+  transform: raw => ({ stations: raw }),
+  cacheTtlSeconds: RAIL_TRA_STATION_CACHE_TTL_SECONDS,
+  updateFrequency: "車站基本資料，變動極少（新增/停用車站時才會變化）",
+  docUrl: "https://tdx.transportdata.tw/api-service/swagger/basic",
+  notes:
+    "欄位結構已於 2026-07-22 透過 fixtures-refresh.yml 真實 API 回應確認（全國 245 站）。" +
+    "StationAddress/StationPhone 在部分站點（例如無人招呼站）真的不存在，非欄位遺漏。" +
+    "tw_rail 精選工具用此資料集把使用者輸入的車站名稱解析成 LiveBoard 端點需要的 StationID。",
+  sampleParams: {},
+  fixtureFileName: "rail-tra-station.json"
+};
+
+registerEntry(railTraStationEntry as unknown as DatasetEntry<never, unknown, unknown>);
+
+export interface RailLiveboardParams {
+  stationId: string;
+}
+
+/** Confirmed via the real capture (Taipei Station, 8 trains): NO platform/月台 field in this response — see module comment above. */
+export interface TdxRailTraLiveboardRawRecord {
+  StationID?: string;
+  StationName?: TdxBilingualName;
+  TrainNo?: string;
+  /** 0/1 observed in the real capture — TDX's documented meaning (going/returning direction relative to the line) not independently re-derived this session, kept as an opaque passthrough. */
+  Direction?: number;
+  TrainTypeID?: string;
+  TrainTypeCode?: string;
+  TrainTypeName?: TdxBilingualName;
+  /** 0/1 observed — same "kept opaque, not re-derived" treatment as Direction. */
+  TripLine?: number;
+  EndingStationID?: string;
+  EndingStationName?: TdxBilingualName;
+  /** HH:mm:ss, no date — only ever absent for a train's originating station in TDX's documented convention (not observed absent in this session's 8-record capture, but handled defensively since a crash on one train shouldn't fail the whole board). */
+  ScheduledArrivalTime?: string;
+  ScheduledDepartureTime?: string;
+  /** Minutes late; 0 = on time. Genuinely present as 0, not absent, when on schedule (confirmed in the real capture). */
+  DelayTime?: number;
+  SrcUpdateTime?: string;
+  UpdateTime?: string;
+}
+
+export interface RailTraLiveboardResult {
+  [key: string]: unknown;
+  trains: TdxRailTraLiveboardRawRecord[];
+}
+
+export const railTraLiveboardEntry: DatasetEntry<
+  RailLiveboardParams,
+  TdxRailTraLiveboardRawRecord[],
+  RailTraLiveboardResult
+> = {
+  id: "tdx:rail-tra-liveboard",
+  source: "tdx",
+  path: TDX_RAIL_TRA_LIVEBOARD_PATH_PREFIX,
+  title: "台鐵即時到離站看板",
+  keywords: ["台鐵", "台鐵誤點", "台鐵到站", "火車到站", "台鐵時刻", "tra liveboard", "train delay"],
+  paramsSchema: { stationId: z.string().min(1) },
+  buildQueryParams: () => ({ "$format": "JSON" }),
+  buildPathSegments: params => [params.stationId],
+  // Defensive client-side re-filter to the requested StationID — the real
+  // capture confirmed every returned record already matched (TDX's path
+  // segment IS a real server-side filter here, unlike a query-param
+  // `filters` this project has independently found unreliable elsewhere,
+  // see AGENTS.md §6), but this is cheap insurance against a future
+  // upstream regression silently mixing in another station's trains.
+  transform: (raw, params) => ({ trains: raw.filter(t => t.StationID === params.stationId) }),
+  cacheTtlSeconds: RAIL_LIVEBOARD_CACHE_TTL_SECONDS,
+  updateFrequency: "動態即時資料，官方文件註明約 2 分鐘延遲",
+  docUrl: "https://tdx.transportdata.tw/api-service/swagger/basic",
+  notes:
+    "欄位結構已於 2026-07-22 透過 fixtures-refresh.yml 真實 API 回應確認（臺北車站，8 個車次）。" +
+    "確認回應中沒有月台/Platform 欄位——TDX 此端點只提供時刻/誤點/方向資料，不含月台配置。" +
+    "StationID 為必填路徑參數，須先透過 tdx:rail-tra-station 把站名解析成 StationID" +
+    "（tw_rail 精選工具會自動處理，直接用此 entry 透過 tw_query_dataset 查詢則需自行提供 StationID）。" +
+    "官方文件註明資料約有 2 分鐘延遲，且不保證與車站月台實際看板完全一致。",
+  // "1000" (Taipei Station) confirmed correct by the real dispatch — see
+  // module comment above.
+  sampleParams: { stationId: "1000" },
+  fixtureFileName: "rail-tra-liveboard.json"
+};
+
+registerEntry(railTraLiveboardEntry as unknown as DatasetEntry<never, unknown, unknown>);
