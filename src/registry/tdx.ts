@@ -2,12 +2,16 @@ import { z } from "zod";
 import {
   BUS_ETA_CACHE_TTL_SECONDS,
   BUS_ETA_MAX_STOPS_RETURNED,
+  METRO_ALERT_CACHE_TTL_SECONDS_SKELETON,
   RAIL_LIVEBOARD_CACHE_TTL_SECONDS,
   RAIL_TRA_STATION_CACHE_TTL_SECONDS,
   TDX_BIKE_AVAILABILITY_PATH_PREFIX,
   TDX_BIKE_STATION_PATH_PREFIX,
   TDX_BUS_ETA_PATH_PREFIX,
   TDX_CITIES,
+  TDX_METRO_ALERT_PATH_PREFIX,
+  TDX_METRO_SYSTEM_ID_BY_NAME,
+  TDX_METRO_SYSTEMS,
   TDX_RAIL_TRA_LIVEBOARD_PATH_PREFIX,
   TDX_RAIL_TRA_STATION_PATH,
   YOUBIKE_CACHE_TTL_SECONDS,
@@ -537,3 +541,91 @@ export const railTraLiveboardEntry: DatasetEntry<
 };
 
 registerEntry(railTraLiveboardEntry as unknown as DatasetEntry<never, unknown, unknown>);
+
+// --- Rail/Metro/Alert/{systemId}: Metro (捷運) real-time operational status / service disruption feed (SKELETON) ---
+//
+// Path confirmed via WebSearch, not memory — see TDX_METRO_ALERT_PATH_PREFIX's
+// comment in constants.ts for the full provenance note (an official
+// tdx.transportdata.tw topic page's own title is the source of the literal
+// path, since this sandbox can't fetch that domain directly). Response FIELD
+// structure is NOT yet confirmed against a real API response — same
+// restriction as every other entry in this project — so this is a skeleton
+// (pass-through transform) pending a real fixtures-refresh.yml dispatch.
+//
+// Deliberately the dynamic Alert/disruption feed, not the static
+// Line/Station/Network endpoints also found via WebSearch — this session's
+// task asks "is the metro running normally right now", which a route-map
+// dataset can't answer. Whether a second, joined entry (line/station names)
+// turns out necessary depends entirely on what the real Alert response
+// contains — e.g. if it references stations/lines only by bare ID with no
+// human-readable name — and that's a call deferred to after the real
+// dispatch, not built speculatively now (AGENTS.md §2).
+//
+// Only three systems this session (per the task's scope): 台北/高雄/桃園,
+// mapped to TDX's systemId codes (TRTC/KRTC/TYMC) via
+// TDX_METRO_SYSTEM_ID_BY_NAME — see that constant's comment for why
+// Taichung is excluded. Unlike TDX_CITIES (TDX's own English city codes,
+// used directly as the caller-facing param because that's what the bus/bike
+// endpoints themselves require), the Chinese system name here is a
+// convenience layer this server invents — the task explicitly asked for
+// "system（捷運系統，例如台北/高雄/桃園）", not the raw TDX code a caller
+// would have no reason to already know.
+//
+// No official "known ~N minute delay" caveat for this specific dataset was
+// found via WebSearch (unlike TRA LiveBoard's pre-confirmed ~2 minute
+// latency, which came from the task that scoped that session, not research
+// done here) — this does NOT mean no disclosure is warranted, only that
+// none is fabricated without evidence. If the real dispatch's captured
+// fixture shows meaningful staleness (an UpdateTime-style field trailing
+// noticeably behind fetch time, the same kind of evidence
+// RAIL_LIVEBOARD_CACHE_TTL_SECONDS's TTL was reasoned from), that evidence —
+// not an invented number — is what would justify adding a dedicated
+// `xxxNotice`-style field to tw_metro_status's response data, per the
+// lesson from tw_rail's delay-notice fix (see constants.ts's
+// RAIL_LIVEBOARD_DELAY_NOTICE comment for why a description-only disclosure
+// isn't sufficient).
+
+export const metroStatusInputShape = {
+  system: z
+    .enum(TDX_METRO_SYSTEMS)
+    .describe(
+      "捷運系統名稱，目前支援「台北」「高雄」「桃園」，必填。" +
+        "這是給人看的中文系統名稱，不是 TDX 內部的 systemId 代碼（例如 TRTC），伺服器會自動轉換。"
+    )
+};
+
+export interface MetroStatusParams {
+  system: (typeof TDX_METRO_SYSTEMS)[number];
+}
+
+export interface TdxMetroAlertRawRecord {
+  [key: string]: unknown;
+}
+
+export interface MetroAlertResult {
+  [key: string]: unknown;
+  alerts: TdxMetroAlertRawRecord[];
+}
+
+export const metroAlertEntry: DatasetEntry<MetroStatusParams, TdxMetroAlertRawRecord[], MetroAlertResult> = {
+  id: "tdx:metro-alert",
+  source: "tdx",
+  path: TDX_METRO_ALERT_PATH_PREFIX,
+  title: "捷運營運通阻（即時營運狀態）",
+  keywords: ["捷運", "捷運誤點", "捷運事故", "捷運正常嗎", "捷運狀態", "metro alert", "mrt status", "mrt disruption"],
+  paramsSchema: metroStatusInputShape,
+  buildQueryParams: () => ({ "$format": "JSON" }),
+  buildPathSegments: params => [TDX_METRO_SYSTEM_ID_BY_NAME[params.system]],
+  // SKELETON transform — see module comment above.
+  transform: raw => ({ alerts: raw }),
+  cacheTtlSeconds: METRO_ALERT_CACHE_TTL_SECONDS_SKELETON,
+  updateFrequency: "動態即時資料（營運通阻/事故通報），確切內部更新頻率待真實 dispatch 確認",
+  docUrl: "https://tdx.transportdata.tw/api-service/swagger/basic",
+  notes:
+    "SKELETON — 欄位結構尚未經真實 API 回應驗證，transform 目前僅原樣轉出 raw 陣列。" +
+    "system 參數為中文系統名稱（台北/高雄/桃園），tw_metro_status 精選工具會自動轉換成 TDX 的 systemId。",
+  sampleParams: { system: "台北" },
+  fixtureFileName: "metro-alert.json"
+};
+
+registerEntry(metroAlertEntry as unknown as DatasetEntry<never, unknown, unknown>);
