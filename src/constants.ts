@@ -47,6 +47,35 @@ export const TDX_SIGNUP_URL = "https://tdx.transportdata.tw/register";
 export const TDX_BUS_ETA_PATH_PREFIX = "v2/Bus/EstimatedTimeOfArrival/City";
 
 /**
+ * Path prefix for the public bike-sharing (YouBike etc.) real-time
+ * availability dataset.
+ *
+ * WebSearch initially suggested `/v2/Bike/Availability/{City}` (no literal
+ * "City/" segment before the city value, unlike bus ETA's `.../City/
+ * {City}`) — a REAL dispatch of fixtures-refresh.yml disproved this with a
+ * genuine HTTP 404 (`{"message":"Resouce Not Found"}`, upstream's own
+ * typo). Corrected to include the "City/" segment, matching bus ETA's
+ * convention (`.../Availability/City/{City}`), pending re-confirmation via
+ * another real dispatch — exactly the "don't trust research-derived paths
+ * without a real response" discipline AGENTS.md already establishes for
+ * field *shapes*, now shown to apply to URL *paths* too.
+ */
+export const TDX_BIKE_AVAILABILITY_PATH_PREFIX = "v2/Bike/Availability/City";
+
+/**
+ * Path prefix for the public bike-sharing STATION METADATA dataset
+ * (name/address/coordinates/capacity) — a separate endpoint from
+ * availability, confirmed necessary by a real dispatch of the Availability
+ * endpoint above: its response has no station name at all, only
+ * StationUID/StationID + numeric counts (see registry/tdx.ts's module
+ * comment on youBikeEntry for the full story). Assumed to follow the same
+ * `.../City/{City}` convention confirmed for both bus ETA and bike
+ * availability — pending its own real-dispatch confirmation before this
+ * stops being a skeleton assumption.
+ */
+export const TDX_BIKE_STATION_PATH_PREFIX = "v2/Bike/Station/City";
+
+/**
  * TDX's English city/county path-segment codes. The six special
  * municipalities (Taipei/NewTaipei/Taoyuan/Taichung/Tainan/Kaohsiung) are
  * confirmed with high confidence — identical spelling appeared across every
@@ -155,6 +184,38 @@ export const BUS_ETA_CACHE_TTL_SECONDS = 30;
  * still bounding the worst case of an unfiltered city query.
  */
 export const BUS_ETA_MAX_STOPS_RETURNED = 100;
+
+/**
+ * Cache TTL for bike STATION METADATA (tdx:youbike-station) — name,
+ * address, coordinates, capacity. Confirmed via the same real dispatch
+ * that confirmed availability's cadence (see YOUBIKE_CACHE_TTL_SECONDS)
+ * that TDX republishes this in the same kind of batch, but the *content*
+ * itself is near-static (a station's name/address/capacity essentially
+ * never changes between polls, unlike availability's live counts) — so
+ * this deliberately uses a much longer TTL than the batch-republish
+ * cadence alone would suggest, since refetching unchanging metadata every
+ * ~1 minute would be pure waste. 1 day, revisited if this server ever
+ * needs same-day station additions/removals to show up faster.
+ */
+export const YOUBIKE_STATION_CACHE_TTL_SECONDS = 24 * 60 * 60;
+
+/**
+ * Evidence-based TTL for bike availability (tdx:youbike-availability),
+ * derived the same way as BUS_ETA_CACHE_TTL_SECONDS but landing on a
+ * different number because the real evidence itself differs: a real
+ * capture (Taipei, 1,775 stations) showed TDX republishes this dataset in
+ * one batch (every currently-in-service station shared one identical
+ * `UpdateTime`), with a median 153s gap between each station's own
+ * `SrcUpdateTime` and that shared `UpdateTime` — consistent with YouBike's
+ * commonly documented ~1-minute refresh cadence. Coarser than bus ETA's
+ * observed ~7s SrcUpdateTime-to-UpdateTime gap (TTL 30s), so this is set
+ * higher — see registry/tdx.ts's module comment on youBikeAvailabilityEntry
+ * for the full reasoning.
+ */
+export const YOUBIKE_CACHE_TTL_SECONDS = 60;
+
+/** Cap on how many matched stations a single tw_youbike call returns — same response-budget reasoning as BUS_ETA_MAX_STOPS_RETURNED. Taipei alone has 1,775 real stations (confirmed via dispatch), so an unfiltered/broad query needs this cap. */
+export const YOUBIKE_MAX_STATIONS_RETURNED = 100;
 
 /**
  * Taiwan's 22 counties/cities as used by CWA's `locationName` parameter.

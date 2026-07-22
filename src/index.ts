@@ -4,6 +4,7 @@ import { CfWorkerJsonSchemaValidator } from "@modelcontextprotocol/sdk/validatio
 
 import type { CacheStore } from "./infra/cache.js";
 import { airQualityInputShape, handleAirQualityTool } from "./tools/air-quality.js";
+import { handleYouBikeTool, youBikeInputShape } from "./tools/bike.js";
 import { busEtaInputShape, handleBusEtaTool } from "./tools/bus-eta.js";
 import { handleRecentEarthquakesTool, recentEarthquakesInputShape } from "./tools/earthquake.js";
 import { handleQueryDatasetTool, handleSearchDatasetsTool, queryDatasetInputShape, searchDatasetsInputShape } from "./tools/generic.js";
@@ -169,6 +170,38 @@ function createServer(env: Env): McpServer {
       }
     },
     ({ city, routeName, stopName }) => handleBusEtaTool({ city, routeName, stopName }, env)
+  );
+
+  server.registerTool(
+    "tw_youbike",
+    {
+      title: "台灣公共自行車（YouBike 等）即時車柱資訊（交通部 TDX）",
+      description:
+        "查詢交通部運輸資料流通服務（TDX）公共自行車即時資料，回傳指定縣市（可加站名關鍵字篩選）的" +
+        "YouBike 等公共自行車站點：站名、可借車輛數（含一般/電輔車細分，若有）、可還空位數、總車位數、" +
+        "資料更新時間。本工具會自動合併 TDX 的兩個資料集（即時可借還數量 + 站點基本資料）才能同時提供" +
+        "站名與即時數量——這兩者在 TDX 原始 API 是分開的資料集。\n\n" +
+        "參數：\n" +
+        "- city：必填，TDX 標準縣市英文代碼（例如「Taipei」「NewTaipei」「Taichung」「Kaohsiung」），" +
+        "**不是**中文全形縣市名稱。\n" +
+        "- stationName：選填但強烈建議提供，做部分字串比對（例如「市政府」可比對到「YouBike2.0_捷運" +
+        "市政府站」，不需輸入完整站名）——不填會查詢整個縣市所有站點，資料量可能很大（例如台北市單一" +
+        "縣市即有上千站），回應只會回傳前面一部分結果並提示縮小查詢範圍。\n\n" +
+        "適用情境：使用者詢問「某站點還有沒有車可借」「某站點還有沒有位子可還」「某站點附近的 YouBike" +
+        "站況」。\n" +
+        "不適用：本工具不提供路線規劃、最近站點的距離排序（未提供地理位置參數，也未對回傳站點依距離" +
+        "排序）、租借費用查詢，也不提供跨站點調度或維修狀態解讀，只轉載官方即時數量。\n\n" +
+        "資料範圍限制：僅涵蓋 TDX 平台已串接的縣市公共自行車系統；「目前無資料」或可借/可還數為 0 是" +
+        "真實常見情況（例如尖峰時段車輛被借光、站點暫停營運等），不代表本伺服器查詢失敗。",
+      inputSchema: youBikeInputShape,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true
+      }
+    },
+    ({ city, stationName }) => handleYouBikeTool({ city, stationName }, env)
   );
 
   server.registerTool(

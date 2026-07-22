@@ -1,5 +1,14 @@
 import { z } from "zod";
-import { BUS_ETA_CACHE_TTL_SECONDS, BUS_ETA_MAX_STOPS_RETURNED, TDX_BUS_ETA_PATH_PREFIX, TDX_CITIES } from "../constants.js";
+import {
+  BUS_ETA_CACHE_TTL_SECONDS,
+  BUS_ETA_MAX_STOPS_RETURNED,
+  TDX_BIKE_AVAILABILITY_PATH_PREFIX,
+  TDX_BIKE_STATION_PATH_PREFIX,
+  TDX_BUS_ETA_PATH_PREFIX,
+  TDX_CITIES,
+  YOUBIKE_CACHE_TTL_SECONDS,
+  YOUBIKE_STATION_CACHE_TTL_SECONDS
+} from "../constants.js";
 import { registerEntry, type DatasetEntry } from "./index.js";
 
 // --- Bus/EstimatedTimeOfArrival/City/{City}[/{RouteName}]: bus dynamic estimated arrival ---
@@ -168,3 +177,189 @@ export const busEtaEntry: DatasetEntry<BusEtaParams, TdxBusEtaRawRecord[], BusEt
 };
 
 registerEntry(busEtaEntry as unknown as DatasetEntry<never, unknown, unknown>);
+
+// --- Bike/Availability/City/{City} + Bike/Station/City/{City}: public bike-sharing (YouBike etc.) ---
+//
+// Path corrected 2026-07-22 after a real dispatch of fixtures-refresh.yml
+// disproved the initial WebSearch-derived guess for Availability
+// (`.../Availability/{City}`, no "City/" segment) with a genuine HTTP 404
+// — see TDX_BIKE_AVAILABILITY_PATH_PREFIX's comment in constants.ts.
+// Corrected to `.../Availability/City/{City}`, matching bus ETA's
+// convention, and confirmed via a second real dispatch.
+//
+// Availability's real response (confirmed via that same dispatch) is a
+// bare JSON array of:
+//   { StationUID, StationID, ServiceStatus, ServiceType,
+//     AvailableRentBikes, AvailableReturnBikes, SrcUpdateTime, UpdateTime,
+//     AvailableRentBikesDetail: { GeneralBikes, ElectricBikes } }
+// Critically — and this is exactly the kind of gap the skeleton+dispatch
+// process exists to catch — **there is no station name field at all**.
+// TDX splits bike-sharing data across two endpoints: Availability (dynamic
+// counts only) and Station (static metadata: name/address/coordinates/
+// capacity), the same "static vs. dynamic" split GTFS-realtime uses. A
+// tool that promised "站名" per the task's requirement can't be built on
+// Availability alone, so `youBikeStationEntry` below registers the
+// metadata endpoint too (path assumed to follow the same confirmed
+// `.../City/{City}` convention as bus ETA and bike availability — still a
+// skeleton pending its own real-dispatch confirmation), and the curated
+// `tw_youbike` tool (tools/bike.ts) fetches BOTH and joins them client-side
+// by StationUID — a new pattern in this codebase (every prior curated tool
+// wraps exactly one registry entry), disclosed here and in the PR per
+// AGENTS.md §7.3.
+//
+// Neither entry attempts an upstream $filter (TDX's bike endpoints
+// document OData `$filter` support, e.g. `$filter=StationName eq '...'`,
+// but the exact field path/syntax wasn't independently confirmed this
+// session, and a malformed $filter risks a 400 rather than a safe no-op)
+// — `stationName` filtering happens entirely client-side in the tool layer
+// after the join, per AGENTS.md §6.
+//
+// TTL evidence (from the real Availability capture, Taipei, 1,775
+// stations): all 1,750 currently-in-service (ServiceStatus=1) stations
+// shared the exact same `UpdateTime` value — TDX republishes this dataset
+// as one batch, not per-station. The per-station `SrcUpdateTime` (each
+// operator's own last-report time) to `UpdateTime` (TDX's batch time) gap
+// had a median of 153s (~2.5 min), consistent with YouBike's own commonly
+// documented ~1-minute refresh cadence. This is a coarser cadence than bus
+// ETA's (~7s SrcUpdateTime-UpdateTime gap, TTL 30s) — evidence-based
+// YOUBIKE_CACHE_TTL_SECONDS is set accordingly, not copied from bus ETA.
+// (The 25 ServiceStatus=0 "not in service" stations had gaps up to ~510
+// days — clearly stale/decommissioned entries, excluded from this
+// reasoning as not representative of live cadence.)
+
+export const youBikeInputShape = {
+  city: z
+    .enum(TDX_CITIES)
+    .describe(
+      "縣市英文代碼（TDX 標準代碼，例如「Taipei」「NewTaipei」「Taichung」「Kaohsiung」），必填。" +
+        "注意這是 TDX 專用的英文代碼，不是 CWA 資料集使用的中文全形縣市名稱。"
+    ),
+  stationName: z
+    .string()
+    .min(1)
+    .max(30)
+    .optional()
+    .describe(
+      "站點名稱關鍵字，選填，做部分字串比對（例如「市政府」可比對到「YouBike2.0_捷運市政府站」），" +
+        "不需要輸入完整站名。不填則回傳該縣市所有站點（可能筆數很多，回應會被截斷並提示縮小查詢範圍）。"
+    )
+};
+
+export interface YouBikeParams {
+  city: string;
+  stationName?: string;
+}
+
+export interface TdxBikeAvailabilityRawRecord {
+  StationUID?: string;
+  StationID?: string;
+  /** 0 = 非營運中／已停用, 1 = 正常營運中— confirmed present in the real capture (both values seen), TDX's documented meaning not independently re-derived this session. */
+  ServiceStatus?: number;
+  /** Only value `2` observed in the real capture — meaning not confirmed, kept as an opaque passthrough rather than interpreted. */
+  ServiceType?: number;
+  AvailableRentBikes?: number;
+  AvailableReturnBikes?: number;
+  SrcUpdateTime?: string;
+  UpdateTime?: string;
+  AvailableRentBikesDetail?: { GeneralBikes?: number; ElectricBikes?: number };
+}
+
+export interface YouBikeAvailabilityResult {
+  [key: string]: unknown;
+  query: { city: string };
+  stations: TdxBikeAvailabilityRawRecord[];
+}
+
+export const youBikeAvailabilityEntry: DatasetEntry<
+  { city: string },
+  TdxBikeAvailabilityRawRecord[],
+  YouBikeAvailabilityResult
+> = {
+  id: "tdx:youbike-availability",
+  source: "tdx",
+  path: TDX_BIKE_AVAILABILITY_PATH_PREFIX,
+  title: "公共自行車（YouBike 等）即時車柱可借還數量",
+  keywords: ["youbike", "公共自行車", "腳踏車", "共享單車", "還有車嗎", "還有位子嗎", "bike availability", "bike sharing"],
+  paramsSchema: { city: youBikeInputShape.city },
+  buildQueryParams: () => ({ "$format": "JSON" }),
+  buildPathSegments: params => [params.city],
+  // No station name in this endpoint's own data (see module comment) — no
+  // client-side name filter is possible here; tw_youbike (tools/bike.ts)
+  // is where stationName filtering actually happens, after joining with
+  // youBikeStationEntry.
+  transform: (raw, params) => ({ query: { city: params.city }, stations: raw }),
+  cacheTtlSeconds: YOUBIKE_CACHE_TTL_SECONDS,
+  updateFrequency: "動態即時資料，TDX 以整批方式重新發布，實測批次時間間隔約 1-3 分鐘等級（詳見上方模組註解的證據）",
+  docUrl: "https://tdx.transportdata.tw/api-service/swagger/basic",
+  notes:
+    "欄位結構已於 2026-07-22 透過 fixtures-refresh.yml 真實 API 回應確認（Taipei，1,775 站）。" +
+    "此資料集本身不含站名——站名要透過 tdx:youbike-station 依 StationUID 對應，" +
+    "tw_youbike 精選工具會自動 join 兩個資料集；本 entry 單獨透過 tw_query_dataset 查詢時只會拿到" +
+    "車柱 ID 與可借還數量，不含站名。",
+  sampleParams: { city: "Taipei" },
+  fixtureFileName: "youbike-availability.json"
+};
+
+registerEntry(youBikeAvailabilityEntry as unknown as DatasetEntry<never, unknown, unknown>);
+
+// --- Bike/Station/City/{City}: public bike-sharing station metadata ---
+//
+// Path (the assumed `.../City/{City}` convention) and field structure both
+// confirmed 2026-07-22 via a real dispatch of fixtures-refresh.yml
+// (Taipei, 1,775 stations) — a bare JSON array of:
+//   { StationUID, StationID, AuthorityID, StationName: {Zh_tw, En},
+//     StationPosition: {PositionLon, PositionLat, GeoHash},
+//     StationAddress: {Zh_tw, En}, BikesCapacity, ServiceType,
+//     SrcUpdateTime, UpdateTime }
+// Same batch-publish pattern as availability: all 1,775 records shared one
+// identical UpdateTime. `BikesCapacity` is the "總車位數" the task asked
+// for — it lives here, not in Availability (see youBikeAvailabilityEntry's
+// module comment for the full split story).
+
+interface TdxBikeStationPosition {
+  PositionLon?: number;
+  PositionLat?: number;
+  GeoHash?: string;
+}
+
+export interface TdxBikeStationRawRecord {
+  StationUID?: string;
+  StationID?: string;
+  AuthorityID?: string;
+  StationName?: TdxBilingualName;
+  StationPosition?: TdxBikeStationPosition;
+  StationAddress?: TdxBilingualName;
+  BikesCapacity?: number;
+  ServiceType?: number;
+  SrcUpdateTime?: string;
+  UpdateTime?: string;
+}
+
+export interface YouBikeStationResult {
+  [key: string]: unknown;
+  query: { city: string };
+  stations: TdxBikeStationRawRecord[];
+}
+
+export const youBikeStationEntry: DatasetEntry<{ city: string }, TdxBikeStationRawRecord[], YouBikeStationResult> = {
+  id: "tdx:youbike-station",
+  source: "tdx",
+  path: TDX_BIKE_STATION_PATH_PREFIX,
+  title: "公共自行車（YouBike 等）站點基本資料",
+  keywords: ["youbike 站點", "自行車站", "bike station", "youbike station"],
+  paramsSchema: { city: youBikeInputShape.city },
+  buildQueryParams: () => ({ "$format": "JSON" }),
+  buildPathSegments: params => [params.city],
+  transform: (raw, params) => ({ query: { city: params.city }, stations: raw }),
+  cacheTtlSeconds: YOUBIKE_STATION_CACHE_TTL_SECONDS,
+  updateFrequency: "站點基本資料，變動極少（新增/停用站點時才會變化），TDX 仍以整批方式定期重新發布",
+  docUrl: "https://tdx.transportdata.tw/api-service/swagger/basic",
+  notes:
+    "欄位結構已於 2026-07-22 透過 fixtures-refresh.yml 真實 API 回應確認（Taipei，1,775 站）。" +
+    "站名、地址、座標、總車位數皆在此資料集，即時可借還數量在 tdx:youbike-availability，" +
+    "tw_youbike 精選工具會自動 join 兩者（依 StationUID）。",
+  sampleParams: { city: "Taipei" },
+  fixtureFileName: "youbike-station.json"
+};
+
+registerEntry(youBikeStationEntry as unknown as DatasetEntry<never, unknown, unknown>);
