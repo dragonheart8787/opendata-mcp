@@ -273,6 +273,24 @@ export const RAIL_TRA_STATION_CACHE_TTL_SECONDS = 24 * 60 * 60;
  */
 export const RAIL_LIVEBOARD_CACHE_TTL_SECONDS = 60;
 
+/**
+ * The ~2-minute-delay / platform-display disclosure, as fixed text embedded
+ * directly in tw_rail's own response data (`RailResult.delayNotice`), not
+ * just in the tool's `description` or a code comment. A tool's `description`
+ * is guidance for an LLM caller on *how* to use the tool — it is not
+ * guaranteed to be relayed to the end user on every call, and in production
+ * this notice was found to be reliably missing from what the caller actually
+ * saw (only present in `formatRailText`'s human-readable string, which some
+ * MCP clients don't surface as prominently as `structuredContent`). Putting
+ * it in the data itself means it survives regardless of which representation
+ * (content text vs structuredContent) a caller reads. This is a compliance
+ * requirement (气象法-style faithful-disclosure discipline, same as the
+ * typhoon tool), not an optional nicety — see the fix that added this field.
+ */
+export const RAIL_LIVEBOARD_DELAY_NOTICE =
+  "⚠️ 本資料為交通部 TDX 轉載之台鐵即時到離站看板，官方文件註明約有 2 分鐘延遲，" +
+  "且不保證與車站月台實際看板（TIDS）完全一致，實際到離站狀況請以車站月台顯示為準。";
+
 /** Cap on how many trains a single tw_rail call returns for one station's board — same response-budget reasoning as BUS_ETA_MAX_STOPS_RETURNED/YOUBIKE_MAX_STATIONS_RETURNED, though a real per-station capture (Taipei, 8 trains) suggests this is generous headroom rather than a commonly-hit limit. */
 export const RAIL_LIVEBOARD_MAX_TRAINS_RETURNED = 50;
 

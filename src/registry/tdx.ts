@@ -401,8 +401,12 @@ registerEntry(youBikeStationEntry as unknown as DatasetEntry<never, unknown, unk
 // platform display (TIDS) — already confirmed by the task that scoped
 // this session, not re-searched. This MUST be disclosed in tw_rail's tool
 // description (docs/ARCHITECTURE.md §0's "忠實轉載，不誇大即時性" spirit,
-// same compliance discipline as the typhoon/weather-warning tools), not
-// just noted here.
+// same compliance discipline as the typhoon/weather-warning tools), AND —
+// learned the hard way in production, see RAIL_LIVEBOARD_DELAY_NOTICE's
+// comment in constants.ts — as a fixed field in tw_rail's own response DATA
+// (RailResult.delayNotice, tools/rail.ts), since a tool `description` only
+// guides the calling LLM and isn't guaranteed to be relayed to the end
+// user. Not just noted here.
 //
 // Real LiveBoard capture (Taipei Station, 8 trains) confirms there is NO
 // platform/月台 field in this response at all — TDX's LiveBoard only
