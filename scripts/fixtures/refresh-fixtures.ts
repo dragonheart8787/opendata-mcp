@@ -84,15 +84,19 @@ function buildChecks(): DatasetCheck[] {
     throw new Error("CWA_API_KEY and MOENV_API_KEY must both be set in the environment.");
   }
 
-  const entries = listDatasetEntries();
-  const hasTdxEntry = entries.some(entry => entry.source === "tdx" && entry.sampleParams !== undefined);
-  if (hasTdxEntry && (!TDX_CLIENT_ID || !TDX_CLIENT_SECRET)) {
-    throw new Error("TDX_CLIENT_ID and TDX_CLIENT_SECRET must both be set in the environment to refresh TDX fixtures.");
-  }
-
   const checks: DatasetCheck[] = [];
 
-  for (const entry of entries) {
+  // Deliberately no upfront "TDX_CLIENT_ID/TDX_CLIENT_SECRET must be set"
+  // throw here, unlike the CWA/MOENV check above: those two are assumed
+  // permanently configured (this script has always required them). TDX is
+  // brand new — its secrets may not exist in this repo yet — and a missing
+  // TDX credential must not abort the whole run and lose CWA/MOENV
+  // verification along with it. If TDX_CLIENT_ID/TDX_CLIENT_SECRET are
+  // unset, getAccessToken() below throws its normal AUTH_MISSING ToolError,
+  // which the per-check try/catch in main() already handles the same way
+  // it handles any other per-dataset fetch failure (e.g. O-B0076-001's real
+  // 404) — logged and surfaced in the summary, not a hard abort.
+  for (const entry of listDatasetEntries()) {
     if (entry.sampleParams === undefined) {
       console.log(`Skipping ${entry.id} (${entry.title}) — no sampleParams declared, can't safely build a request.`);
       continue;
