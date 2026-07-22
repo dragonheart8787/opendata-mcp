@@ -8,6 +8,7 @@ import { handleYouBikeTool, youBikeInputShape } from "./tools/bike.js";
 import { busEtaInputShape, handleBusEtaTool } from "./tools/bus-eta.js";
 import { handleRecentEarthquakesTool, recentEarthquakesInputShape } from "./tools/earthquake.js";
 import { handleQueryDatasetTool, handleSearchDatasetsTool, queryDatasetInputShape, searchDatasetsInputShape } from "./tools/generic.js";
+import { handleMetroStatusTool, metroStatusInputShape } from "./tools/metro.js";
 import { handleRailTool, railInputShape } from "./tools/rail.js";
 import { handleTyphoonTool, typhoonNewsInputShape } from "./tools/typhoon.js";
 import { handleWeatherForecastTool, weatherForecastInputShape } from "./tools/weather.js";
@@ -235,6 +236,35 @@ function createServer(env: Env): McpServer {
       }
     },
     ({ stationName, destinationStationName }) => handleRailTool({ stationName, destinationStationName }, env)
+  );
+
+  server.registerTool(
+    "tw_metro_status",
+    {
+      title: "台灣捷運即時營運狀態（交通部 TDX）",
+      description:
+        "查詢交通部運輸資料流通服務（TDX）「捷運營運通阻」即時營運狀態，回傳指定捷運系統目前公告的" +
+        "營運狀態（正常營運，或有事件時的事件描述），以及資料更新時間。本工具逐字轉載 TDX 目前公告的" +
+        "標題與說明文字，不自行判斷或摘要事件嚴重程度。\n\n" +
+        "參數：\n" +
+        "- system：必填，捷運系統中文名稱，目前僅支援「台北」「高雄」「桃園」（TDX 尚未涵蓋台中捷運" +
+        "時刻資料，未納入）。\n\n" +
+        "適用情境：使用者詢問「某捷運系統現在正常嗎」「捷運有沒有事故延誤」「捷運現在營運狀況如何」。\n\n" +
+        "不適用：本工具不提供列車即時位置或到站時間預測（TDX 此端點僅提供系統層級的營運狀態公告，" +
+        "不含個別列車動態，如需台鐵到離站資訊請改用 tw_rail）；不提供路線圖或車站基本資料查詢；" +
+        "不會把數值狀態代碼轉譯成「輕微/嚴重」等分級文字，僅原樣轉載官方標題與說明。\n\n" +
+        "資料範圍限制：TDX 官方回應本身註明批次更新間隔約 60 秒（工具回應會附上這個官方回報的數值，" +
+        "非本伺服器推測），查詢結果可能落後實際狀況數十秒；「查無官方回報資訊」不代表系統確定正常或" +
+        "異常，也不代表本伺服器查詢失敗。",
+      inputSchema: metroStatusInputShape,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true
+      }
+    },
+    ({ system }) => handleMetroStatusTool({ system }, env)
   );
 
   server.registerTool(

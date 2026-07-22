@@ -274,6 +274,64 @@ export const RAIL_TRA_STATION_CACHE_TTL_SECONDS = 24 * 60 * 60;
 export const RAIL_LIVEBOARD_CACHE_TTL_SECONDS = 60;
 
 /**
+ * Path prefix for TDX's Metro (捷運) real-time operational status / service
+ * disruption feed ("營運通阻") — confirmed via WebSearch, not guessed from
+ * memory: an official tdx.transportdata.tw topic/example page's own title
+ * includes the literal path `v2/Rail/Metro/Alert/TRTC` (this sandbox has no
+ * direct network access to tdx.transportdata.tw — same restriction already
+ * documented throughout this project — so only the WebSearch result
+ * snippet, not a full page fetch, was available; the path itself is still a
+ * verbatim quote from an official source, not invented). systemId is a
+ * required path segment, supplied per-request by `metroAlertEntry.
+ * buildPathSegments` (registry/tdx.ts) via `TDX_METRO_SYSTEM_ID_BY_NAME`.
+ *
+ * Deliberately NOT the static Line/Station/Network endpoints (also found via
+ * WebSearch: `v2/Rail/Metro/Line/{systemId}`, `v2/Rail/Metro/Station/
+ * {systemId}`) — this session's task is "is the metro running normally right
+ * now", which this dynamic Alert feed answers directly. Whether a second,
+ * joined entry for line/station names ends up necessary (e.g. if the real
+ * Alert response only carries bare line/station IDs with no human-readable
+ * name) is a decision deferred until a real dispatch shows what the
+ * response actually contains — not built speculatively, per AGENTS.md §2's
+ * guidance on multi-endpoint joins.
+ */
+export const TDX_METRO_ALERT_PATH_PREFIX = "v2/Rail/Metro/Alert";
+
+/**
+ * The three metro systems this session covers, per the task's explicit
+ * scope (台北/高雄/桃園) — a caller-facing Chinese name mapped to the TDX
+ * systemId its URL path segment actually needs. Codes confirmed via
+ * WebSearch against multiple independent sources: TDX's own example URLs
+ * use "TRTC"/"KRTC"/"TYMC" verbatim, independently corroborated by the
+ * ChiaJung-Yeh/TDX_Guide R package documentation (which also notes Taichung
+ * Metro's schedule data "尚未匯入 TDX" as of this session's research — no
+ * Alert-capable systemId for it was found either, so it's excluded here
+ * rather than guessed).
+ */
+export const TDX_METRO_SYSTEMS = ["台北", "高雄", "桃園"] as const;
+
+export type TdxMetroSystemName = (typeof TDX_METRO_SYSTEMS)[number];
+
+export const TDX_METRO_SYSTEM_ID_BY_NAME: Record<TdxMetroSystemName, string> = {
+  台北: "TRTC",
+  高雄: "KRTC",
+  桃園: "TYMC"
+};
+
+/**
+ * Cache TTL for Metro Alert. A real capture (Taipei/TRTC) turned up
+ * stronger evidence than any other TDX entry in this project: TDX's
+ * response itself self-reports its batch republish interval via
+ * `UpdateInterval`/`SrcUpdateInterval` — both 60 (seconds) in the real
+ * capture, not inferred from a SrcUpdateTime/UpdateTime gap the way
+ * BUS_ETA_CACHE_TTL_SECONDS/YOUBIKE_CACHE_TTL_SECONDS/
+ * RAIL_LIVEBOARD_CACHE_TTL_SECONDS had to. Matching that self-declared
+ * interval exactly means this server's cache never stacks additional
+ * staleness on top of what TDX already discloses.
+ */
+export const METRO_ALERT_CACHE_TTL_SECONDS = 60;
+
+/**
  * The ~2-minute-delay / platform-display disclosure, as fixed text embedded
  * directly in tw_rail's own response data (`RailResult.delayNotice`), not
  * just in the tool's `description` or a code comment. A tool's `description`
