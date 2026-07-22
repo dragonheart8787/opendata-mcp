@@ -284,7 +284,7 @@ export const RAIL_LIVEBOARD_CACHE_TTL_SECONDS = 60;
  * MCP clients don't surface as prominently as `structuredContent`). Putting
  * it in the data itself means it survives regardless of which representation
  * (content text vs structuredContent) a caller reads. This is a compliance
- * requirement (气象法-style faithful-disclosure discipline, same as the
+ * requirement (氣象法-style faithful-disclosure discipline, same as the
  * typhoon tool), not an optional nicety — see the fix that added this field.
  */
 export const RAIL_LIVEBOARD_DELAY_NOTICE =
