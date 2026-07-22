@@ -186,11 +186,18 @@ export const BUS_ETA_CACHE_TTL_SECONDS = 30;
 export const BUS_ETA_MAX_STOPS_RETURNED = 100;
 
 /**
- * Placeholder cache TTL for the bike-station-metadata skeleton entry (still
- * unconfirmed against a real response) — NOT the final availability TTL,
- * see YOUBIKE_CACHE_TTL_SECONDS below for that.
+ * Cache TTL for bike STATION METADATA (tdx:youbike-station) — name,
+ * address, coordinates, capacity. Confirmed via the same real dispatch
+ * that confirmed availability's cadence (see YOUBIKE_CACHE_TTL_SECONDS)
+ * that TDX republishes this in the same kind of batch, but the *content*
+ * itself is near-static (a station's name/address/capacity essentially
+ * never changes between polls, unlike availability's live counts) — so
+ * this deliberately uses a much longer TTL than the batch-republish
+ * cadence alone would suggest, since refetching unchanging metadata every
+ * ~1 minute would be pure waste. 1 day, revisited if this server ever
+ * needs same-day station additions/removals to show up faster.
  */
-export const YOUBIKE_CACHE_TTL_SECONDS_SKELETON = 60;
+export const YOUBIKE_STATION_CACHE_TTL_SECONDS = 24 * 60 * 60;
 
 /**
  * Evidence-based TTL for bike availability (tdx:youbike-availability),

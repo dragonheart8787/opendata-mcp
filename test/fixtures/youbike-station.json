@@ -1,0 +1,772 @@
+[
+  {
+    "StationUID": "TPE500101001",
+    "StationID": "500101001",
+    "AuthorityID": "TPE",
+    "StationName": {
+      "Zh_tw": "YouBike2.0_捷運科技大樓站",
+      "En": "YouBike2.0_MRT Technology Bldg. Sta."
+    },
+    "StationPosition": {
+      "PositionLon": 121.5436,
+      "PositionLat": 25.02605,
+      "GeoHash": "wsqqmgc77"
+    },
+    "StationAddress": {
+      "Zh_tw": "復興南路二段235號前",
+      "En": "No.235, Sec. 2, Fuxing S. Rd."
+    },
+    "BikesCapacity": 28,
+    "ServiceType": 2,
+    "SrcUpdateTime": "2026-07-22T12:15:03+08:00",
+    "UpdateTime": "2026-07-22T12:15:36+08:00"
+  },
+  {
+    "StationUID": "TPE500101002",
+    "StationID": "500101002",
+    "AuthorityID": "TPE",
+    "StationName": {
+      "Zh_tw": "YouBike2.0_復興南路二段273號前",
+      "En": "YouBike2.0_No.273, Sec. 2, Fuxing S. Rd."
+    },
+    "StationPosition": {
+      "PositionLon": 121.54357,
+      "PositionLat": 25.02565,
+      "GeoHash": "wsqqmgc2f"
+    },
+    "StationAddress": {
+      "Zh_tw": "復興南路二段273號西側",
+      "En": "No.273, Sec. 2, Fuxing S. Rd. (West)"
+    },
+    "BikesCapacity": 21,
+    "ServiceType": 2,
+    "SrcUpdateTime": "2026-07-22T12:15:03+08:00",
+    "UpdateTime": "2026-07-22T12:15:36+08:00"
+  },
+  {
+    "StationUID": "TPE500101003",
+    "StationID": "500101003",
+    "AuthorityID": "TPE",
+    "StationName": {
+      "Zh_tw": "YouBike2.0_國北教大實小東側門",
+      "En": "YouBike2.0_NTUE Experiment Elementary School (East)"
+    },
+    "StationPosition": {
+      "PositionLon": 121.54124,
+      "PositionLat": 25.02429,
+      "GeoHash": "wsqqmex9h"
+    },
+    "StationAddress": {
+      "Zh_tw": "和平東路二段96巷7號",
+      "En": "No. 7, Ln. 96, Sec. 2, Heping E. Rd"
+    },
+    "BikesCapacity": 28,
+    "ServiceType": 2,
+    "SrcUpdateTime": "2026-07-22T12:15:03+08:00",
+    "UpdateTime": "2026-07-22T12:15:36+08:00"
+  },
+  {
+    "StationUID": "TPE500101004",
+    "StationID": "500101004",
+    "AuthorityID": "TPE",
+    "StationName": {
+      "Zh_tw": "YouBike2.0_和平公園東側",
+      "En": "YouBike2.0_Heping Park (East)"
+    },
+    "StationPosition": {
+      "PositionLon": 121.54282,
+      "PositionLat": 25.02351,
+      "GeoHash": "wsqqmg2u8"
+    },
+    "StationAddress": {
+      "Zh_tw": "和平東路二段118巷33號",
+      "En": "No. 33, Ln. 118, Sec. 2, Heping E. Rd"
+    },
+    "BikesCapacity": 11,
+    "ServiceType": 2,
+    "SrcUpdateTime": "2026-07-22T12:13:02+08:00",
+    "UpdateTime": "2026-07-22T12:15:36+08:00"
+  },
+  {
+    "StationUID": "TPE500101005",
+    "StationID": "500101005",
+    "AuthorityID": "TPE",
+    "StationName": {
+      "Zh_tw": "YouBike2.0_辛亥復興路口西北側",
+      "En": "YouBike2.0_Xinhai Fuxing Rd. Intersection (Northwest)"
+    },
+    "StationPosition": {
+      "PositionLon": 121.54299,
+      "PositionLat": 25.02153,
+      "GeoHash": "wsqqmg0bu"
+    },
+    "StationAddress": {
+      "Zh_tw": "復興南路二段368號",
+      "En": "No. 368, Sec. 2, Fuxing S. Rd."
+    },
+    "BikesCapacity": 16,
+    "ServiceType": 2,
+    "SrcUpdateTime": "2026-07-22T12:15:03+08:00",
+    "UpdateTime": "2026-07-22T12:15:36+08:00"
+  },
+  {
+    "StationUID": "TPE500101006",
+    "StationID": "500101006",
+    "AuthorityID": "TPE",
+    "StationName": {
+      "Zh_tw": "YouBike2.0_復興南路二段280號前",
+      "En": "YouBike2.0_No. 280, Sec. 2, Fuxing S. Rd."
+    },
+    "StationPosition": {
+      "PositionLon": 121.54328,
+      "PositionLat": 25.02429,
+      "GeoHash": "wsqqmg915"
+    },
+    "StationAddress": {
+      "Zh_tw": "復興南路二段280號",
+      "En": "No. 280, Sec. 2, Fuxing S. Rd."
+    },
+    "BikesCapacity": 27,
+    "ServiceType": 2,
+    "SrcUpdateTime": "2026-07-22T12:15:03+08:00",
+    "UpdateTime": "2026-07-22T12:15:36+08:00"
+  },
+  {
+    "StationUID": "TPE500101007",
+    "StationID": "500101007",
+    "AuthorityID": "TPE",
+    "StationName": {
+      "Zh_tw": "YouBike2.0_復興南路二段340巷口",
+      "En": "YouBike2.0_Ln. 340, Sec. 2, Fuxing S. Rd."
+    },
+    "StationPosition": {
+      "PositionLon": 121.54326,
+      "PositionLat": 25.02253,
+      "GeoHash": "wsqqmg1ng"
+    },
+    "StationAddress": {
+      "Zh_tw": "復興南路二段342號",
+      "En": "No. 342, Sec. 2, Fuxing S. Rd."
+    },
+    "BikesCapacity": 11,
+    "ServiceType": 2,
+    "SrcUpdateTime": "2026-07-22T12:15:17+08:00",
+    "UpdateTime": "2026-07-22T12:15:36+08:00"
+  },
+  {
+    "StationUID": "TPE500101008",
+    "StationID": "500101008",
+    "AuthorityID": "TPE",
+    "StationName": {
+      "Zh_tw": "YouBike2.0_新生南路三段52號前",
+      "En": "YouBike2.0_No. 52, Sec. 3, Xinsheng S. Rd."
+    },
+    "StationPosition": {
+      "PositionLon": 121.53407,
+      "PositionLat": 25.02112,
+      "GeoHash": "wsqqmdfqt"
+    },
+    "StationAddress": {
+      "Zh_tw": "新生南路三段52號",
+      "En": "No. 52, Sec. 3, Xinsheng S. Rd."
+    },
+    "BikesCapacity": 17,
+    "ServiceType": 2,
+    "SrcUpdateTime": "2026-07-22T12:13:02+08:00",
+    "UpdateTime": "2026-07-22T12:15:36+08:00"
+  },
+  {
+    "StationUID": "TPE500101009",
+    "StationID": "500101009",
+    "AuthorityID": "TPE",
+    "StationName": {
+      "Zh_tw": "YouBike2.0_新生南路三段66號前",
+      "En": "YouBike2.0_No. 66, Sec. 3, Xinsheng S. Rd."
+    },
+    "StationPosition": {
+      "PositionLon": 121.53384,
+      "PositionLat": 25.01976,
+      "GeoHash": "wsqqmddnx"
+    },
+    "StationAddress": {
+      "Zh_tw": "新生南路三段66號東側",
+      "En": "No. 66, Sec. 3, Xinsheng S. Rd. (East)"
+    },
+    "BikesCapacity": 16,
+    "ServiceType": 2,
+    "SrcUpdateTime": "2026-07-22T12:11:16+08:00",
+    "UpdateTime": "2026-07-22T12:15:36+08:00"
+  },
+  {
+    "StationUID": "TPE500101010",
+    "StationID": "500101010",
+    "AuthorityID": "TPE",
+    "StationName": {
+      "Zh_tw": "YouBike2.0_新生南路三段82號前",
+      "En": "YouBike2.0_No. 82, Sec. 3, Xinsheng S. Rd."
+    },
+    "StationPosition": {
+      "PositionLon": 121.53361,
+      "PositionLat": 25.01894,
+      "GeoHash": "wsqqmdd1f"
+    },
+    "StationAddress": {
+      "Zh_tw": "新生南路三段82號",
+      "En": "No. 82, Sec. 3, Xinsheng S. Rd."
+    },
+    "BikesCapacity": 20,
+    "ServiceType": 2,
+    "SrcUpdateTime": "2026-07-22T12:12:04+08:00",
+    "UpdateTime": "2026-07-22T12:15:36+08:00"
+  },
+  {
+    "StationUID": "TPE500101012",
+    "StationID": "500101012",
+    "AuthorityID": "TPE",
+    "StationName": {
+      "Zh_tw": "YouBike2.0_辛亥路一段30號前",
+      "En": "YouBike2.0_No. 30, Sec. 1, Xinhai Rd."
+    },
+    "StationPosition": {
+      "PositionLon": 121.52982,
+      "PositionLat": 25.01986,
+      "GeoHash": "wsqqm6xr4"
+    },
+    "StationAddress": {
+      "Zh_tw": "辛亥路一段30號",
+      "En": "No. 30, Sec. 1, Xinhai Rd."
+    },
+    "BikesCapacity": 8,
+    "ServiceType": 2,
+    "SrcUpdateTime": "2026-07-22T12:15:03+08:00",
+    "UpdateTime": "2026-07-22T12:15:36+08:00"
+  },
+  {
+    "StationUID": "TPE500101013",
+    "StationID": "500101013",
+    "AuthorityID": "TPE",
+    "StationName": {
+      "Zh_tw": "YouBike2.0_和平復興路口西北側",
+      "En": "YouBike2.0_Heping Fuxing Rd. Intersection (Northwest)"
+    },
+    "StationPosition": {
+      "PositionLon": 121.54332,
+      "PositionLat": 25.02543,
+      "GeoHash": "wsqqmg9ps"
+    },
+    "StationAddress": {
+      "Zh_tw": "復興南路二段236號",
+      "En": "No. 236, Sec. 2, Fuxing S. Rd."
+    },
+    "BikesCapacity": 9,
+    "ServiceType": 2,
+    "SrcUpdateTime": "2026-07-22T12:12:04+08:00",
+    "UpdateTime": "2026-07-22T12:15:36+08:00"
+  },
+  {
+    "StationUID": "TPE500101014",
+    "StationID": "500101014",
+    "AuthorityID": "TPE",
+    "StationName": {
+      "Zh_tw": "YouBike2.0_羅斯福路三段311號前",
+      "En": "YouBike2.0_No. 311, Sec. 3, Roosevelt Rd."
+    },
+    "StationPosition": {
+      "PositionLon": 121.53202,
+      "PositionLat": 25.01717,
+      "GeoHash": "wsqqmd0zt"
+    },
+    "StationAddress": {
+      "Zh_tw": "羅斯福路三段311號",
+      "En": "No. 311, Sec. 3, Roosevelt Rd."
+    },
+    "BikesCapacity": 11,
+    "ServiceType": 2,
+    "SrcUpdateTime": "2026-07-22T12:15:03+08:00",
+    "UpdateTime": "2026-07-22T12:15:36+08:00"
+  },
+  {
+    "StationUID": "TPE500101015",
+    "StationID": "500101015",
+    "AuthorityID": "TPE",
+    "StationName": {
+      "Zh_tw": "YouBike2.0_大安運動中心停車場",
+      "En": "YouBike2.0_Taipei Da-an Sports Center Parking lot"
+    },
+    "StationPosition": {
+      "PositionLon": 121.54697,
+      "PositionLat": 25.02089,
+      "GeoHash": "wsqqmfgv1"
+    },
+    "StationAddress": {
+      "Zh_tw": "敦南街76巷28號",
+      "En": "No. 28, Ln. 76, Dunnan St."
+    },
+    "BikesCapacity": 19,
+    "ServiceType": 2,
+    "SrcUpdateTime": "2026-07-22T12:11:02+08:00",
+    "UpdateTime": "2026-07-22T12:15:36+08:00"
+  },
+  {
+    "StationUID": "TPE500101016",
+    "StationID": "500101016",
+    "AuthorityID": "TPE",
+    "StationName": {
+      "Zh_tw": "YouBike2.0_羅斯福路三段245號前",
+      "En": "YouBike2.0_No. 245, Sec. 3, Roosevelt Rd."
+    },
+    "StationPosition": {
+      "PositionLon": 121.52989,
+      "PositionLat": 25.01927,
+      "GeoHash": "wsqqm6x7g"
+    },
+    "StationAddress": {
+      "Zh_tw": "羅斯福路三段245號",
+      "En": "No. 245, Sec. 3, Roosevelt Rd."
+    },
+    "BikesCapacity": 8,
+    "ServiceType": 2,
+    "SrcUpdateTime": "2026-07-22T12:09:03+08:00",
+    "UpdateTime": "2026-07-22T12:15:36+08:00"
+  },
+  {
+    "StationUID": "TPE500101018",
+    "StationID": "500101018",
+    "AuthorityID": "TPE",
+    "StationName": {
+      "Zh_tw": "YouBike2.0_溫州公園",
+      "En": "YouBike2.0_Wenzhou Park"
+    },
+    "StationPosition": {
+      "PositionLon": 121.53156,
+      "PositionLat": 25.01895,
+      "GeoHash": "wsqqmd89f"
+    },
+    "StationAddress": {
+      "Zh_tw": "羅斯福路三段283巷11號",
+      "En": "No. 11, Ln. 283, Sec. 3, Roosevelt Rd."
+    },
+    "BikesCapacity": 11,
+    "ServiceType": 2,
+    "SrcUpdateTime": "2026-07-22T12:11:02+08:00",
+    "UpdateTime": "2026-07-22T12:15:36+08:00"
+  },
+  {
+    "StationUID": "TPE500101019",
+    "StationID": "500101019",
+    "AuthorityID": "TPE",
+    "StationName": {
+      "Zh_tw": "YouBike2.0_和平臥龍街口",
+      "En": "YouBike2.0_Heping Wolong St. Intersection"
+    },
+    "StationPosition": {
+      "PositionLon": 121.546705,
+      "PositionLat": 25.024461,
+      "GeoHash": "wsqqmged5"
+    },
+    "StationAddress": {
+      "Zh_tw": "臥龍街1號",
+      "En": "No. 1, Wolong St."
+    },
+    "BikesCapacity": 24,
+    "ServiceType": 2,
+    "SrcUpdateTime": "2026-07-22T12:14:03+08:00",
+    "UpdateTime": "2026-07-22T12:15:36+08:00"
+  },
+  {
+    "StationUID": "TPE500101021",
+    "StationID": "500101021",
+    "AuthorityID": "TPE",
+    "StationName": {
+      "Zh_tw": "YouBike2.0_銘傳國小側門",
+      "En": "YouBike2.0_Taipei Municipal MingChuan Elementary School(Side Gate)"
+    },
+    "StationPosition": {
+      "PositionLon": 121.53549,
+      "PositionLat": 25.01385,
+      "GeoHash": "wsqqm9ekn"
+    },
+    "StationAddress": {
+      "Zh_tw": "羅斯福路四段21號旁天橋下",
+      "En": "No. 21, Sec. 4, Roosevelt Rd."
+    },
+    "BikesCapacity": 7,
+    "ServiceType": 2,
+    "SrcUpdateTime": "2026-07-22T12:15:03+08:00",
+    "UpdateTime": "2026-07-22T12:15:36+08:00"
+  },
+  {
+    "StationUID": "TPE500101022",
+    "StationID": "500101022",
+    "AuthorityID": "TPE",
+    "StationName": {
+      "Zh_tw": "YouBike2.0_捷運公館站(2號出口)",
+      "En": "YouBike2.0_MRT Gongguan Sta. (Exit 2)"
+    },
+    "StationPosition": {
+      "PositionLon": 121.53438,
+      "PositionLat": 25.01491,
+      "GeoHash": "wsqqm9fdk"
+    },
+    "StationAddress": {
+      "Zh_tw": "捷運公館站(2號出口)外側",
+      "En": "MRT Gongguan Sta. (Exit 2)"
+    },
+    "BikesCapacity": 99,
+    "ServiceType": 2,
+    "SrcUpdateTime": "2026-07-22T12:15:03+08:00",
+    "UpdateTime": "2026-07-22T12:15:36+08:00"
+  },
+  {
+    "StationUID": "TPE500101023",
+    "StationID": "500101023",
+    "AuthorityID": "TPE",
+    "StationName": {
+      "Zh_tw": "YouBike2.0_第二學生活動中心",
+      "En": "YouBike2.0_2nd Student Activity Center"
+    },
+    "StationPosition": {
+      "PositionLon": 121.53661,
+      "PositionLat": 25.01244,
+      "GeoHash": "wsqqm9kk0"
+    },
+    "StationAddress": {
+      "Zh_tw": "羅斯福路四段107號(西南側)",
+      "En": "No. 107, Sec. 4, Roosevelt Rd.(Southwest)"
+    },
+    "BikesCapacity": 87,
+    "ServiceType": 2,
+    "SrcUpdateTime": "2026-07-22T12:13:02+08:00",
+    "UpdateTime": "2026-07-22T12:15:36+08:00"
+  },
+  {
+    "StationUID": "TPE500101024",
+    "StationID": "500101024",
+    "AuthorityID": "TPE",
+    "StationName": {
+      "Zh_tw": "YouBike2.0_臺灣科技大學正門",
+      "En": "YouBike2.0_NTUST(Main Gate)"
+    },
+    "StationPosition": {
+      "PositionLon": 121.54142,
+      "PositionLat": 25.01451,
+      "GeoHash": "wsqqm9zb0"
+    },
+    "StationAddress": {
+      "Zh_tw": "基隆路四段43號(臺灣科技大學正門旁小側門靠田徑場)",
+      "En": "No. 43, Sec. 4, Keelung Rd."
+    },
+    "BikesCapacity": 50,
+    "ServiceType": 2,
+    "SrcUpdateTime": "2026-07-22T12:14:03+08:00",
+    "UpdateTime": "2026-07-22T12:15:36+08:00"
+  },
+  {
+    "StationUID": "TPE500101025",
+    "StationID": "500101025",
+    "AuthorityID": "TPE",
+    "StationName": {
+      "Zh_tw": "YouBike2.0_臺灣科技大學側門",
+      "En": "YouBike2.0_NTUST(Side Gate)"
+    },
+    "StationPosition": {
+      "PositionLon": 121.53973,
+      "PositionLat": 25.01295,
+      "GeoHash": "wsqqm9qwb"
+    },
+    "StationAddress": {
+      "Zh_tw": "基隆路四段73巷與基隆路口",
+      "En": "Ln. 73, Sec. 4, Keelung Rd. Intersection"
+    },
+    "BikesCapacity": 97,
+    "ServiceType": 2,
+    "SrcUpdateTime": "2026-07-22T12:13:02+08:00",
+    "UpdateTime": "2026-07-22T12:15:36+08:00"
+  },
+  {
+    "StationUID": "TPE500101026",
+    "StationID": "500101026",
+    "AuthorityID": "TPE",
+    "StationName": {
+      "Zh_tw": "YouBike2.0_公館公園",
+      "En": "YouBike2.0_Gongguan Park"
+    },
+    "StationPosition": {
+      "PositionLon": 121.54062,
+      "PositionLat": 25.01137,
+      "GeoHash": "wsqqm9pjv"
+    },
+    "StationAddress": {
+      "Zh_tw": "羅斯福路四段113巷基隆路四段41巷口",
+      "En": "Ln. 113, Sec. 4, Roosevelt Rd. & Ln. 41, Sec. 4, Keelung Rd. Intersection"
+    },
+    "BikesCapacity": 30,
+    "ServiceType": 2,
+    "SrcUpdateTime": "2026-07-22T12:12:04+08:00",
+    "UpdateTime": "2026-07-22T12:15:36+08:00"
+  },
+  {
+    "StationUID": "TPE500101027",
+    "StationID": "500101027",
+    "AuthorityID": "TPE",
+    "StationName": {
+      "Zh_tw": "YouBike2.0_臺灣科技大學後門",
+      "En": "YouBike2.0_NTUST(Back Gate)"
+    },
+    "StationPosition": {
+      "PositionLon": 121.54165,
+      "PositionLat": 25.01182,
+      "GeoHash": "wsqqm9rbm"
+    },
+    "StationAddress": {
+      "Zh_tw": "基隆路四段41巷68弄臺科帆船大樓旁",
+      "En": "Aly. 68, Ln. 41, Sec. 4, Keelung Rd."
+    },
+    "BikesCapacity": 99,
+    "ServiceType": 2,
+    "SrcUpdateTime": "2026-07-22T12:14:03+08:00",
+    "UpdateTime": "2026-07-22T12:15:36+08:00"
+  },
+  {
+    "StationUID": "TPE500101028",
+    "StationID": "500101028",
+    "AuthorityID": "TPE",
+    "StationName": {
+      "Zh_tw": "YouBike2.0_臺大醫學院附設癌醫中心",
+      "En": "YouBike2.0_NTU Cancer Center"
+    },
+    "StationPosition": {
+      "PositionLon": 121.54382,
+      "PositionLat": 25.01426,
+      "GeoHash": "wsqqmc9w8"
+    },
+    "StationAddress": {
+      "Zh_tw": "基隆路三段155巷57號西側",
+      "En": "No. 57, Ln. 155, Sec. 3, Keelung Rd.(West)"
+    },
+    "BikesCapacity": 20,
+    "ServiceType": 2,
+    "SrcUpdateTime": "2026-07-22T12:15:03+08:00",
+    "UpdateTime": "2026-07-22T12:15:36+08:00"
+  },
+  {
+    "StationUID": "TPE500101029",
+    "StationID": "500101029",
+    "AuthorityID": "TPE",
+    "StationName": {
+      "Zh_tw": "YouBike2.0_臺大環研大樓",
+      "En": "YouBike2.0_NTU Environment Research Building"
+    },
+    "StationPosition": {
+      "PositionLon": 121.54503,
+      "PositionLat": 25.01234,
+      "GeoHash": "wsqqmc67k"
+    },
+    "StationAddress": {
+      "Zh_tw": "芳蘭路/基隆路三段155巷口",
+      "En": "Fanglan Rd & Ln. 155, Sec. 3, Keelung Rd. Intersection"
+    },
+    "BikesCapacity": 41,
+    "ServiceType": 2,
+    "SrcUpdateTime": "2026-07-22T12:14:03+08:00",
+    "UpdateTime": "2026-07-22T12:15:36+08:00"
+  },
+  {
+    "StationUID": "TPE500101030",
+    "StationID": "500101030",
+    "AuthorityID": "TPE",
+    "StationName": {
+      "Zh_tw": "YouBike2.0_臺大永齡生醫工程館",
+      "En": "YouBike2.0_NTU Yonglin Biomedical Engineering Hall"
+    },
+    "StationPosition": {
+      "PositionLon": 121.54656,
+      "PositionLat": 25.0136,
+      "GeoHash": "wsqqmcedb"
+    },
+    "StationAddress": {
+      "Zh_tw": "芳蘭路51號西北側",
+      "En": "No. 51, Fanglan Rd.(Northwest)"
+    },
+    "BikesCapacity": 34,
+    "ServiceType": 2,
+    "SrcUpdateTime": "2026-07-22T12:15:03+08:00",
+    "UpdateTime": "2026-07-22T12:15:36+08:00"
+  },
+  {
+    "StationUID": "TPE500101031",
+    "StationID": "500101031",
+    "AuthorityID": "TPE",
+    "StationName": {
+      "Zh_tw": "YouBike2.0_臺大男七舍前",
+      "En": "YouBike2.0_NTU 7th Men's Dorm"
+    },
+    "StationPosition": {
+      "PositionLon": 121.54698,
+      "PositionLat": 25.01537,
+      "GeoHash": "wsqqmcgv1"
+    },
+    "StationAddress": {
+      "Zh_tw": "長興街/長興街80巷口西側",
+      "En": "Ln. 80, Changxing St. Intersection(West)"
+    },
+    "BikesCapacity": 20,
+    "ServiceType": 2,
+    "SrcUpdateTime": "2026-07-22T12:14:03+08:00",
+    "UpdateTime": "2026-07-22T12:15:36+08:00"
+  },
+  {
+    "StationUID": "TPE500101032",
+    "StationID": "500101032",
+    "AuthorityID": "TPE",
+    "StationName": {
+      "Zh_tw": "YouBike2.0_臺大男一舍前",
+      "En": "YouBike2.0_NTU 1st Men's Dorm"
+    },
+    "StationPosition": {
+      "PositionLon": 121.54535,
+      "PositionLat": 25.01637,
+      "GeoHash": "wsqqmf4dg"
+    },
+    "StationAddress": {
+      "Zh_tw": "長興街50號西北側",
+      "En": "No. 50, Changxing St.(Northwest)"
+    },
+    "BikesCapacity": 61,
+    "ServiceType": 2,
+    "SrcUpdateTime": "2026-07-22T12:11:16+08:00",
+    "UpdateTime": "2026-07-22T12:15:36+08:00"
+  },
+  {
+    "StationUID": "TPE500101033",
+    "StationID": "500101033",
+    "AuthorityID": "TPE",
+    "StationName": {
+      "Zh_tw": "YouBike2.0_臺大男六舍前",
+      "En": "YouBike2.0_NTU 6th Men's Dorm"
+    },
+    "StationPosition": {
+      "PositionLon": 121.5452,
+      "PositionLat": 25.01664,
+      "GeoHash": "wsqqmf4s2"
+    },
+    "StationAddress": {
+      "Zh_tw": "大安區長興街31號",
+      "En": "No. 31, Changxing St."
+    },
+    "BikesCapacity": 40,
+    "ServiceType": 2,
+    "SrcUpdateTime": "2026-07-22T12:13:02+08:00",
+    "UpdateTime": "2026-07-22T12:15:36+08:00"
+  },
+  {
+    "StationUID": "TPE500101020",
+    "StationID": "500101020",
+    "AuthorityID": "TPE",
+    "StationName": {
+      "Zh_tw": "YouBike2.0_溫州停車場",
+      "En": "YouBike2.0_Wenzhou Parking Lot"
+    },
+    "StationPosition": {
+      "PositionLon": 121.5331,
+      "PositionLat": 25.02093,
+      "GeoHash": "wsqqmdctq"
+    },
+    "StationAddress": {
+      "Zh_tw": "新生南路三段54巷/溫州街口",
+      "En": "Ln. 54, Sec. 3, Xinsheng S. Rd. & Wenzhou St. Intersection"
+    },
+    "BikesCapacity": 5,
+    "ServiceType": 2,
+    "SrcUpdateTime": "2026-07-10T06:57:04+08:00",
+    "UpdateTime": "2026-07-22T12:15:36+08:00"
+  },
+  {
+    "StationUID": "TPE500101111",
+    "StationID": "500101111",
+    "AuthorityID": "TPE",
+    "StationName": {
+      "Zh_tw": "YouBike2.0_捷運古亭站(5號出口)",
+      "En": "YouBike2.0_MRT Guting Sta. (Exit 5)"
+    },
+    "StationPosition": {
+      "PositionLon": 121.52293,
+      "PositionLat": 25.02715,
+      "GeoHash": "wsqqmk439"
+    },
+    "StationAddress": {
+      "Zh_tw": "和平東路一段19號前",
+      "En": "No. 19, Sec. 1, Heping E. Rd"
+    },
+    "BikesCapacity": 14,
+    "ServiceType": 2,
+    "SrcUpdateTime": "2026-07-10T06:57:04+08:00",
+    "UpdateTime": "2026-07-22T12:15:36+08:00"
+  },
+  {
+    "StationUID": "TPE500101117",
+    "StationID": "500101117",
+    "AuthorityID": "TPE",
+    "StationName": {
+      "Zh_tw": "YouBike2.0_捷運東門站(3號出口)",
+      "En": "YouBike2.0_MRT Dongmen Sta. (Exit 3)"
+    },
+    "StationPosition": {
+      "PositionLon": 121.52815,
+      "PositionLat": 25.03383,
+      "GeoHash": "wsqqmmq0e"
+    },
+    "StationAddress": {
+      "Zh_tw": "信義路二段128號前",
+      "En": "No. 128, Sec. 2, Xinyi Rd."
+    },
+    "BikesCapacity": 18,
+    "ServiceType": 2,
+    "SrcUpdateTime": "2025-02-27T01:05:15+08:00",
+    "UpdateTime": "2026-07-22T12:15:36+08:00"
+  },
+  {
+    "StationUID": "TPE500101034",
+    "StationID": "500101034",
+    "AuthorityID": "TPE",
+    "StationName": {
+      "Zh_tw": "YouBike2.0_臺大動物醫院前",
+      "En": "YouBike2.0_NTU Veterinary Hospital"
+    },
+    "StationPosition": {
+      "PositionLon": 121.54291,
+      "PositionLat": 25.01576,
+      "GeoHash": "wsqqmcbz7"
+    },
+    "StationAddress": {
+      "Zh_tw": "基隆路三段155巷/基隆路四段口",
+      "En": "Ln. 155, Sec. 3, Keelung Rd. Intersection"
+    },
+    "BikesCapacity": 18,
+    "ServiceType": 2,
+    "SrcUpdateTime": "2026-07-22T12:15:03+08:00",
+    "UpdateTime": "2026-07-22T12:15:36+08:00"
+  },
+  {
+    "StationUID": "TPE500101035",
+    "StationID": "500101035",
+    "AuthorityID": "TPE",
+    "StationName": {
+      "Zh_tw": "YouBike2.0_臺大土木研究大樓前",
+      "En": "YouBike2.0_NTU Civil Engineering Research Building"
+    },
+    "StationPosition": {
+      "PositionLon": 121.5476,
+      "PositionLat": 25.01787,
+      "GeoHash": "wsqqmfk78"
+    },
+    "StationAddress": {
+      "Zh_tw": "辛亥路三段188號",
+      "En": "No. 188, Sec. 3, Xinhai Rd."
+    },
+    "BikesCapacity": 24,
+    "ServiceType": 2,
+    "SrcUpdateTime": "2026-07-22T12:14:03+08:00",
+    "UpdateTime": "2026-07-22T12:15:36+08:00"
+  }
+]

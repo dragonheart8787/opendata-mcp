@@ -7,7 +7,7 @@ import {
   TDX_BUS_ETA_PATH_PREFIX,
   TDX_CITIES,
   YOUBIKE_CACHE_TTL_SECONDS,
-  YOUBIKE_CACHE_TTL_SECONDS_SKELETON
+  YOUBIKE_STATION_CACHE_TTL_SECONDS
 } from "../constants.js";
 import { registerEntry, type DatasetEntry } from "./index.js";
 
@@ -302,22 +302,43 @@ export const youBikeAvailabilityEntry: DatasetEntry<
 
 registerEntry(youBikeAvailabilityEntry as unknown as DatasetEntry<never, unknown, unknown>);
 
-// --- Bike/Station/City/{City}: public bike-sharing station metadata (SKELETON) ---
+// --- Bike/Station/City/{City}: public bike-sharing station metadata ---
 //
-// Path ASSUMED to follow the same `.../City/{City}` convention confirmed
-// for bus ETA and bike availability (see TDX_BIKE_STATION_PATH_PREFIX's
-// comment in constants.ts) — not yet independently confirmed via a real
-// dispatch. Field structure is entirely unconfirmed (skeleton pass-through
-// transform) pending that dispatch.
+// Path (the assumed `.../City/{City}` convention) and field structure both
+// confirmed 2026-07-22 via a real dispatch of fixtures-refresh.yml
+// (Taipei, 1,775 stations) — a bare JSON array of:
+//   { StationUID, StationID, AuthorityID, StationName: {Zh_tw, En},
+//     StationPosition: {PositionLon, PositionLat, GeoHash},
+//     StationAddress: {Zh_tw, En}, BikesCapacity, ServiceType,
+//     SrcUpdateTime, UpdateTime }
+// Same batch-publish pattern as availability: all 1,775 records shared one
+// identical UpdateTime. `BikesCapacity` is the "總車位數" the task asked
+// for — it lives here, not in Availability (see youBikeAvailabilityEntry's
+// module comment for the full split story).
+
+interface TdxBikeStationPosition {
+  PositionLon?: number;
+  PositionLat?: number;
+  GeoHash?: string;
+}
 
 export interface TdxBikeStationRawRecord {
-  [key: string]: unknown;
+  StationUID?: string;
+  StationID?: string;
+  AuthorityID?: string;
+  StationName?: TdxBilingualName;
+  StationPosition?: TdxBikeStationPosition;
+  StationAddress?: TdxBilingualName;
+  BikesCapacity?: number;
+  ServiceType?: number;
+  SrcUpdateTime?: string;
+  UpdateTime?: string;
 }
 
 export interface YouBikeStationResult {
   [key: string]: unknown;
   query: { city: string };
-  raw: TdxBikeStationRawRecord[];
+  stations: TdxBikeStationRawRecord[];
 }
 
 export const youBikeStationEntry: DatasetEntry<{ city: string }, TdxBikeStationRawRecord[], YouBikeStationResult> = {
@@ -329,12 +350,14 @@ export const youBikeStationEntry: DatasetEntry<{ city: string }, TdxBikeStationR
   paramsSchema: { city: youBikeInputShape.city },
   buildQueryParams: () => ({ "$format": "JSON" }),
   buildPathSegments: params => [params.city],
-  // SKELETON transform — see module comment above.
-  transform: (raw, params) => ({ query: { city: params.city }, raw }),
-  cacheTtlSeconds: YOUBIKE_CACHE_TTL_SECONDS_SKELETON,
-  updateFrequency: "站點基本資料，變動極少（新增/停用站點時才會變化）",
+  transform: (raw, params) => ({ query: { city: params.city }, stations: raw }),
+  cacheTtlSeconds: YOUBIKE_STATION_CACHE_TTL_SECONDS,
+  updateFrequency: "站點基本資料，變動極少（新增/停用站點時才會變化），TDX 仍以整批方式定期重新發布",
   docUrl: "https://tdx.transportdata.tw/api-service/swagger/basic",
-  notes: "SKELETON — 欄位結構尚未經真實 API 回應驗證，transform 目前僅原樣轉出 raw 陣列。",
+  notes:
+    "欄位結構已於 2026-07-22 透過 fixtures-refresh.yml 真實 API 回應確認（Taipei，1,775 站）。" +
+    "站名、地址、座標、總車位數皆在此資料集，即時可借還數量在 tdx:youbike-availability，" +
+    "tw_youbike 精選工具會自動 join 兩者（依 StationUID）。",
   sampleParams: { city: "Taipei" },
   fixtureFileName: "youbike-station.json"
 };
