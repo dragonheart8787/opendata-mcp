@@ -34,6 +34,8 @@ jobs:
         env:
           CWA_API_KEY: ${{ secrets.CWA_API_KEY }}
           MOENV_API_KEY: ${{ secrets.MOENV_API_KEY }}
+          TDX_CLIENT_ID: ${{ secrets.TDX_CLIENT_ID }}
+          TDX_CLIENT_SECRET: ${{ secrets.TDX_CLIENT_SECRET }}
         run: npm run refresh-fixtures
 
       # Captures whatever refresh-fixtures.ts wrote to test/fixtures/ right

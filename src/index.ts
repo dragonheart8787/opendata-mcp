@@ -14,10 +14,16 @@ export interface Env {
   CWA_API_KEY?: string;
   /** MOENV open data platform API key. Set via `wrangler secret put MOENV_API_KEY`, never committed. */
   MOENV_API_KEY?: string;
+  /** TDX (交通部運輸資料流通服務) OAuth2 client id. Set via `wrangler secret put TDX_CLIENT_ID`, never committed. */
+  TDX_CLIENT_ID?: string;
+  /** TDX OAuth2 client secret, paired with TDX_CLIENT_ID. Set via `wrangler secret put TDX_CLIENT_SECRET`, never committed. */
+  TDX_CLIENT_SECRET?: string;
   /**
    * Cloudflare KV namespace used as a short-TTL response cache (binding name
    * `CACHE` in wrangler.toml). Optional — tools work without it, every call
-   * just hits the upstream API directly.
+   * just hits the upstream API directly. Also used by `adapters/tdx.ts` to
+   * cache the OAuth2 access token (key `tdx:access_token`) — same store,
+   * different key namespace, no dedicated binding needed.
    */
   CACHE?: CacheStore;
 }
@@ -143,7 +149,7 @@ function createServer(env: Env): McpServer {
         "**只搜尋本伺服器已收錄的資料集，不是搜尋整個政府開放資料平台**。\n\n" +
         "參數：\n" +
         "- query：搜尋關鍵字，比對資料集標題與關鍵字標籤（例如「地震」「空氣品質」「溫度」）。\n" +
-        "- source：選填，只搜尋特定機關（cwa＝中央氣象署，moenv＝環境部），不填則搜尋所有機關。\n\n" +
+        "- source：選填，只搜尋特定機關（cwa＝中央氣象署，moenv＝環境部，tdx＝交通部運輸資料流通服務），不填則搜尋所有機關。\n\n" +
         "適用情境：不確定要用哪個精選工具查某項資料、或想知道除了 tw_weather_forecast／tw_recent_earthquakes／" +
         "tw_air_quality 之外還有哪些資料集可以透過 tw_query_dataset 查詢時。\n" +
         "不適用：查詢資料集的實際內容（找到 datasetId 後請改用 tw_query_dataset）。\n\n" +

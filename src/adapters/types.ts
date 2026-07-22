@@ -17,7 +17,7 @@ import type { DatasetEntry } from "../registry/index.js";
  * addition — same pattern the pre-refactor CWA/MOENV clients already used.
  */
 export interface SourceAdapter {
-  id: "cwa" | "moenv";
+  id: "cwa" | "moenv" | "tdx";
   displayName: string;
   fetchDataset<TParams, TRaw>(
     entry: DatasetEntry<TParams, TRaw, unknown>,

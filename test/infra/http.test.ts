@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { httpGet, isTimeoutError } from "../../src/infra/http.js";
+import { httpGet, httpPost, isTimeoutError } from "../../src/infra/http.js";
 
 describe("httpGet", () => {
   it("returns the response on a normal successful call, without retrying", async () => {
@@ -82,6 +82,43 @@ describe("httpGet", () => {
       })) as unknown as typeof fetch;
 
     const response = await httpGet("https://example.com", { timeoutMs: 20 }, fetchImpl);
+
+    expect(calls).toBe(2);
+    expect(response.status).toBe(200);
+  });
+});
+
+describe("httpPost", () => {
+  it("passes method: POST, headers, and body through to fetchImpl", async () => {
+    let capturedInit: RequestInit | undefined;
+    const fetchImpl = (async (_url: string, init?: RequestInit) => {
+      capturedInit = init;
+      return new Response("ok");
+    }) as unknown as typeof fetch;
+
+    await httpPost(
+      "https://example.com/token",
+      { headers: { "content-type": "application/x-www-form-urlencoded" }, body: "grant_type=client_credentials" },
+      fetchImpl
+    );
+
+    expect(capturedInit?.method).toBe("POST");
+    expect(capturedInit?.headers).toEqual({ "content-type": "application/x-www-form-urlencoded" });
+    expect(capturedInit?.body).toBe("grant_type=client_credentials");
+    expect(capturedInit?.signal).toBeInstanceOf(AbortSignal);
+  });
+
+  it("retries once on a network failure, same as httpGet", async () => {
+    let calls = 0;
+    const fetchImpl = (async () => {
+      calls++;
+      if (calls === 1) {
+        throw new Error("ECONNRESET");
+      }
+      return new Response("ok", { status: 200 });
+    }) as unknown as typeof fetch;
+
+    const response = await httpPost("https://example.com/token", {}, fetchImpl);
 
     expect(calls).toBe(2);
     expect(response.status).toBe(200);

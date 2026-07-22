@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { cwaAdapter } from "../adapters/cwa.js";
 import { moenvAdapter } from "../adapters/moenv.js";
+import { tdxAdapter } from "../adapters/tdx.js";
 import type { SourceAdapter } from "../adapters/types.js";
 import { withCacheTracked } from "../infra/cache.js";
 import { buildFailureEnvelope, buildSuccessEnvelope } from "../infra/envelope.js";
@@ -22,7 +23,8 @@ import type { McpToolResult } from "./types.js";
 
 const ADAPTERS: Record<DatasetEntry<never, unknown, unknown>["source"], SourceAdapter> = {
   cwa: cwaAdapter,
-  moenv: moenvAdapter
+  moenv: moenvAdapter,
+  tdx: tdxAdapter
 };
 
 // --- tw_search_datasets ---
@@ -33,9 +35,9 @@ export const searchDatasetsInputShape = {
     .min(1)
     .describe("搜尋關鍵字，比對已註冊資料集的標題與關鍵字標籤（例如「地震」「空氣品質」「溫度」）。"),
   source: z
-    .enum(["cwa", "moenv"])
+    .enum(["cwa", "moenv", "tdx"])
     .optional()
-    .describe("只搜尋特定機關的資料集：cwa（中央氣象署）或 moenv（環境部）。不填則搜尋所有機關。")
+    .describe("只搜尋特定機關的資料集：cwa（中央氣象署）、moenv（環境部）或 tdx（交通部運輸資料流通服務）。不填則搜尋所有機關。")
 };
 
 export interface DatasetSearchParamInfo {
