@@ -47,6 +47,19 @@ export const TDX_SIGNUP_URL = "https://tdx.transportdata.tw/register";
 export const TDX_BUS_ETA_PATH_PREFIX = "v2/Bus/EstimatedTimeOfArrival/City";
 
 /**
+ * Path prefix for the public bike-sharing (YouBike etc.) real-time
+ * availability dataset. Confirmed via WebSearch against TDX's official
+ * Swagger docs and independent integration guides — full documented path:
+ * `/v2/Bike/Availability/{City}` (city as a required URL path segment).
+ * Note the shape difference from bus ETA: there's no literal "City/"
+ * segment before the city value here (bus ETA has
+ * `.../EstimatedTimeOfArrival/City/{City}`, bike availability has
+ * `.../Availability/{City}` directly) — confirmed from multiple
+ * independent real example URLs, not assumed by analogy to bus ETA.
+ */
+export const TDX_BIKE_AVAILABILITY_PATH_PREFIX = "v2/Bike/Availability";
+
+/**
  * TDX's English city/county path-segment codes. The six special
  * municipalities (Taipei/NewTaipei/Taoyuan/Taichung/Tainan/Kaohsiung) are
  * confirmed with high confidence — identical spelling appeared across every
@@ -155,6 +168,18 @@ export const BUS_ETA_CACHE_TTL_SECONDS = 30;
  * still bounding the worst case of an unfiltered city query.
  */
 export const BUS_ETA_MAX_STOPS_RETURNED = 100;
+
+/**
+ * Placeholder cache TTL for the YouBike/bike-availability skeleton entry —
+ * NOT yet evidence-based (no real UpdateTime data captured yet). Replaced
+ * with a value derived from the real fixture's update-timestamp gap once
+ * fixtures-refresh.yml confirms the actual response shape and cadence, same
+ * process used for BUS_ETA_CACHE_TTL_SECONDS.
+ */
+export const YOUBIKE_CACHE_TTL_SECONDS_SKELETON = 60;
+
+/** Cap on how many matched stations a single tw_youbike call returns — same response-budget reasoning as BUS_ETA_MAX_STOPS_RETURNED, exact number to be revisited once real per-city station counts are known. */
+export const YOUBIKE_MAX_STATIONS_RETURNED = 100;
 
 /**
  * Taiwan's 22 counties/cities as used by CWA's `locationName` parameter.
