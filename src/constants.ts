@@ -258,17 +258,26 @@ export const YOUBIKE_MAX_STATIONS_RETURNED = 100;
 export const RAIL_TRA_STATION_CACHE_TTL_SECONDS = 24 * 60 * 60;
 
 /**
- * Placeholder cache TTL for TRA LiveBoard (skeleton stage, not yet
- * evidence-based). The task's own hard ceiling for this one applies
- * regardless of what real UpdateTime-gap evidence later shows: TDX's
- * LiveBoard already carries a documented ~2 minute latency of its own, so
- * this server's cache must not stack meaningfully more staleness on top —
- * capped at 60s here as a starting point, to be revisited (only downward)
- * once a real dispatch reveals the actual update cadence, the same
- * evidence-driven process used for BUS_ETA_CACHE_TTL_SECONDS/
- * YOUBIKE_CACHE_TTL_SECONDS.
+ * Cache TTL for TRA LiveBoard. A real capture (Taipei Station, 8 trains)
+ * showed all 8 sharing one identical `UpdateTime` (one batch snapshot) with
+ * per-train `SrcUpdateTime` trailing it by roughly 25s-7min — a single
+ * snapshot can't directly show the batch's own republish interval, so this
+ * doesn't derive a tighter number from that gap the way
+ * BUS_ETA_CACHE_TTL_SECONDS/YOUBIKE_CACHE_TTL_SECONDS did. Instead this
+ * stays at the task's own explicit hard ceiling: TDX's LiveBoard already
+ * carries a documented ~2 minute latency of its own, so this server's cache
+ * must not stack meaningfully more staleness on top of that — 60s max,
+ * consistent with the module comment on railTraLiveboardEntry
+ * (registry/tdx.ts) and the 2-minute-delay disclosure required in tw_rail's
+ * tool description.
  */
-export const RAIL_LIVEBOARD_CACHE_TTL_SECONDS_SKELETON = 60;
+export const RAIL_LIVEBOARD_CACHE_TTL_SECONDS = 60;
+
+/** Cap on how many trains a single tw_rail call returns for one station's board — same response-budget reasoning as BUS_ETA_MAX_STOPS_RETURNED/YOUBIKE_MAX_STATIONS_RETURNED, though a real per-station capture (Taipei, 8 trains) suggests this is generous headroom rather than a commonly-hit limit. */
+export const RAIL_LIVEBOARD_MAX_TRAINS_RETURNED = 50;
+
+/** How many candidate station names tw_rail's ambiguous-match error lists, so the caller can pick a more specific one without the error message itself becoming huge. */
+export const RAIL_STATION_AMBIGUOUS_CANDIDATES_SHOWN = 10;
 
 /**
  * Taiwan's 22 counties/cities as used by CWA's `locationName` parameter.

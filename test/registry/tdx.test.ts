@@ -17,15 +17,34 @@ import { BUS_ETA_MAX_STOPS_RETURNED } from "../../src/constants.js";
 const fixture: TdxBusEtaRawRecord[] = JSON.parse(
   readFileSync(fileURLToPath(new URL("../fixtures/bus-eta.json", import.meta.url)), "utf-8")
 );
-const withoutEstimate = fixture[0];
 
-// The route-615 fixture happened to capture a moment with zero live
-// buses (all 78 records have StopStatus 1, none carry EstimateTime) — a
-// genuine real state, not a gap in the fixture. This record's field
-// *values* are verbatim from the same 2026-07-22 real dispatch (the
-// unfiltered Taipei-wide capture used to first confirm the shape, before
-// sampleParams was narrowed to route 615), used here only to exercise the
-// estimateSeconds-present code path.
+// NOT `fixture[0]` — a real re-dispatch of fixtures-refresh.yml on
+// 2026-07-22 found every record in the (fresh) route-615 capture now
+// carries EstimateTime (buses were actually running that time), which
+// would make an estimate-absent test built on fixture[0] silently stop
+// covering that code path the moment the fixture was refreshed again.
+// This record's field *values* are still verbatim from a genuine real
+// capture (the earlier 2026-07-22 route-615 dispatch, which happened to
+// catch zero live buses — StopStatus 1, no EstimateTime), just no longer
+// tied to fixture array position — same rationale as `withEstimate` below,
+// which was already hand-authored for the same reason.
+const withoutEstimate: TdxBusEtaRawRecord = {
+  StopUID: "TPE187095",
+  StopID: "187095",
+  StopName: { Zh_tw: "新莊高中", En: "Xinzhuang High School" },
+  RouteUID: "TPE10471",
+  RouteID: "10471",
+  RouteName: { Zh_tw: "615", En: "615" },
+  Direction: 1,
+  StopStatus: 1,
+  SrcUpdateTime: "2026-07-22T11:18:30+08:00",
+  UpdateTime: "2026-07-22T11:18:32+08:00"
+};
+
+// This record's field *values* are verbatim from a real 2026-07-22
+// dispatch (the unfiltered Taipei-wide capture used to first confirm the
+// shape, before sampleParams was narrowed to route 615), used here only to
+// exercise the estimateSeconds-present code path.
 const withEstimate: TdxBusEtaRawRecord = {
   StopUID: "TPE36407",
   StopID: "36407",

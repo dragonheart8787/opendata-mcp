@@ -8,6 +8,7 @@ import { handleYouBikeTool, youBikeInputShape } from "./tools/bike.js";
 import { busEtaInputShape, handleBusEtaTool } from "./tools/bus-eta.js";
 import { handleRecentEarthquakesTool, recentEarthquakesInputShape } from "./tools/earthquake.js";
 import { handleQueryDatasetTool, handleSearchDatasetsTool, queryDatasetInputShape, searchDatasetsInputShape } from "./tools/generic.js";
+import { handleRailTool, railInputShape } from "./tools/rail.js";
 import { handleTyphoonTool, typhoonNewsInputShape } from "./tools/typhoon.js";
 import { handleWeatherForecastTool, weatherForecastInputShape } from "./tools/weather.js";
 
@@ -202,6 +203,38 @@ function createServer(env: Env): McpServer {
       }
     },
     ({ city, stationName }) => handleYouBikeTool({ city, stationName }, env)
+  );
+
+  server.registerTool(
+    "tw_rail",
+    {
+      title: "台灣台鐵即時到離站看板（交通部 TDX）",
+      description:
+        "查詢交通部運輸資料流通服務（TDX）「台鐵即時到離站看板」，回傳指定台鐵車站目前的列車動態：" +
+        "車次、車種、開往方向的終點站、預計到站/離站時間、誤點分鐘數（0 表示準點），以及資料更新時間。\n\n" +
+        "參數：\n" +
+        "- stationName：必填，台鐵車站名稱（例如「臺北」「板橋」「左營」），可只輸入部分字串——" +
+        "若比對到多個車站會回傳候選清單提示縮小範圍，注意須用「臺」而非「台」（例如「臺北」）較容易精確比對。\n" +
+        "- destinationStationName：選填，篩選開往特定方向的車次（比對車次終點站名稱，例如輸入「花蓮」" +
+        "只顯示開往花蓮方向的車次），此為本伺服器 client-side 篩選，非 TDX 官方查詢參數。\n\n" +
+        "適用情境：使用者詢問「台鐵某車站現在有沒有誤點」「某站下一班往某地的火車幾點到」「某車站即時到離站" +
+        "資訊」。\n\n" +
+        "不適用：本工具僅涵蓋台鐵（TRA），不含高鐵（THSR，TDX 未提供對應的即時到離站看板端點，僅有" +
+        "去程時刻表與座位供需資料，性質不同）；不提供月台號碼（此 TDX 端點的真實回應確認不含月台欄位）；" +
+        "不提供跨站查詢起訖區間所有車次的完整時刻表規劃（僅回傳單一車站當下的到離站看板，" +
+        "非查詢起訖站之間的班次搜尋或轉乘規劃）；本工具**不即時反映月台實際顯示，可能有約 2 分鐘延遲**。\n\n" +
+        "資料範圍限制：TDX 官方文件明確註明此看板資料約有 2 分鐘延遲，且不保證與車站月台實際 TIDS 看板" +
+        "顯示完全一致——實際到離站狀況請以車站月台顯示為準，不要將本工具的回應當作即時精確資訊使用；" +
+        "「目前查無符合車次」是真實常見情況（例如末班車已過、離峰時段班次較少），不代表本伺服器查詢失敗。",
+      inputSchema: railInputShape,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true
+      }
+    },
+    ({ stationName, destinationStationName }) => handleRailTool({ stationName, destinationStationName }, env)
   );
 
   server.registerTool(
