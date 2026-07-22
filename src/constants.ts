@@ -356,6 +356,68 @@ export const RAIL_LIVEBOARD_MAX_TRAINS_RETURNED = 50;
 export const RAIL_STATION_AMBIGUOUS_CANDIDATES_SHOWN = 10;
 
 /**
+ * Path prefix for TDX's off-street (路外/立體) parking lot dataset —
+ * confirmed via WebSearch, not memory: a real example URL was found
+ * (`tdx.transportdata.tw/api/basic/v1/Parking/OffStreet/CarPark/City/
+ * Taipei`). Note the version segment is `v1`, not the `v2` every other TDX
+ * entry in this project uses — TDX's parking API genuinely lives under a
+ * different, older API version group ("停車資訊 v1" in TDX's own Swagger
+ * listing), not a typo.
+ *
+ * On-street (路邊) parking was investigated in the same research pass —
+ * TDX's own R-package documentation (ChiaJung-Yeh/TDX_Guide) confirms an
+ * on-street parking dataset exists conceptually (`Car_Park(street="on")`),
+ * but no WebSearch query surfaced an actual literal on-street REST path
+ * (only two literal off-street paths were ever found: this one and
+ * `.../ParkingEntranceExit/City/{City}`). Registering a made-up on-street
+ * path name would be exactly the "填記憶" this project's discipline
+ * forbids, so on-street parking is skipped this round rather than guessed
+ * — see the PR for this reasoning.
+ *
+ * Real-time availability (即時空位): no separate `.../Availability/...`
+ * sibling endpoint (the pattern YouBike's Bike/Availability + Bike/Station
+ * split uses) was ever found via WebSearch for parking. This CarPark
+ * endpoint is registered as the best-evidenced candidate and its real
+ * response — once a dispatch confirms it — will show whether live space
+ * counts are bundled inline (common for this style of government parking
+ * dataset) or whether this turns out to be static-only, in which case the
+ * registry `notes` will say so honestly rather than implying real-time
+ * data this entry doesn't actually have.
+ */
+export const TDX_PARKING_OFFSTREET_CARPARK_PATH_PREFIX = "v1/Parking/OffStreet/CarPark/City";
+
+/** Skeleton placeholder TTL for parking — not yet evidence-based, pending a real dispatch revealing this dataset's actual update cadence (or confirming it's static-only, in which case this should move to a YOUBIKE_STATION_CACHE_TTL_SECONDS-style long TTL instead). */
+export const PARKING_OFFSTREET_CACHE_TTL_SECONDS_SKELETON = 5 * 60;
+
+/**
+ * Path prefix for TDX's road CMS (可變訊息標誌 / changeable message signs)
+ * dataset under the "路況資訊 v2" resource group — the closest real,
+ * WebSearch-confirmed dataset to this session's "道路交通事件/施工封路"
+ * ask. Multiple independent WebSearch results confirmed TDX's Road Traffic
+ * v2 API group covers exactly five sibling resources: VD (vehicle
+ * detectors), CCTV, CMS, ETag (toll gantries), and Section — with a real,
+ * literal example URL confirming CCTV's exact path convention
+ * (`tdx.transportdata.tw/api/basic/v2/Road/Traffic/CCTV/City/Hsinchu`).
+ * No distinct "TrafficEvent"/"事件"/"施工封路" resource was found anywhere
+ * in this resource group despite extensive searching — the only adjacent
+ * hit was a *reporting/admin backend* ("交通部道路交通事件填報系統管理
+ * 後臺") for authorities to file incidents, not a public read API for
+ * querying them. This path (`.../Traffic/CMS/City/{City}`) is extrapolated
+ * from CCTV's confirmed sibling convention applied to CMS's confirmed
+ * resource name — a real message-sign board commonly DOES carry incident/
+ * construction/congestion text, so it's a legitimate (if imperfect) proxy
+ * for the original ask, not a literal incident-schema endpoint. This is a
+ * weaker evidence tier than every other entry in this project (which all
+ * had a literal confirmed URL before registration) — flagged here
+ * explicitly so a dispatch 404 would mean "this specific guess was wrong,"
+ * not "the resource group doesn't exist."
+ */
+export const TDX_ROAD_TRAFFIC_CMS_PATH_PREFIX = "v2/Road/Traffic/CMS/City";
+
+/** Skeleton placeholder TTL for road CMS — not yet evidence-based, pending a real dispatch. CMS board content changes with traffic conditions, so this starts short (same class as bus ETA) rather than assuming a long static-data TTL. */
+export const ROAD_TRAFFIC_CMS_CACHE_TTL_SECONDS_SKELETON = 60;
+
+/**
  * Taiwan's 22 counties/cities as used by CWA's `locationName` parameter.
  * CWA uses the traditional character "臺" (not the common variant "台") in
  * 臺北市, 臺中市, 臺南市, and 臺東縣 — this must match exactly or the API

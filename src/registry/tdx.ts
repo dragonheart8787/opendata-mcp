@@ -3,8 +3,10 @@ import {
   BUS_ETA_CACHE_TTL_SECONDS,
   BUS_ETA_MAX_STOPS_RETURNED,
   METRO_ALERT_CACHE_TTL_SECONDS,
+  PARKING_OFFSTREET_CACHE_TTL_SECONDS_SKELETON,
   RAIL_LIVEBOARD_CACHE_TTL_SECONDS,
   RAIL_TRA_STATION_CACHE_TTL_SECONDS,
+  ROAD_TRAFFIC_CMS_CACHE_TTL_SECONDS_SKELETON,
   TDX_BIKE_AVAILABILITY_PATH_PREFIX,
   TDX_BIKE_STATION_PATH_PREFIX,
   TDX_BUS_ETA_PATH_PREFIX,
@@ -12,8 +14,10 @@ import {
   TDX_METRO_ALERT_PATH_PREFIX,
   TDX_METRO_SYSTEM_ID_BY_NAME,
   TDX_METRO_SYSTEMS,
+  TDX_PARKING_OFFSTREET_CARPARK_PATH_PREFIX,
   TDX_RAIL_TRA_LIVEBOARD_PATH_PREFIX,
   TDX_RAIL_TRA_STATION_PATH,
+  TDX_ROAD_TRAFFIC_CMS_PATH_PREFIX,
   YOUBIKE_CACHE_TTL_SECONDS,
   YOUBIKE_STATION_CACHE_TTL_SECONDS
 } from "../constants.js";
@@ -691,3 +695,158 @@ export const metroAlertEntry: DatasetEntry<MetroStatusParams, TdxMetroAlertRawRe
 };
 
 registerEntry(metroAlertEntry as unknown as DatasetEntry<never, unknown, unknown>);
+
+// --- Parking/OffStreet/CarPark/City/{City}: off-street (路外/立體) parking lots (SKELETON, generic-layer only) ---
+//
+// Path confirmed via WebSearch, not memory — see
+// TDX_PARKING_OFFSTREET_CARPARK_PATH_PREFIX's comment in constants.ts for
+// the full provenance note (a real example URL was found; on-street
+// parking was investigated and deliberately NOT registered — no literal
+// on-street path was ever found, see the same comment). Response FIELD
+// structure is NOT yet confirmed against a real API response — this is a
+// skeleton (pass-through transform) pending a real fixtures-refresh.yml
+// dispatch.
+//
+// Long-tail entry per docs/ARCHITECTURE.md §3.2 — registered so it's
+// queryable via tw_query_dataset/tw_search_datasets, no dedicated curated
+// tool this round (not asked for, and a real-time-vs-static verdict on
+// this dataset isn't even confirmed yet — see the notes field below).
+//
+// Per AGENTS.md §6 ("upstream filters aren't guaranteed to work") and this
+// session's explicit instruction: the City path segment is NOT yet proven
+// to reliably filter server-side the way it's been independently confirmed
+// for tw_bus_eta/tw_rail — until a real dispatch shows what field (if any)
+// carries a per-record city/county value, `transform` can't defensively
+// re-filter on it yet. This MUST be added once the real field name is
+// known, the same way railTraLiveboardEntry's defensive re-filter was
+// added after its own real capture confirmed the field to filter on.
+
+export const parkingOffStreetInputShape = {
+  city: z
+    .enum(TDX_CITIES)
+    .describe(
+      "縣市英文代碼（TDX 標準代碼，例如「Taipei」「NewTaipei」「Taichung」「Kaohsiung」），必填。" +
+        "注意這是 TDX 專用的英文代碼，不是 CWA 資料集使用的中文全形縣市名稱。"
+    )
+};
+
+export interface ParkingOffStreetParams {
+  city: string;
+}
+
+export interface TdxParkingOffStreetCarParkRawRecord {
+  [key: string]: unknown;
+}
+
+export interface ParkingOffStreetResult {
+  [key: string]: unknown;
+  query: { city: string };
+  carparks: TdxParkingOffStreetCarParkRawRecord[];
+}
+
+export const parkingOffStreetCarParkEntry: DatasetEntry<
+  ParkingOffStreetParams,
+  TdxParkingOffStreetCarParkRawRecord[],
+  ParkingOffStreetResult
+> = {
+  id: "tdx:parking-offstreet-carpark",
+  source: "tdx",
+  path: TDX_PARKING_OFFSTREET_CARPARK_PATH_PREFIX,
+  title: "路外停車場基本資料（含即時空位，如有）",
+  keywords: ["停車場", "路外停車場", "立體停車場", "停車位", "還有車位嗎", "parking", "car park", "parking lot"],
+  paramsSchema: parkingOffStreetInputShape,
+  buildQueryParams: () => ({ "$format": "JSON" }),
+  buildPathSegments: params => [params.city],
+  // SKELETON transform — see module comment above. Whether this dataset
+  // actually carries real-time available-space counts inline, or is
+  // static-only (name/address/capacity, like YouBike's Station half), is
+  // exactly what the pending real dispatch needs to answer.
+  transform: (raw, params) => ({ query: { city: params.city }, carparks: raw }),
+  cacheTtlSeconds: PARKING_OFFSTREET_CACHE_TTL_SECONDS_SKELETON,
+  updateFrequency: "更新頻率尚未確認（可能為靜態基本資料，也可能含即時空位）— 待真實 dispatch 確認",
+  docUrl: "https://tdx.transportdata.tw/api-service/swagger/basic",
+  notes:
+    "SKELETON — 欄位結構尚未經真實 API 回應驗證，transform 目前僅原樣轉出 raw 陣列。" +
+    "此為長尾資料集，僅登記進 registry（可透過 tw_search_datasets/tw_query_dataset 查詢），" +
+    "本次不建立專屬精選工具。city 篩選目前僅透過 URL path segment 送出，" +
+    "尚未確認是否為可信賴的伺服器端篩選，亦尚未加上 client-side 保底重新篩選" +
+    "（待真實回應確認欄位名稱後補上，比照 AGENTS.md §6）。",
+  sampleParams: { city: "Taipei" },
+  fixtureFileName: "parking-offstreet-carpark.json"
+};
+
+registerEntry(parkingOffStreetCarParkEntry as unknown as DatasetEntry<never, unknown, unknown>);
+
+// --- Road/Traffic/CMS/City/{City}: road changeable message signs (可變訊息標誌) (SKELETON, generic-layer only) ---
+//
+// Path extrapolated from a WebSearch-confirmed sibling convention, not
+// memory — see TDX_ROAD_TRAFFIC_CMS_PATH_PREFIX's comment in constants.ts
+// for the full provenance note and the explicit disclosure that this is a
+// weaker evidence tier than every other entry in this project (CCTV's
+// exact path was confirmed via a literal real URL; CMS's suffix is
+// inferred from that confirmed sibling pattern, not independently observed
+// itself). This is the closest real, WebSearch-confirmed dataset found to
+// this session's "道路交通事件/施工封路" ask — no distinct
+// "TrafficEvent"-style resource was found under TDX's Road Traffic v2
+// group despite extensive searching (see the same comment for what WAS
+// found instead: an admin/reporting backend, not a public read API).
+//
+// Response FIELD structure is NOT yet confirmed — skeleton (pass-through
+// transform) pending a real fixtures-refresh.yml dispatch, which will also
+// be the first real confirmation of whether this path guess is even
+// correct (a 404 here would mean CMS's suffix doesn't follow CCTV's
+// convention after all, not that the resource group doesn't exist).
+//
+// Long-tail entry per docs/ARCHITECTURE.md §3.2 — registry-only, no
+// curated tool this round. Same AGENTS.md §6 caveat as the parking entry
+// above: city is currently only a path segment, not yet confirmed reliable
+// or defensively re-filtered client-side.
+
+export const roadTrafficCmsInputShape = {
+  city: z
+    .enum(TDX_CITIES)
+    .describe(
+      "縣市英文代碼（TDX 標準代碼，例如「Taipei」「NewTaipei」「Taichung」「Kaohsiung」），必填。" +
+        "注意這是 TDX 專用的英文代碼，不是 CWA 資料集使用的中文全形縣市名稱。"
+    )
+};
+
+export interface RoadTrafficCmsParams {
+  city: string;
+}
+
+export interface TdxRoadTrafficCmsRawRecord {
+  [key: string]: unknown;
+}
+
+export interface RoadTrafficCmsResult {
+  [key: string]: unknown;
+  query: { city: string };
+  signs: TdxRoadTrafficCmsRawRecord[];
+}
+
+export const roadTrafficCmsEntry: DatasetEntry<RoadTrafficCmsParams, TdxRoadTrafficCmsRawRecord[], RoadTrafficCmsResult> = {
+  id: "tdx:road-traffic-cms",
+  source: "tdx",
+  path: TDX_ROAD_TRAFFIC_CMS_PATH_PREFIX,
+  title: "道路可變訊息標誌（CMS）看板內容",
+  keywords: ["道路事件", "施工", "封路", "壅塞", "可變訊息標誌", "CMS", "road event", "road closure", "traffic message sign"],
+  paramsSchema: roadTrafficCmsInputShape,
+  buildQueryParams: () => ({ "$format": "JSON" }),
+  buildPathSegments: params => [params.city],
+  // SKELETON transform — see module comment above.
+  transform: (raw, params) => ({ query: { city: params.city }, signs: raw }),
+  cacheTtlSeconds: ROAD_TRAFFIC_CMS_CACHE_TTL_SECONDS_SKELETON,
+  updateFrequency: "動態即時資料（可變訊息標誌顯示內容），確切內部更新頻率待真實 dispatch 確認",
+  docUrl: "https://tdx.transportdata.tw/api-service/swagger/basic",
+  notes:
+    "SKELETON — 欄位結構尚未經真實 API 回應驗證，transform 目前僅原樣轉出 raw 陣列。路徑本身也未經真實" +
+    "回應驗證（由 CCTV 已確認的路徑慣例推論而來，見 constants.ts 註解），可能因 dispatch 回傳 404 而需修正。" +
+    "此為長尾資料集，僅登記進 registry，本次不建立專屬精選工具。這是「可變訊息標誌看板內容」，" +
+    "不是結構化的道路事件/施工封路資料集——TDX 未找到後者的公開查詢端點，此為目前最接近的實際替代資料。" +
+    "city 篩選目前僅透過 URL path segment 送出，尚未確認是否可信賴，亦尚未加上 client-side 保底重新篩選。",
+  sampleParams: { city: "Taipei" },
+  fixtureFileName: "road-traffic-cms.json"
+};
+
+registerEntry(roadTrafficCmsEntry as unknown as DatasetEntry<never, unknown, unknown>);
