@@ -67,6 +67,7 @@ describe("worker fetch routing", () => {
         "tw_bus_eta",
         "tw_youbike",
         "tw_rail",
+        "tw_metro_status",
         "tw_search_datasets",
         "tw_query_dataset"
       ])

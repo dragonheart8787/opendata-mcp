@@ -272,12 +272,29 @@ describe("tdxAdapter.fetchDataset", () => {
     expect(tokenCallCount).toBe(2); // initial + the one forced retry, no further attempts
   });
 
-  it("throws SCHEMA_MISMATCH when the data response isn't a JSON array", async () => {
+  it("accepts a single-object response, not just a bare array (Rail/Metro/Alert's real shape)", async () => {
     const fetchImpl = (async (url: string) => {
       if (url === "https://tdx.transportdata.tw/auth/realms/TDXConnect/protocol/openid-connect/token") {
         return new Response(JSON.stringify({ access_token: "t", expires_in: 3600 }), { status: 200 });
       }
-      return new Response(JSON.stringify({ not: "an array" }), { status: 200 });
+      return new Response(JSON.stringify({ AuthorityCode: "TRTC", Alerts: [] }), { status: 200 });
+    }) as unknown as typeof fetch;
+
+    const result = await tdxAdapter.fetchDataset(
+      makeEntry(),
+      { city: "Taipei" },
+      { TDX_CLIENT_ID: "id", TDX_CLIENT_SECRET: "secret" },
+      fetchImpl
+    );
+    expect(result).toEqual({ AuthorityCode: "TRTC", Alerts: [] });
+  });
+
+  it("throws SCHEMA_MISMATCH when the data response is neither an array nor an object", async () => {
+    const fetchImpl = (async (url: string) => {
+      if (url === "https://tdx.transportdata.tw/auth/realms/TDXConnect/protocol/openid-connect/token") {
+        return new Response(JSON.stringify({ access_token: "t", expires_in: 3600 }), { status: 200 });
+      }
+      return new Response(JSON.stringify("just a string"), { status: 200 });
     }) as unknown as typeof fetch;
 
     try {

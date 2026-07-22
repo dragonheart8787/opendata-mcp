@@ -319,17 +319,17 @@ export const TDX_METRO_SYSTEM_ID_BY_NAME: Record<TdxMetroSystemName, string> = {
 };
 
 /**
- * Placeholder cache TTL for Metro Alert (skeleton stage — not yet
- * evidence-based; see registry/tdx.ts's module comment on metroAlertEntry).
- * Incident/disruption data is expected to need a much shorter TTL than
- * static route-map data (this session's task's own framing) — starts at
- * bus ETA's realtime-cadence TTL as a reasonable upper bound, to be
- * replaced with real evidence (ideally an UpdateTime-style field in the
- * real response) once a dispatch reveals this dataset's own update cadence,
- * the same evidence-driven process used for BUS_ETA_CACHE_TTL_SECONDS/
- * YOUBIKE_CACHE_TTL_SECONDS/RAIL_LIVEBOARD_CACHE_TTL_SECONDS.
+ * Cache TTL for Metro Alert. A real capture (Taipei/TRTC) turned up
+ * stronger evidence than any other TDX entry in this project: TDX's
+ * response itself self-reports its batch republish interval via
+ * `UpdateInterval`/`SrcUpdateInterval` — both 60 (seconds) in the real
+ * capture, not inferred from a SrcUpdateTime/UpdateTime gap the way
+ * BUS_ETA_CACHE_TTL_SECONDS/YOUBIKE_CACHE_TTL_SECONDS/
+ * RAIL_LIVEBOARD_CACHE_TTL_SECONDS had to. Matching that self-declared
+ * interval exactly means this server's cache never stacks additional
+ * staleness on top of what TDX already discloses.
  */
-export const METRO_ALERT_CACHE_TTL_SECONDS_SKELETON = 30;
+export const METRO_ALERT_CACHE_TTL_SECONDS = 60;
 
 /**
  * The ~2-minute-delay / platform-display disclosure, as fixed text embedded

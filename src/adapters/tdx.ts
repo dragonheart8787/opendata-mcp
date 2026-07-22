@@ -229,10 +229,17 @@ async function fetchDataset<TParams, TRaw>(
     });
   }
 
-  if (!Array.isArray(payload)) {
+  // Not array-only: every TDX entry in this project used to return a bare
+  // JSON array, until a real dispatch showed Rail/Metro/Alert returns a
+  // single object (batch metadata + a nested `Alerts` array) instead — see
+  // registry/tdx.ts's module comment on metroAlertEntry. TDX doesn't have
+  // one uniform envelope shape the way CWA/MOENV do, so this only rejects
+  // clearly broken payloads (null, a bare string/number), not "not an
+  // array" specifically.
+  if (payload === null || typeof payload !== "object") {
     throw new ToolError({
       code: "SCHEMA_MISMATCH",
-      message: "TDX 運輸資料流通服務回應格式不符預期（非陣列），可能是資料集路徑錯誤或暫時無資料。"
+      message: "TDX 運輸資料流通服務回應格式不符預期（非物件或陣列），可能是資料集路徑錯誤或暫時無資料。"
     });
   }
 
