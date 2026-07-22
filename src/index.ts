@@ -4,6 +4,7 @@ import { CfWorkerJsonSchemaValidator } from "@modelcontextprotocol/sdk/validatio
 
 import type { CacheStore } from "./infra/cache.js";
 import { airQualityInputShape, handleAirQualityTool } from "./tools/air-quality.js";
+import { busEtaInputShape, handleBusEtaTool } from "./tools/bus-eta.js";
 import { handleRecentEarthquakesTool, recentEarthquakesInputShape } from "./tools/earthquake.js";
 import { handleQueryDatasetTool, handleSearchDatasetsTool, queryDatasetInputShape, searchDatasetsInputShape } from "./tools/generic.js";
 import { handleTyphoonTool, typhoonNewsInputShape } from "./tools/typhoon.js";
@@ -138,6 +139,36 @@ function createServer(env: Env): McpServer {
       }
     },
     ({ county, siteName }) => handleAirQualityTool({ county, siteName }, env)
+  );
+
+  server.registerTool(
+    "tw_bus_eta",
+    {
+      title: "台灣公車動態預估到站時間（交通部 TDX）",
+      description:
+        "查詢交通部運輸資料流通服務（TDX）「公車動態預估到站時間」，" +
+        "回傳指定縣市（可加路線/站牌篩選）目前的公車動態資料：路線名稱、站牌名稱、行駛方向、" +
+        "預估幾秒後到站（若目前無預估資料則不提供，不代表資料異常）、資料更新時間。\n\n" +
+        "參數：\n" +
+        "- city：必填，TDX 標準縣市英文代碼（例如「Taipei」「NewTaipei」「Taichung」「Kaohsiung」），" +
+        "**不是**中文全形縣市名稱。\n" +
+        "- routeName：選填但強烈建議提供（例如「615」「藍29」「重慶幹線」）——不填會查詢整個縣市所有路線，" +
+        "資料量非常大，回應只會回傳前面一部分結果並提示縮小查詢範圍。\n" +
+        "- stopName：選填，進一步篩選特定站牌（例如「板橋車站」）。\n\n" +
+        "適用情境：使用者詢問「某路線公車還有幾分鐘到站」「某站牌現在有哪些公車動態」。\n" +
+        "不適用：本工具不提供路網規劃、轉乘建議、票價查詢，也不提供公車即時位置地圖座標；" +
+        "只回傳官方到站預估與站牌/路線基本資訊。\n\n" +
+        "資料範圍限制：僅涵蓋 TDX 平台已串接的縣市公車業者，部分偏遠路線或非固定班次業者可能未涵蓋；" +
+        "「目前無預估到站時間」是真實常見情況（例如末班車已過、今日未營運等），不代表本伺服器查詢失敗。",
+      inputSchema: busEtaInputShape,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true
+      }
+    },
+    ({ city, routeName, stopName }) => handleBusEtaTool({ city, routeName, stopName }, env)
   );
 
   server.registerTool(

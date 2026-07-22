@@ -144,6 +144,19 @@ export const TYPHOON_WARNING_CACHE_TTL_SECONDS = 10 * 60;
 export const BUS_ETA_CACHE_TTL_SECONDS = 30;
 
 /**
+ * Cap on how many matched stops a single tw_bus_eta call returns. Confirmed
+ * via a real dispatch of fixtures-refresh.yml that an unfiltered city query
+ * (no routeName/stopName) can return tens of thousands of records for a
+ * major city (Taipei alone: 28,731) — without a cap this would blow the
+ * response-size budget (docs/ARCHITECTURE.md §2.3: "單次工具回應目標 ≤
+ * 2,000 tokens") and be useless to a caller anyway. Chosen generously above
+ * what a single real route's stop count looks like in practice (a real
+ * captured route, "615", had 78 records across both directions) while
+ * still bounding the worst case of an unfiltered city query.
+ */
+export const BUS_ETA_MAX_STOPS_RETURNED = 100;
+
+/**
  * Taiwan's 22 counties/cities as used by CWA's `locationName` parameter.
  * CWA uses the traditional character "臺" (not the common variant "台") in
  * 臺北市, 臺中市, 臺南市, and 臺東縣 — this must match exactly or the API
