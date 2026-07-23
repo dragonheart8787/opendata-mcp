@@ -7,6 +7,7 @@ import { airQualityInputShape, handleAirQualityTool } from "./tools/air-quality.
 import { handleYouBikeTool, youBikeInputShape } from "./tools/bike.js";
 import { busEtaInputShape, handleBusEtaTool } from "./tools/bus-eta.js";
 import { handleRecentEarthquakesTool, recentEarthquakesInputShape } from "./tools/earthquake.js";
+import { parseHighwayXml } from "./adapters/highway.js";
 import { handleQueryDatasetTool, handleSearchDatasetsTool, queryDatasetInputShape, searchDatasetsInputShape } from "./tools/generic.js";
 import { handleHighwayTrafficTool, highwayLiveEventsInputShape } from "./tools/highway.js";
 import { handleMetroStatusTool, metroStatusInputShape } from "./tools/metro.js";
@@ -364,9 +365,74 @@ const JSON_RPC_METHOD_NOT_ALLOWED = {
   id: null
 };
 
+/**
+ * TEMPORARY diagnostic route, not part of the shipped API — remove once
+ * its job is done (see AGENTS.md §6's debug-probe-on-a-real-deployment
+ * methodology). Real user reports of tw_highway_traffic timing out three
+ * times in a row (other tools unaffected) need real numbers: how big is
+ * LiveEvents.xml right now, how long does each phase (fetch-to-headers,
+ * body read, XML parse) actually take. Deliberately measures the body
+ * read and parse phases *separately* from adapters/highway.ts's own
+ * timeout, since code review already found that infra/http.ts's 5s
+ * AbortController is cleared the moment fetch() resolves (response
+ * headers), before any adapter ever calls response.text() — meaning the
+ * body-read phase, which is what actually scales with this endpoint's
+ * unfiltered nationwide payload, currently has NO timeout coverage at all.
+ */
+async function probeHighwayPerf(): Promise<Response> {
+  const url = "https://tisvcloud.freeway.gov.tw/history/motc20/LiveEvents.xml";
+  const t0 = Date.now();
+  try {
+    const response = await fetch(url, { headers: { accept: "application/xml" } });
+    const tHeaders = Date.now();
+    const rawXml = await response.text();
+    const tBody = Date.now();
+    let eventCount: number | string = "parse failed";
+    let parseError: string | undefined;
+    try {
+      const parsed = parseHighwayXml(rawXml) as { LiveEventList?: { LiveEvents?: { LiveEvent?: unknown[] } } };
+      eventCount = parsed.LiveEventList?.LiveEvents?.LiveEvent?.length ?? 0;
+    } catch (error) {
+      parseError = error instanceof Error ? error.message : String(error);
+    }
+    const tParse = Date.now();
+    return new Response(
+      JSON.stringify(
+        {
+          url,
+          status: response.status,
+          contentLengthHeader: response.headers.get("content-length"),
+          transferEncoding: response.headers.get("transfer-encoding"),
+          actualBodyBytes: new TextEncoder().encode(rawXml).length,
+          eventCount,
+          parseError,
+          timingMs: {
+            fetchToHeaders: tHeaders - t0,
+            bodyRead: tBody - tHeaders,
+            xmlParse: tParse - tBody,
+            total: tParse - t0
+          }
+        },
+        null,
+        2
+      ),
+      { headers: { "content-type": "application/json" } }
+    );
+  } catch (error) {
+    return new Response(
+      JSON.stringify({ url, error: error instanceof Error ? error.message : String(error), elapsedMs: Date.now() - t0 }, null, 2),
+      { headers: { "content-type": "application/json" } }
+    );
+  }
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
+
+    if (url.pathname === "/debug/probe-highway-perf") {
+      return probeHighwayPerf();
+    }
 
     if (url.pathname === "/" || url.pathname === "/health") {
       return new Response("Taiwan OpenData MCP Server is running. Send MCP requests to POST /mcp.\n", {
