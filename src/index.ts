@@ -340,48 +340,42 @@ const JSON_RPC_METHOD_NOT_ALLOWED = {
  * egress, running on different infrastructure, fares differently before
  * committing to building the tw_highway_traffic feature on top of it.
  */
+/**
+ * Discovery phase is done — /history/motc20/LiveEvents.xml is the real,
+ * live-updating (last-modified minutes old) road event feed. This probe
+ * now only needs to answer: what does its XML actually look like (root
+ * element, per-event fields, timestamp format)? 99KB total; a few
+ * thousand characters is enough to see the root tag plus a couple of full
+ * sample records to design the real transform against.
+ */
 async function probeTisvcloudFromWorker(): Promise<Response> {
-  // Root turned out to be a JS-rendered (Bootstrap + tisvcloud.js) landing
-  // page, not a real directory listing — no filenames visible in its body.
-  // Third-party doc search hits showed /history/<subpath>/ pages titled
-  // "Index of /history/...", the classic bare Apache/nginx autoindex format
-  // — trying those instead, since that's where real filenames should
-  // actually be readable straight out of the body.
-  const candidates = [
-    "https://tisvcloud.freeway.gov.tw/",
-    "https://tisvcloud.freeway.gov.tw/history/",
-    "https://tisvcloud.freeway.gov.tw/history/motc20/",
-    "https://tisvcloud.freeway.gov.tw/cctv_value.xml.gz"
-  ];
-  const results = await Promise.all(
-    candidates.map(async url => {
-      const start = Date.now();
-      try {
-        const response = await fetch(url, { signal: AbortSignal.timeout(8000) });
-        // Body preview only for listing-shaped URLs — that's what we need to
-        // actually read (directory listing of real filenames), not just
-        // status. robots.txt-respecting fetch tools (WebFetch, most
-        // scrapers) get refused by this host; a plain GET from here does not.
-        // A flat slice(0, 4000) only ever captured a boilerplate "使用下載
-        // 資料應注意事項" disclaimer that precedes the real listing on every
-        // /history/ page — the actual file/folder links live inside a table
-        // with id="indexlist", further down than that flat cutoff reached.
-        // Find that marker and slice from there instead of guessing a bigger
-        // flat length; fall back to the old flat slice if the marker isn't
-        // present (e.g. a non-listing page like the JS-rendered root).
-        let bodyPreview: string | undefined;
-        if (url.endsWith("/")) {
-          const text = await response.text();
-          const markerIndex = text.indexOf('id="indexlist"');
-          bodyPreview = markerIndex === -1 ? text.slice(0, 4000) : text.slice(markerIndex, markerIndex + 5000);
-        }
-        return { url, status: response.status, ok: response.ok, elapsedMs: Date.now() - start, bodyPreview };
-      } catch (error) {
-        return { url, error: error instanceof Error ? error.message : String(error), elapsedMs: Date.now() - start };
-      }
-    })
-  );
-  return new Response(JSON.stringify({ results }, null, 2), { headers: { "content-type": "application/json" } });
+  const url = "https://tisvcloud.freeway.gov.tw/history/motc20/LiveEvents.xml";
+  const start = Date.now();
+  try {
+    const response = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    const text = await response.text();
+    return new Response(
+      JSON.stringify(
+        {
+          url,
+          status: response.status,
+          ok: response.ok,
+          contentLength: response.headers.get("content-length"),
+          lastModified: response.headers.get("last-modified"),
+          elapsedMs: Date.now() - start,
+          bodyPreview: text.slice(0, 6000)
+        },
+        null,
+        2
+      ),
+      { headers: { "content-type": "application/json" } }
+    );
+  } catch (error) {
+    return new Response(
+      JSON.stringify({ url, error: error instanceof Error ? error.message : String(error), elapsedMs: Date.now() - start }, null, 2),
+      { headers: { "content-type": "application/json" } }
+    );
+  }
 }
 
 export default {
