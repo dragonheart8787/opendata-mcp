@@ -347,7 +347,12 @@ async function probeTisvcloudFromWorker(): Promise<Response> {
       const start = Date.now();
       try {
         const response = await fetch(url, { signal: AbortSignal.timeout(8000) });
-        return { url, status: response.status, ok: response.ok, elapsedMs: Date.now() - start };
+        // Body preview only for the root listing — that's the one we need to
+        // actually read (directory listing of real filenames), not just its
+        // status. robots.txt-respecting fetch tools (WebFetch, most scrapers)
+        // get refused by this host; a plain GET from here does not.
+        const bodyPreview = url.endsWith("/") ? (await response.text()).slice(0, 4000) : undefined;
+        return { url, status: response.status, ok: response.ok, elapsedMs: Date.now() - start, bodyPreview };
       } catch (error) {
         return { url, error: error instanceof Error ? error.message : String(error), elapsedMs: Date.now() - start };
       }
