@@ -10,17 +10,38 @@
  * Deliberately dependency-free plain Node so the workflow doesn't need a
  * build/typecheck step before running it.
  */
-import { writeFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
 
 const URL_ARG = process.env.SMOKE_TEST_URL || "https://opendata-mcp.dragonheartliu1440.workers.dev/mcp";
 
-const EXPECTED_TOOLS = [
-  "tw_weather_forecast",
-  "tw_recent_earthquakes",
-  "tw_air_quality",
-  "tw_search_datasets",
-  "tw_query_dataset"
-];
+/**
+ * Derives the expected tool list directly from src/index.ts's real
+ * `server.registerTool("toolName", ...)` calls, instead of a hand-copied
+ * array in this file — a hardcoded EXPECTED_TOOLS list is exactly the kind
+ * of second copy of the truth that silently goes stale the moment a new
+ * tool is added elsewhere and nobody remembers to update this file too
+ * (confirmed: it had drifted to 5 tools while the server actually
+ * registers 10 — and would go stale again the next time a tool is added,
+ * exactly the failure this fix removes). This workflow runs plain `node`
+ * with no `npm ci`/build step (see post-deploy-smoke-test.yml), so this
+ * can't import the TypeScript source as a module — reading it as text and
+ * regex-matching the one call shape every tool registration actually uses
+ * is the genuinely-dynamic option available without adding a dependency
+ * or a build step to the workflow.
+ */
+function deriveExpectedToolsFromSource() {
+  const indexPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../src/index.ts");
+  const source = readFileSync(indexPath, "utf-8");
+  const names = [...source.matchAll(/server\.registerTool\(\s*["']([a-zA-Z0-9_]+)["']/g)].map(m => m[1]);
+  if (names.length === 0) {
+    throw new Error(`Found zero server.registerTool(...) calls in ${indexPath} — regex is broken or the file moved/changed shape.`);
+  }
+  return names;
+}
+
+const EXPECTED_TOOLS = deriveExpectedToolsFromSource();
 
 const TOOL_CALLS = [
   {
