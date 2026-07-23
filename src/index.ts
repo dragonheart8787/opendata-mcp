@@ -330,9 +330,39 @@ const JSON_RPC_METHOD_NOT_ALLOWED = {
   id: null
 };
 
+/**
+ * TEMPORARY diagnostic route, not part of the shipped API — remove before
+ * this branch merges. Answers one question: can Cloudflare Workers' own
+ * edge network reach tisvcloud.freeway.gov.tw at all? Both this repo's
+ * dev sandbox (proxy explicitly denies the host) and GitHub Actions
+ * (every request timed out uniformly, including a URL independently
+ * confirmed to exist) could not reach it — this checks whether Workers'
+ * egress, running on different infrastructure, fares differently before
+ * committing to building the tw_highway_traffic feature on top of it.
+ */
+async function probeTisvcloudFromWorker(): Promise<Response> {
+  const candidates = ["https://tisvcloud.freeway.gov.tw/", "https://tisvcloud.freeway.gov.tw/cctv_value.xml.gz"];
+  const results = await Promise.all(
+    candidates.map(async url => {
+      const start = Date.now();
+      try {
+        const response = await fetch(url, { signal: AbortSignal.timeout(8000) });
+        return { url, status: response.status, ok: response.ok, elapsedMs: Date.now() - start };
+      } catch (error) {
+        return { url, error: error instanceof Error ? error.message : String(error), elapsedMs: Date.now() - start };
+      }
+    })
+  );
+  return new Response(JSON.stringify({ results }, null, 2), { headers: { "content-type": "application/json" } });
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
+
+    if (url.pathname === "/debug/probe-tisvcloud") {
+      return probeTisvcloudFromWorker();
+    }
 
     if (url.pathname === "/" || url.pathname === "/health") {
       return new Response("Taiwan OpenData MCP Server is running. Send MCP requests to POST /mcp.\n", {
