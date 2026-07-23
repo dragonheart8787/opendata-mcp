@@ -771,7 +771,12 @@ export const parkingOffStreetCarParkEntry: DatasetEntry<
     "本次不建立專屬精選工具。city 篩選目前僅透過 URL path segment 送出，" +
     "尚未確認是否為可信賴的伺服器端篩選，亦尚未加上 client-side 保底重新篩選" +
     "（待真實回應確認欄位名稱後補上，比照 AGENTS.md §6）。",
-  sampleParams: { city: "Taipei" },
+  // TEMP: switched from "Taipei" after the real dispatch came back with
+  // CarParks: [] for Taipei (ambiguous — genuinely no data, or something
+  // else wrong) — trying a different city to get a non-empty real sample
+  // before finalizing the transform. Revert to a normal confirmed value
+  // once resolved.
+  sampleParams: { city: "NewTaipei" },
   fixtureFileName: "parking-offstreet-carpark.json"
 };
 
