@@ -25,7 +25,7 @@ import type { ZodTypeAny } from "zod";
 export interface DatasetEntry<TParams = never, TRaw = unknown, TResult = unknown> {
   /** e.g. "cwa:F-C0032-001" */
   id: string;
-  source: "cwa" | "moenv" | "tdx";
+  source: "cwa" | "moenv" | "tdx" | "highway";
   /** Dataset id/path used by the adapter to build the upstream URL. */
   path: string;
   title: string;

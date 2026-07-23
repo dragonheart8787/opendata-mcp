@@ -31,6 +31,7 @@
 | 中央氣象署 CWA | opendata.cwa.gov.tw | query/header `Authorization` | `CWA_API_KEY` | ✅ 已接 |
 | 環境部 MOENV | data.moenv.gov.tw | query `api_key` | `MOENV_API_KEY` | ✅ 已接 |
 | 交通部 TDX | tdx.transportdata.tw | OAuth2 client credentials | `TDX_CLIENT_ID` / `TDX_CLIENT_SECRET` | 🔜 Phase 3 |
+| 交通部高速公路局「交通資料庫」 | tisvcloud.freeway.gov.tw | 無（公開下載，免金鑰） | — | ✅ 已接（`tw_highway_traffic`）——不在原規劃內，第一個 XML 格式、零認證的來源，見 AGENTS.md §6 |
 | 水利署 WRA | data.gov.tw 轉介 / 防災資訊服務網 | 多數免金鑰 | — | 🔜 Phase 4 |
 | 其他（農業部價格、衛福部藥局等） | data.gov.tw | 各異 | — | Backlog |
 

@@ -31,6 +31,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { buildCwaUrl } from "../../src/adapters/cwa.js";
+import { buildHighwayUrl, parseHighwayXml } from "../../src/adapters/highway.js";
 import { buildMoenvUrl } from "../../src/adapters/moenv.js";
 import { getAccessToken, buildTdxUrl } from "../../src/adapters/tdx.js";
 import { httpGet } from "../../src/infra/http.js";
@@ -43,6 +44,7 @@ import { diffShapesFromValues, formatShapeDiff } from "./shape-diff.js";
 import "../../src/registry/cwa.js";
 import "../../src/registry/moenv.js";
 import "../../src/registry/tdx.js";
+import "../../src/registry/highway.js";
 
 const FIXTURES_DIR = path.resolve(fileURLToPath(new URL(".", import.meta.url)), "../../test/fixtures");
 
@@ -80,6 +82,35 @@ const INTER_CHECK_DELAY_MS = 750;
  */
 const TDX_EXTRA_DELAY_MS = 1500;
 
+/**
+ * ADDITIONAL delay applied only before a `highway` check, same mechanism
+ * as TDX_EXTRA_DELAY_MS above. The platform's own usage rule requires
+ * repeated fetches of the same file to be spaced at least 40 seconds
+ * apart — this pads well above that floor. With exactly one `highway`
+ * entry today this has no observable effect within a single dispatch run
+ * (there's nothing else of the same source to pace against), but it's set
+ * now so a second highway entry (LiveTraffic.xml/News.xml — see
+ * registry/highway.ts's module comment on candidates not registered this
+ * round) doesn't get fetched back-to-back with this one in under 40s
+ * later, without anyone having to remember to add pacing at that point.
+ *
+ * In practice this whole check currently fails anyway: this host is
+ * unreachable from GitHub Actions (see AGENTS.md §6) — expected, not a
+ * bug, and explicitly NOT treated as a fatal `hadFetchFailure` below.
+ */
+const HIGHWAY_EXTRA_DELAY_MS = 40000;
+
+/**
+ * Sources whose real-world unreachability from GitHub Actions/this
+ * pipeline's environment is a known, documented, *expected* condition
+ * (AGENTS.md §6) rather than a signal something is broken. A fetch
+ * failure for one of these still gets logged and shown in the summary —
+ * useful if it ever unexpectedly starts working — but doesn't set
+ * `hadFetchFailure` (see main()), so it doesn't fail the CI run the way a
+ * genuine, unexpected failure on any other source should.
+ */
+const KNOWN_UNREACHABLE_FROM_CI_SOURCES = new Set(["highway"]);
+
 function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -104,6 +135,16 @@ async function fetchRawJson(url: URL, secret: string | undefined, extraHeaders?:
     );
   }
   return JSON.parse(redact(text, secret));
+}
+
+/** No secret to redact — this source needs no API key at all. Reuses `parseHighwayXml` so a captured fixture is parsed with byte-identical logic to production, same reasoning as `fetchRawJson` reusing `buildCwaUrl`/`buildMoenvUrl`. */
+async function fetchRawXml(url: URL): Promise<unknown> {
+  const response = await httpGet(url.toString(), { headers: { accept: "application/xml" } });
+  const text = await response.text();
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status} fetching ${url.toString()}: ${text.slice(0, 500)}`);
+  }
+  return parseHighwayXml(text);
 }
 
 interface DatasetCheck {
@@ -165,6 +206,13 @@ function buildChecks(): DatasetCheck[] {
           const accessToken = await getAccessToken({ TDX_CLIENT_ID, TDX_CLIENT_SECRET, CACHE: undefined }, fetch);
           return fetchRawJson(buildTdxUrl(entry, sampleParams), undefined, { authorization: `Bearer ${accessToken}` });
         }
+        if (entry.source === "highway") {
+          // No auth at all — this platform needs no API key/OAuth. Expected
+          // to fail here: this host is unreachable from GitHub Actions (see
+          // AGENTS.md §6 and KNOWN_UNREACHABLE_FROM_CI_SOURCES above),
+          // confirmed via real dispatch attempts, not assumed.
+          return fetchRawXml(buildHighwayUrl(entry));
+        }
         throw new Error(`No fixtures-refresh fetch strategy for source "${entry.source}" (dataset ${entry.id}).`);
       }
     });
@@ -181,8 +229,8 @@ async function main(): Promise<void> {
 
   for (const [index, check] of checks.entries()) {
     if (index > 0) {
-      const delay = INTER_CHECK_DELAY_MS + (check.source === "tdx" ? TDX_EXTRA_DELAY_MS : 0);
-      await sleep(delay);
+      const extraDelay = check.source === "tdx" ? TDX_EXTRA_DELAY_MS : check.source === "highway" ? HIGHWAY_EXTRA_DELAY_MS : 0;
+      await sleep(INTER_CHECK_DELAY_MS + extraDelay);
     }
 
     console.log(`Fetching ${check.name}...`);
@@ -192,9 +240,15 @@ async function main(): Promise<void> {
       fresh = await check.fetch();
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      console.error(`  FAILED: ${message}`);
-      summarySections.push(`## ${check.name}\n\n⚠️ 無法取得最新回應：${message}`);
-      hadFetchFailure = true;
+      const knownUnreachable = KNOWN_UNREACHABLE_FROM_CI_SOURCES.has(check.source);
+      console.error(`  ${knownUnreachable ? "FAILED (expected — see AGENTS.md §6)" : "FAILED"}: ${message}`);
+      summarySections.push(
+        `## ${check.name}\n\n⚠️ 無法取得最新回應：${message}` +
+          (knownUnreachable ? "\n\n（此來源已知從 CI 環境連不上，見 AGENTS.md §6 — 不視為異常，不影響此次執行結果。）" : "")
+      );
+      if (!knownUnreachable) {
+        hadFetchFailure = true;
+      }
       continue;
     }
 

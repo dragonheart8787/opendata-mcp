@@ -8,6 +8,7 @@ import { handleYouBikeTool, youBikeInputShape } from "./tools/bike.js";
 import { busEtaInputShape, handleBusEtaTool } from "./tools/bus-eta.js";
 import { handleRecentEarthquakesTool, recentEarthquakesInputShape } from "./tools/earthquake.js";
 import { handleQueryDatasetTool, handleSearchDatasetsTool, queryDatasetInputShape, searchDatasetsInputShape } from "./tools/generic.js";
+import { handleHighwayTrafficTool, highwayLiveEventsInputShape } from "./tools/highway.js";
 import { handleMetroStatusTool, metroStatusInputShape } from "./tools/metro.js";
 import { handleRailTool, railInputShape } from "./tools/rail.js";
 import { handleTyphoonTool, typhoonNewsInputShape } from "./tools/typhoon.js";
@@ -268,6 +269,39 @@ function createServer(env: Env): McpServer {
   );
 
   server.registerTool(
+    "tw_highway_traffic",
+    {
+      title: "台灣國道即時交通事件（交通部高速公路局）",
+      description:
+        "查詢交通部高速公路局『交通資料庫』的國道即時交通事件資料（LiveEvents），回傳目前所有國道" +
+        "（含高速公路、快速道路）上公告中的事故、施工、管制等事件：事件標題與說明文字、生效時間、" +
+        "座標位置、所在道路/方向/里程、影響說明與封閉車道，以及資料更新時間。本工具逐字轉載官方目前" +
+        "公告的標題與說明文字，不自行判斷或翻譯事件嚴重程度代碼。\n\n" +
+        "參數：\n" +
+        "- road：選填，依國道名稱做部分字串篩選（例如「國道一號」「國道三號」）——不填會回傳全國所有" +
+        "國道目前的事件，筆數依當下實際事件數量而定。\n\n" +
+        "適用情境：使用者詢問「國道現在有沒有事故」「某國道有沒有在施工」「國道目前有哪些管制」。\n\n" +
+        "不適用：本工具僅涵蓋國道（高速公路/快速道路），**不涵蓋市區道路**——市區道路的可變訊息標誌" +
+        "位置資料請改用 tw_query_dataset 查詢 tdx:road-traffic-cms（注意那筆資料集僅有看板設置位置，" +
+        "同樣不含即時路況內容）；本工具不提供即時車速、旅行時間預估或壅塞程度（同目錄下的 " +
+        "LiveTraffic.xml 這次未收錄）；不提供路口號誌或市區施工封路資訊；不會把 EventType/Severity 等" +
+        "數值代碼轉譯成「輕微/嚴重」等分級文字，僅原樣轉載官方標題與說明文字。\n\n" +
+        "資料範圍限制：官方回應本身註明批次更新間隔約 60 秒（工具回應會附上這個官方回報的數值，非本" +
+        "伺服器推測），查詢結果可能落後實際狀況數十秒；本資料集為全國性質，沒有縣市欄位，僅能以道路" +
+        "名稱篩選；「查無符合事件」代表目前沒有官方回報的事件（或篩選條件下沒有符合的道路），不代表" +
+        "本伺服器查詢失敗。",
+      inputSchema: highwayLiveEventsInputShape,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true
+      }
+    },
+    ({ road }) => handleHighwayTrafficTool({ road }, env)
+  );
+
+  server.registerTool(
     "tw_search_datasets",
     {
       title: "搜尋本伺服器已登記的資料集",
@@ -330,61 +364,9 @@ const JSON_RPC_METHOD_NOT_ALLOWED = {
   id: null
 };
 
-/**
- * TEMPORARY diagnostic route, not part of the shipped API — remove before
- * this branch merges. Answers one question: can Cloudflare Workers' own
- * edge network reach tisvcloud.freeway.gov.tw at all? Both this repo's
- * dev sandbox (proxy explicitly denies the host) and GitHub Actions
- * (every request timed out uniformly, including a URL independently
- * confirmed to exist) could not reach it — this checks whether Workers'
- * egress, running on different infrastructure, fares differently before
- * committing to building the tw_highway_traffic feature on top of it.
- */
-/**
- * Discovery phase is done — /history/motc20/LiveEvents.xml is the real,
- * live-updating (last-modified minutes old) road event feed. This probe
- * now only needs to answer: what does its XML actually look like (root
- * element, per-event fields, timestamp format)? 99KB total; a few
- * thousand characters is enough to see the root tag plus a couple of full
- * sample records to design the real transform against.
- */
-async function probeTisvcloudFromWorker(): Promise<Response> {
-  const url = "https://tisvcloud.freeway.gov.tw/history/motc20/LiveEvents.xml";
-  const start = Date.now();
-  try {
-    const response = await fetch(url, { signal: AbortSignal.timeout(8000) });
-    const text = await response.text();
-    return new Response(
-      JSON.stringify(
-        {
-          url,
-          status: response.status,
-          ok: response.ok,
-          contentLength: response.headers.get("content-length"),
-          lastModified: response.headers.get("last-modified"),
-          elapsedMs: Date.now() - start,
-          bodyPreview: text.slice(0, 6000)
-        },
-        null,
-        2
-      ),
-      { headers: { "content-type": "application/json" } }
-    );
-  } catch (error) {
-    return new Response(
-      JSON.stringify({ url, error: error instanceof Error ? error.message : String(error), elapsedMs: Date.now() - start }, null, 2),
-      { headers: { "content-type": "application/json" } }
-    );
-  }
-}
-
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
-
-    if (url.pathname === "/debug/probe-tisvcloud") {
-      return probeTisvcloudFromWorker();
-    }
 
     if (url.pathname === "/" || url.pathname === "/health") {
       return new Response("Taiwan OpenData MCP Server is running. Send MCP requests to POST /mcp.\n", {
