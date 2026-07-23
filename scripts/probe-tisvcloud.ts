@@ -35,10 +35,16 @@ const CANDIDATES = [
   "roadclosure_value.xml.gz"
 ];
 
+/** Every probe request needs its own timeout — the first run of this script hung indefinitely on an unresponsive candidate URL with no timeout set, wasting the whole job. */
+const REQUEST_TIMEOUT_MS = 10_000;
+
 async function probeUrl(url: string): Promise<void> {
   const start = Date.now();
   try {
-    const response = await fetch(url, { headers: { "user-agent": "opendata-mcp-probe/1.0 (research; contact via GitHub repo)" } });
+    const response = await fetch(url, {
+      headers: { "user-agent": "opendata-mcp-probe/1.0 (research; contact via GitHub repo)" },
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS)
+    });
     const elapsed = Date.now() - start;
     const contentType = response.headers.get("content-type");
     const contentLength = response.headers.get("content-length");
