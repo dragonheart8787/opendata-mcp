@@ -341,16 +341,27 @@ const JSON_RPC_METHOD_NOT_ALLOWED = {
  * committing to building the tw_highway_traffic feature on top of it.
  */
 async function probeTisvcloudFromWorker(): Promise<Response> {
-  const candidates = ["https://tisvcloud.freeway.gov.tw/", "https://tisvcloud.freeway.gov.tw/cctv_value.xml.gz"];
+  // Root turned out to be a JS-rendered (Bootstrap + tisvcloud.js) landing
+  // page, not a real directory listing — no filenames visible in its body.
+  // Third-party doc search hits showed /history/<subpath>/ pages titled
+  // "Index of /history/...", the classic bare Apache/nginx autoindex format
+  // — trying those instead, since that's where real filenames should
+  // actually be readable straight out of the body.
+  const candidates = [
+    "https://tisvcloud.freeway.gov.tw/",
+    "https://tisvcloud.freeway.gov.tw/history/",
+    "https://tisvcloud.freeway.gov.tw/history/motc20/",
+    "https://tisvcloud.freeway.gov.tw/cctv_value.xml.gz"
+  ];
   const results = await Promise.all(
     candidates.map(async url => {
       const start = Date.now();
       try {
         const response = await fetch(url, { signal: AbortSignal.timeout(8000) });
-        // Body preview only for the root listing — that's the one we need to
-        // actually read (directory listing of real filenames), not just its
-        // status. robots.txt-respecting fetch tools (WebFetch, most scrapers)
-        // get refused by this host; a plain GET from here does not.
+        // Body preview only for listing-shaped URLs — that's what we need to
+        // actually read (directory listing of real filenames), not just
+        // status. robots.txt-respecting fetch tools (WebFetch, most
+        // scrapers) get refused by this host; a plain GET from here does not.
         const bodyPreview = url.endsWith("/") ? (await response.text()).slice(0, 4000) : undefined;
         return { url, status: response.status, ok: response.ok, elapsedMs: Date.now() - start, bodyPreview };
       } catch (error) {
