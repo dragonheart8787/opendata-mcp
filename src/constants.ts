@@ -356,6 +356,75 @@ export const RAIL_LIVEBOARD_MAX_TRAINS_RETURNED = 50;
 export const RAIL_STATION_AMBIGUOUS_CANDIDATES_SHOWN = 10;
 
 /**
+ * NOT registered this session — see the PR for the full story. TDX's
+ * off-street (路外/立體) parking lot dataset path was confirmed via
+ * WebSearch (`v1/Parking/OffStreet/CarPark/City/{City}`, a real example URL
+ * found; note the genuine `v1` version group, not a typo) and the endpoint
+ * itself responds correctly (200, well-formed batch wrapper: UpdateTime/
+ * UpdateInterval/AuthorityCode/VersionID/CarParks) — but two independent
+ * real dispatches, against Taipei (AuthorityCode "TPE") and New Taipei
+ * ("NWT"), both came back with `CarParks: []`. Empty for Taiwan's two
+ * largest, most digitally mature cities is strong enough evidence that this
+ * "basic" resource isn't meaningfully populated, not a per-city gap worth
+ * probing further — and with zero real records ever observed, no per-record
+ * field structure (name, address, capacity, live space count) could be
+ * confirmed either, so there's nothing real to type or fixture. Registering
+ * a dataset that can only ever be shown to return zero results, with an
+ * unconfirmed record shape, fails this project's real-fixture standard
+ * (AGENTS.md §5) for no practical benefit — dropped rather than kept as a
+ * permanently-empty skeleton. On-street (路邊) parking was investigated in
+ * the same research pass — TDX's own R-package documentation
+ * (ChiaJung-Yeh/TDX_Guide) confirms an on-street parking dataset exists
+ * conceptually (`Car_Park(street="on")`), but no WebSearch query surfaced an
+ * actual literal on-street REST path, so it was never registered either.
+ */
+
+/**
+ * Path prefix for TDX's road CMS (可變訊息標誌 / changeable message signs)
+ * dataset under the "路況資訊 v2" resource group — the closest real,
+ * WebSearch-confirmed dataset to this session's "道路交通事件/施工封路"
+ * ask. Multiple independent WebSearch results confirmed TDX's Road Traffic
+ * v2 API group covers exactly five sibling resources: VD (vehicle
+ * detectors), CCTV, CMS, ETag (toll gantries), and Section — with a real,
+ * literal example URL confirming CCTV's exact path convention
+ * (`tdx.transportdata.tw/api/basic/v2/Road/Traffic/CCTV/City/Hsinchu`).
+ * No distinct "TrafficEvent"/"事件"/"施工封路" resource was found anywhere
+ * in this resource group despite extensive searching — the only adjacent
+ * hit was a *reporting/admin backend* ("交通部道路交通事件填報系統管理
+ * 後臺") for authorities to file incidents, not a public read API for
+ * querying them. This path (`.../Traffic/CMS/City/{City}`) is extrapolated
+ * from CCTV's confirmed sibling convention applied to CMS's confirmed
+ * resource name.
+ *
+ * IMPORTANT — corrected after the real capture, don't re-introduce this
+ * mistake: this endpoint does NOT carry the actual message text currently
+ * displayed on each sign. A real dispatch (Taipei, ~180 records) confirmed
+ * every record is pure sign-location metadata (CMSID, LinkID, LocationType,
+ * coordinates, optional RoadID/RoadName/RoadClass/RoadDirection) — no
+ * message/display-content field anywhere. This is a static sign *inventory*
+ * (closer to YouBike's Station half than its Availability half), not a live
+ * board-content feed, and it does NOT answer "is there a road
+ * event/closure right now" the way the task that asked for this dataset
+ * wanted — see registry/tdx.ts's module comment on roadTrafficCmsEntry for
+ * how this reshaped the entry's title/notes to stay honest about what it
+ * actually contains.
+ */
+export const TDX_ROAD_TRAFFIC_CMS_PATH_PREFIX = "v2/Road/Traffic/CMS/City";
+
+/**
+ * Cache TTL for road CMS sign locations. A real capture showed TDX's own
+ * self-reported `UpdateInterval` of 21600 seconds (6 hours) — matched
+ * exactly, the same evidence-trusting approach as
+ * METRO_ALERT_CACHE_TTL_SECONDS/RAIL_LIVEBOARD_CACHE_TTL_SECONDS, rather
+ * than assuming a shorter TTL that would just add pointless refetching of
+ * data TDX itself says only republishes every 6 hours. (The same response
+ * also carried a slower `SrcUpdateInterval` of 86400s/24h for the
+ * underlying source data — 6h is still the right number to cache against,
+ * since that's the rate *this* endpoint actually republishes at.)
+ */
+export const ROAD_TRAFFIC_CMS_CACHE_TTL_SECONDS = 21600;
+
+/**
  * Taiwan's 22 counties/cities as used by CWA's `locationName` parameter.
  * CWA uses the traditional character "臺" (not the common variant "台") in
  * 臺北市, 臺中市, 臺南市, and 臺東縣 — this must match exactly or the API

@@ -5,6 +5,7 @@ import {
   METRO_ALERT_CACHE_TTL_SECONDS,
   RAIL_LIVEBOARD_CACHE_TTL_SECONDS,
   RAIL_TRA_STATION_CACHE_TTL_SECONDS,
+  ROAD_TRAFFIC_CMS_CACHE_TTL_SECONDS,
   TDX_BIKE_AVAILABILITY_PATH_PREFIX,
   TDX_BIKE_STATION_PATH_PREFIX,
   TDX_BUS_ETA_PATH_PREFIX,
@@ -14,6 +15,7 @@ import {
   TDX_METRO_SYSTEMS,
   TDX_RAIL_TRA_LIVEBOARD_PATH_PREFIX,
   TDX_RAIL_TRA_STATION_PATH,
+  TDX_ROAD_TRAFFIC_CMS_PATH_PREFIX,
   YOUBIKE_CACHE_TTL_SECONDS,
   YOUBIKE_STATION_CACHE_TTL_SECONDS
 } from "../constants.js";
@@ -691,3 +693,126 @@ export const metroAlertEntry: DatasetEntry<MetroStatusParams, TdxMetroAlertRawRe
 };
 
 registerEntry(metroAlertEntry as unknown as DatasetEntry<never, unknown, unknown>);
+
+// tdx:parking-offstreet-carpark was investigated and deliberately NOT
+// registered — the endpoint (v1/Parking/OffStreet/CarPark/City/{City})
+// responds correctly, but two independent real dispatches (Taipei, New
+// Taipei) both came back with an empty CarParks array, so no real
+// per-record field structure was ever observed. See
+// TDX_PARKING_OFFSTREET_CARPARK_PATH_PREFIX's comment history / the PR for
+// the full story — kept out rather than registered as a permanently-empty
+// skeleton with an unconfirmed record shape (AGENTS.md §5).
+
+// --- Road/Traffic/CMS/City/{City}: road changeable message sign locations (可變訊息標誌位置) ---
+//
+// Path extrapolated from a WebSearch-confirmed sibling convention, not
+// memory — see TDX_ROAD_TRAFFIC_CMS_PATH_PREFIX's comment in constants.ts
+// for the full provenance note and the explicit disclosure that this is a
+// weaker evidence tier than every other entry in this project (CCTV's
+// exact path was confirmed via a literal real URL; CMS's suffix is
+// inferred from that confirmed sibling pattern, not independently observed
+// itself — but the real dispatch confirmed the guess was right: a 200 with
+// real data, not a 404).
+//
+// Field structure confirmed 2026-07-23 via a real dispatch of
+// fixtures-refresh.yml (Taipei, ~180 records) — and it forced a real
+// correction to what this entry even IS. The original plan (per the task
+// that scoped this session) was for this to stand in for "道路交通事件/
+// 施工封路" — but the real response contains ONLY sign-location metadata
+// (CMSID, LinkID, LocationType, coordinates, optional RoadID/RoadName/
+// RoadClass/RoadDirection), never the message text actually displayed on
+// a sign. There is no field here that says what a sign is warning about,
+// so this dataset does NOT answer "is there an incident/closure right
+// now" — it only answers "where are the CMS signs." Title, keywords, and
+// notes below were rewritten after this discovery to stop implying board
+// content this endpoint doesn't have; see the PR for the full accounting
+// of what was asked for vs. what's actually available. No distinct
+// "TrafficEvent"-style resource was found anywhere in TDX's Road Traffic
+// v2 group despite extensive searching (the only adjacent hit was a
+// reporting/admin backend for authorities to file incidents, not a public
+// read API) — this remains the closest real substitute found.
+//
+// Long-tail entry per docs/ARCHITECTURE.md §3.2 — registry-only, no
+// curated tool. No per-record city/county field exists to defensively
+// re-filter on (per AGENTS.md §6) — the only city signal is the top-level
+// `AuthorityCode`, which a caller can sanity-check against what they asked
+// for, but there's nothing at the record level to filter.
+
+export const roadTrafficCmsInputShape = {
+  city: z
+    .enum(TDX_CITIES)
+    .describe(
+      "縣市英文代碼（TDX 標準代碼，例如「Taipei」「NewTaipei」「Taichung」「Kaohsiung」），必填。" +
+        "注意這是 TDX 專用的英文代碼，不是 CWA 資料集使用的中文全形縣市名稱。"
+    )
+};
+
+export interface RoadTrafficCmsParams {
+  city: string;
+}
+
+/** Confirmed via the real capture: RoadID/RoadName/RoadClass/RoadDirection are genuinely absent on some records (e.g. minor links with no named road association), not a fixture gap. */
+export interface TdxRoadTrafficCmsSignRawRecord {
+  CMSID?: string;
+  LinkID?: string;
+  /** Numeric code, 1-6 observed in the real capture — meaning not independently confirmed, kept as an opaque passthrough (same discipline as bus ETA's StopStatus). */
+  LocationType?: number;
+  PositionLon?: number;
+  PositionLat?: number;
+  RoadID?: string;
+  RoadName?: string;
+  RoadClass?: number;
+  /** Compass direction string (e.g. "E", "NW") observed in the real capture. */
+  RoadDirection?: string;
+}
+
+export interface TdxRoadTrafficCmsRawResponse {
+  UpdateTime?: string;
+  /** Seconds — TDX's own self-reported batch republish interval (21600/6h in the real capture). */
+  UpdateInterval?: number;
+  SrcUpdateTime?: string;
+  SrcUpdateInterval?: number;
+  AuthorityCode?: string;
+  CMSs?: TdxRoadTrafficCmsSignRawRecord[];
+}
+
+export interface RoadTrafficCmsResult {
+  [key: string]: unknown;
+  query: { city: string };
+  authorityCode: string | null;
+  updateTime: string | null;
+  updateIntervalSeconds: number | null;
+  signs: TdxRoadTrafficCmsSignRawRecord[];
+}
+
+export const roadTrafficCmsEntry: DatasetEntry<RoadTrafficCmsParams, TdxRoadTrafficCmsRawResponse, RoadTrafficCmsResult> = {
+  id: "tdx:road-traffic-cms",
+  source: "tdx",
+  path: TDX_ROAD_TRAFFIC_CMS_PATH_PREFIX,
+  title: "道路可變訊息標誌（CMS）設置位置",
+  keywords: ["可變訊息標誌", "CMS", "道路電子看板位置", "traffic message sign location", "CMS location"],
+  paramsSchema: roadTrafficCmsInputShape,
+  buildQueryParams: () => ({ "$format": "JSON" }),
+  buildPathSegments: params => [params.city],
+  transform: (raw, params) => ({
+    query: { city: params.city },
+    authorityCode: raw.AuthorityCode ?? null,
+    updateTime: raw.UpdateTime ?? null,
+    updateIntervalSeconds: raw.UpdateInterval ?? null,
+    signs: raw.CMSs ?? []
+  }),
+  cacheTtlSeconds: ROAD_TRAFFIC_CMS_CACHE_TTL_SECONDS,
+  updateFrequency: "近靜態位置資料，TDX 自行回報批次更新間隔約 6 小時（欄位 UpdateInterval，非本伺服器推測）",
+  docUrl: "https://tdx.transportdata.tw/api-service/swagger/basic",
+  notes:
+    "欄位結構已於 2026-07-23 透過 fixtures-refresh.yml 真實 API 回應確認（Taipei，約 180 筆）。" +
+    "**重要**：真實回應只有可變訊息標誌的設置位置（座標、所在路段），完全沒有看板目前顯示的文字內容，" +
+    "因此**無法用來回答「現在有沒有事故/施工」**——這是本 session 原本想找的「道路交通事件/施工封路」" +
+    "資料集查證後最接近的真實替代資料，但實際內容與原始設想不同，已誠實調整標題與說明。" +
+    "回應為單一物件（非本專案其他 TDX entry 常見的裸陣列），LocationType 數值代碼未轉譯為文字說明。" +
+    "無逐筆縣市欄位可做 client-side 保底重新篩選，僅有整批層級的 AuthorityCode 可供比對。",
+  sampleParams: { city: "Taipei" },
+  fixtureFileName: "road-traffic-cms.json"
+};
+
+registerEntry(roadTrafficCmsEntry as unknown as DatasetEntry<never, unknown, unknown>);
