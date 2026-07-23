@@ -362,7 +362,19 @@ async function probeTisvcloudFromWorker(): Promise<Response> {
         // actually read (directory listing of real filenames), not just
         // status. robots.txt-respecting fetch tools (WebFetch, most
         // scrapers) get refused by this host; a plain GET from here does not.
-        const bodyPreview = url.endsWith("/") ? (await response.text()).slice(0, 4000) : undefined;
+        // A flat slice(0, 4000) only ever captured a boilerplate "使用下載
+        // 資料應注意事項" disclaimer that precedes the real listing on every
+        // /history/ page — the actual file/folder links live inside a table
+        // with id="indexlist", further down than that flat cutoff reached.
+        // Find that marker and slice from there instead of guessing a bigger
+        // flat length; fall back to the old flat slice if the marker isn't
+        // present (e.g. a non-listing page like the JS-rendered root).
+        let bodyPreview: string | undefined;
+        if (url.endsWith("/")) {
+          const text = await response.text();
+          const markerIndex = text.indexOf('id="indexlist"');
+          bodyPreview = markerIndex === -1 ? text.slice(0, 4000) : text.slice(markerIndex, markerIndex + 5000);
+        }
         return { url, status: response.status, ok: response.ok, elapsedMs: Date.now() - start, bodyPreview };
       } catch (error) {
         return { url, error: error instanceof Error ? error.message : String(error), elapsedMs: Date.now() - start };
