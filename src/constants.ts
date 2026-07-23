@@ -356,38 +356,28 @@ export const RAIL_LIVEBOARD_MAX_TRAINS_RETURNED = 50;
 export const RAIL_STATION_AMBIGUOUS_CANDIDATES_SHOWN = 10;
 
 /**
- * Path prefix for TDX's off-street (路外/立體) parking lot dataset —
- * confirmed via WebSearch, not memory: a real example URL was found
- * (`tdx.transportdata.tw/api/basic/v1/Parking/OffStreet/CarPark/City/
- * Taipei`). Note the version segment is `v1`, not the `v2` every other TDX
- * entry in this project uses — TDX's parking API genuinely lives under a
- * different, older API version group ("停車資訊 v1" in TDX's own Swagger
- * listing), not a typo.
- *
- * On-street (路邊) parking was investigated in the same research pass —
- * TDX's own R-package documentation (ChiaJung-Yeh/TDX_Guide) confirms an
- * on-street parking dataset exists conceptually (`Car_Park(street="on")`),
- * but no WebSearch query surfaced an actual literal on-street REST path
- * (only two literal off-street paths were ever found: this one and
- * `.../ParkingEntranceExit/City/{City}`). Registering a made-up on-street
- * path name would be exactly the "填記憶" this project's discipline
- * forbids, so on-street parking is skipped this round rather than guessed
- * — see the PR for this reasoning.
- *
- * Real-time availability (即時空位): no separate `.../Availability/...`
- * sibling endpoint (the pattern YouBike's Bike/Availability + Bike/Station
- * split uses) was ever found via WebSearch for parking. This CarPark
- * endpoint is registered as the best-evidenced candidate and its real
- * response — once a dispatch confirms it — will show whether live space
- * counts are bundled inline (common for this style of government parking
- * dataset) or whether this turns out to be static-only, in which case the
- * registry `notes` will say so honestly rather than implying real-time
- * data this entry doesn't actually have.
+ * NOT registered this session — see the PR for the full story. TDX's
+ * off-street (路外/立體) parking lot dataset path was confirmed via
+ * WebSearch (`v1/Parking/OffStreet/CarPark/City/{City}`, a real example URL
+ * found; note the genuine `v1` version group, not a typo) and the endpoint
+ * itself responds correctly (200, well-formed batch wrapper: UpdateTime/
+ * UpdateInterval/AuthorityCode/VersionID/CarParks) — but two independent
+ * real dispatches, against Taipei (AuthorityCode "TPE") and New Taipei
+ * ("NWT"), both came back with `CarParks: []`. Empty for Taiwan's two
+ * largest, most digitally mature cities is strong enough evidence that this
+ * "basic" resource isn't meaningfully populated, not a per-city gap worth
+ * probing further — and with zero real records ever observed, no per-record
+ * field structure (name, address, capacity, live space count) could be
+ * confirmed either, so there's nothing real to type or fixture. Registering
+ * a dataset that can only ever be shown to return zero results, with an
+ * unconfirmed record shape, fails this project's real-fixture standard
+ * (AGENTS.md §5) for no practical benefit — dropped rather than kept as a
+ * permanently-empty skeleton. On-street (路邊) parking was investigated in
+ * the same research pass — TDX's own R-package documentation
+ * (ChiaJung-Yeh/TDX_Guide) confirms an on-street parking dataset exists
+ * conceptually (`Car_Park(street="on")`), but no WebSearch query surfaced an
+ * actual literal on-street REST path, so it was never registered either.
  */
-export const TDX_PARKING_OFFSTREET_CARPARK_PATH_PREFIX = "v1/Parking/OffStreet/CarPark/City";
-
-/** Skeleton placeholder TTL for parking — not yet evidence-based, pending a real dispatch revealing this dataset's actual update cadence (or confirming it's static-only, in which case this should move to a YOUBIKE_STATION_CACHE_TTL_SECONDS-style long TTL instead). */
-export const PARKING_OFFSTREET_CACHE_TTL_SECONDS_SKELETON = 5 * 60;
 
 /**
  * Path prefix for TDX's road CMS (可變訊息標誌 / changeable message signs)
@@ -404,18 +394,35 @@ export const PARKING_OFFSTREET_CACHE_TTL_SECONDS_SKELETON = 5 * 60;
  * 後臺") for authorities to file incidents, not a public read API for
  * querying them. This path (`.../Traffic/CMS/City/{City}`) is extrapolated
  * from CCTV's confirmed sibling convention applied to CMS's confirmed
- * resource name — a real message-sign board commonly DOES carry incident/
- * construction/congestion text, so it's a legitimate (if imperfect) proxy
- * for the original ask, not a literal incident-schema endpoint. This is a
- * weaker evidence tier than every other entry in this project (which all
- * had a literal confirmed URL before registration) — flagged here
- * explicitly so a dispatch 404 would mean "this specific guess was wrong,"
- * not "the resource group doesn't exist."
+ * resource name.
+ *
+ * IMPORTANT — corrected after the real capture, don't re-introduce this
+ * mistake: this endpoint does NOT carry the actual message text currently
+ * displayed on each sign. A real dispatch (Taipei, ~180 records) confirmed
+ * every record is pure sign-location metadata (CMSID, LinkID, LocationType,
+ * coordinates, optional RoadID/RoadName/RoadClass/RoadDirection) — no
+ * message/display-content field anywhere. This is a static sign *inventory*
+ * (closer to YouBike's Station half than its Availability half), not a live
+ * board-content feed, and it does NOT answer "is there a road
+ * event/closure right now" the way the task that asked for this dataset
+ * wanted — see registry/tdx.ts's module comment on roadTrafficCmsEntry for
+ * how this reshaped the entry's title/notes to stay honest about what it
+ * actually contains.
  */
 export const TDX_ROAD_TRAFFIC_CMS_PATH_PREFIX = "v2/Road/Traffic/CMS/City";
 
-/** Skeleton placeholder TTL for road CMS — not yet evidence-based, pending a real dispatch. CMS board content changes with traffic conditions, so this starts short (same class as bus ETA) rather than assuming a long static-data TTL. */
-export const ROAD_TRAFFIC_CMS_CACHE_TTL_SECONDS_SKELETON = 60;
+/**
+ * Cache TTL for road CMS sign locations. A real capture showed TDX's own
+ * self-reported `UpdateInterval` of 21600 seconds (6 hours) — matched
+ * exactly, the same evidence-trusting approach as
+ * METRO_ALERT_CACHE_TTL_SECONDS/RAIL_LIVEBOARD_CACHE_TTL_SECONDS, rather
+ * than assuming a shorter TTL that would just add pointless refetching of
+ * data TDX itself says only republishes every 6 hours. (The same response
+ * also carried a slower `SrcUpdateInterval` of 86400s/24h for the
+ * underlying source data — 6h is still the right number to cache against,
+ * since that's the rate *this* endpoint actually republishes at.)
+ */
+export const ROAD_TRAFFIC_CMS_CACHE_TTL_SECONDS = 21600;
 
 /**
  * Taiwan's 22 counties/cities as used by CWA's `locationName` parameter.

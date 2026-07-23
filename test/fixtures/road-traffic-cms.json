@@ -1,0 +1,235 @@
+{
+  "UpdateTime": "2026-07-23T02:40:55+08:00",
+  "UpdateInterval": 21600,
+  "SrcUpdateTime": "2026-07-23T00:00:00+08:00",
+  "SrcUpdateInterval": 86400,
+  "AuthorityCode": "TPE",
+  "CMSs": [
+    {
+      "CMSID": "X0121C0",
+      "LinkID": "2000200000060A",
+      "LocationType": 2,
+      "PositionLon": 121.51344,
+      "PositionLat": 25.04935,
+      "RoadID": "200020",
+      "RoadName": "市民大道高架道路",
+      "RoadClass": 2,
+      "RoadDirection": "E"
+    },
+    {
+      "CMSID": "X0130A0",
+      "LinkID": "2000200100150A",
+      "LocationType": 2,
+      "PositionLon": 121.52267,
+      "PositionLat": 25.04784,
+      "RoadID": "200020",
+      "RoadName": "市民大道高架道路",
+      "RoadClass": 2,
+      "RoadDirection": "W"
+    },
+    {
+      "CMSID": "X0141C1",
+      "LinkID": "2000200000300A",
+      "LocationType": 1,
+      "PositionLon": 121.53667,
+      "PositionLat": 25.04442,
+      "RoadID": "200020",
+      "RoadName": "市民大道高架道路",
+      "RoadClass": 2,
+      "RoadDirection": "E"
+    },
+    {
+      "CMSID": "X0391G0",
+      "LinkID": "6002690600000A",
+      "LocationType": 2,
+      "PositionLon": 121.55965,
+      "PositionLat": 25.04591,
+      "RoadID": "600269A",
+      "RoadName": "市民大道五段",
+      "RoadClass": 6,
+      "RoadDirection": "W"
+    },
+    {
+      "CMSID": "X1001A0",
+      "LinkID": "2000400100520A",
+      "LocationType": 2,
+      "PositionLon": 121.53773,
+      "PositionLat": 25.02299,
+      "RoadID": "200040",
+      "RoadName": "建國南北快速道路",
+      "RoadClass": 2,
+      "RoadDirection": "N"
+    },
+    {
+      "CMSID": "X1051A1",
+      "LinkID": "6003030000030A",
+      "LocationType": 1,
+      "PositionLon": 121.53707,
+      "PositionLat": 25.0524,
+      "RoadID": "600303A",
+      "RoadName": "建國北路二段",
+      "RoadClass": 6,
+      "RoadDirection": "N"
+    },
+    {
+      "CMSID": "X1ESA40",
+      "LinkID": "6004550500000A",
+      "LocationType": 1,
+      "PositionLon": 121.56883,
+      "PositionLat": 24.98397,
+      "RoadID": "600455A",
+      "RoadName": "木新路二段",
+      "RoadClass": 6,
+      "RoadDirection": "SW"
+    },
+    {
+      "CMSID": "X2110C0",
+      "LinkID": "2000600100130A",
+      "LocationType": 2,
+      "PositionLon": 121.53924,
+      "PositionLat": 25.0131,
+      "RoadID": "200060",
+      "RoadName": "基隆路高架道路",
+      "RoadClass": 2,
+      "RoadDirection": "NE"
+    },
+    {
+      "CMSID": "X4010A0",
+      "LinkID": "2000100100680F",
+      "LocationType": 2,
+      "PositionLon": 121.53492,
+      "PositionLat": 24.99433
+    },
+    {
+      "CMSID": "X4090H0",
+      "LinkID": "2001000000740A",
+      "LocationType": 1,
+      "PositionLon": 121.49155,
+      "PositionLat": 25.02249,
+      "RoadID": "200100",
+      "RoadName": "環河快速道路",
+      "RoadClass": 2,
+      "RoadDirection": "S"
+    },
+    {
+      "CMSID": "X6111A0",
+      "LinkID": "2000201007000A",
+      "LocationType": 2,
+      "PositionLon": 121.56627,
+      "PositionLat": 25.04528,
+      "RoadID": "200020",
+      "RoadName": "市民大道高架道路",
+      "RoadClass": 2,
+      "RoadDirection": "E"
+    },
+    {
+      "CMSID": "X9011A0",
+      "LinkID": "0000310100300A",
+      "LocationType": 2,
+      "PositionLon": 121.58368,
+      "PositionLat": 25.00426
+    },
+    {
+      "CMSID": "X9040A0",
+      "LinkID": "2000300100100A",
+      "LocationType": 2,
+      "PositionLon": 121.57779,
+      "PositionLat": 25.02168,
+      "RoadID": "200030",
+      "RoadName": "信義快速道路",
+      "RoadClass": 2,
+      "RoadDirection": "N"
+    },
+    {
+      "CMSID": "XEFMN40",
+      "LinkID": "6001720100020A",
+      "LocationType": 1,
+      "PositionLon": 121.54786,
+      "PositionLat": 25.02032,
+      "RoadID": "600172A",
+      "RoadName": "基隆路三段",
+      "RoadClass": 6,
+      "RoadDirection": "NE"
+    },
+    {
+      "CMSID": "XH6N700",
+      "LinkID": "6003930000000A",
+      "LocationType": 3,
+      "PositionLon": 121.54897,
+      "PositionLat": 25.03222,
+      "RoadID": "600393A",
+      "RoadName": "敦化南路二段",
+      "RoadClass": 6,
+      "RoadDirection": "N"
+    },
+    {
+      "CMSID": "XITCH00",
+      "LinkID": "2001000100540A",
+      "LocationType": 4,
+      "PositionLon": 121.49251,
+      "PositionLat": 25.03705,
+      "RoadID": "200100",
+      "RoadName": "環河快速道路",
+      "RoadClass": 2,
+      "RoadDirection": "N"
+    },
+    {
+      "CMSID": "XKVVH60",
+      "LinkID": "6003390500006A",
+      "LocationType": 1,
+      "PositionLon": 121.58733,
+      "PositionLat": 25.04891
+    },
+    {
+      "CMSID": "XLHXA20",
+      "LinkID": "6003390500008A",
+      "LocationType": 1,
+      "PositionLon": 121.59258,
+      "PositionLat": 25.05011
+    },
+    {
+      "CMSID": "XLRKQ40",
+      "LinkID": "2000101114000A",
+      "LocationType": 6,
+      "PositionLon": 121.5368,
+      "PositionLat": 24.99817,
+      "RoadID": "200010",
+      "RoadName": "水源快速道路",
+      "RoadClass": 2,
+      "RoadDirection": "NW"
+    },
+    {
+      "CMSID": "XN0B0E0",
+      "LinkID": "2000801110000A",
+      "LocationType": 2,
+      "PositionLon": 121.53033,
+      "PositionLat": 25.04413,
+      "RoadID": "200080",
+      "RoadName": "新生高架道路",
+      "RoadClass": 2,
+      "RoadDirection": "N"
+    },
+    {
+      "CMSID": "XPMSU00",
+      "LinkID": "2000701112000A",
+      "LocationType": 1,
+      "PositionLon": 121.57283,
+      "PositionLat": 25.0613,
+      "RoadID": "200070",
+      "RoadName": "堤頂大道",
+      "RoadClass": 2,
+      "RoadDirection": "N"
+    },
+    {
+      "CMSID": "XZ000A0",
+      "LinkID": "6006080000040A",
+      "LocationType": 1,
+      "PositionLon": 121.50637,
+      "PositionLat": 25.04975,
+      "RoadID": "600608A",
+      "RoadName": "環河北路一段",
+      "RoadClass": 6,
+      "RoadDirection": "N"
+    }
+  ]
+}

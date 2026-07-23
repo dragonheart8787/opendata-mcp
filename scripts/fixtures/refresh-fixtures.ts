@@ -47,21 +47,38 @@ import "../../src/registry/tdx.js";
 const FIXTURES_DIR = path.resolve(fileURLToPath(new URL(".", import.meta.url)), "../../test/fixtures");
 
 /**
- * Delay between each dataset check. Added after a real dispatch hit a
- * genuine TDX HTTP 429 ("API rate limit exceeded") on the 6th TDX entry
- * checked in one run — this script fires every check back-to-back with no
- * pacing at all, and every TDX check does its own token fetch AND data
- * fetch (see `getAccessToken` below), so 6 TDX entries means ~12 rapid
- * requests to tdx.transportdata.tw before this delay existed. This
- * disproves an earlier comment on this file's TDX branch that assumed
- * "nowhere near TDX's per-IP rate limit" — that assumption held only while
- * there were few enough TDX entries to not notice. 750ms keeps the whole
- * run's added latency modest (well under 20 real API keys' worth) while
- * giving TDX's short-window limiter room to breathe; CWA/MOENV haven't
- * shown any rate-limit symptoms, so this applies uniformly rather than
- * special-casing one source.
+ * Baseline delay between every dataset check, regardless of source. Added
+ * after a real dispatch hit a genuine TDX HTTP 429 ("API rate limit
+ * exceeded") — this script used to fire every check back-to-back with no
+ * pacing at all. CWA/MOENV have never shown rate-limit symptoms, so this
+ * stays a light, uniform floor for all three sources.
  */
 const INTER_CHECK_DELAY_MS = 750;
+
+/**
+ * ADDITIONAL delay applied only before a `tdx` check (on top of
+ * INTER_CHECK_DELAY_MS above — so back-to-back TDX checks wait
+ * INTER_CHECK_DELAY_MS + TDX_EXTRA_DELAY_MS apart). Added after the
+ * uniform 750ms alone still weren't enough: with 7 TDX entries now
+ * registered, a real dispatch hit 429 on the 6th+ TDX check even with that
+ * delay in place, and a second attempt with the same pacing hit it again —
+ * evidence that TDX's limiter cares about TDX-specific request volume in a
+ * window shorter than what 750ms alone covers, not just overall pacing.
+ * Every TDX check also does its own OAuth token fetch AND data fetch (no KV
+ * in this standalone script — see `getAccessToken` below), doubling TDX's
+ * real request count per entry versus CWA/MOENV's one-request checks, which
+ * is presumably why TDX needed a source-specific bump and the other two
+ * sources didn't.
+ *
+ * A source-specific delay was chosen over the alternative of splitting TDX
+ * into its own separate dispatch/job: that would mean restructuring
+ * fixtures-refresh.yml into multiple jobs (or multiple triggered runs) with
+ * their own PR/issue-opening logic, a meaningfully bigger and riskier
+ * change to a CI pipeline other datasets already depend on, for a problem
+ * this smaller, targeted fix already resolves. Revisit only if TDX's entry
+ * count keeps growing and even this stops being enough.
+ */
+const TDX_EXTRA_DELAY_MS = 1500;
 
 function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -92,6 +109,7 @@ async function fetchRawJson(url: URL, secret: string | undefined, extraHeaders?:
 interface DatasetCheck {
   name: string;
   fixturePath: string;
+  source: string;
   fetch: () => Promise<unknown>;
 }
 
@@ -129,6 +147,7 @@ function buildChecks(): DatasetCheck[] {
     checks.push({
       name: `${entry.title} (${entry.id})`,
       fixturePath: path.join(FIXTURES_DIR, fixtureFileName),
+      source: entry.source,
       fetch: async () => {
         if (entry.source === "cwa") {
           return fetchRawJson(buildCwaUrl(entry, sampleParams, CWA_API_KEY!), CWA_API_KEY);
@@ -162,7 +181,8 @@ async function main(): Promise<void> {
 
   for (const [index, check] of checks.entries()) {
     if (index > 0) {
-      await sleep(INTER_CHECK_DELAY_MS);
+      const delay = INTER_CHECK_DELAY_MS + (check.source === "tdx" ? TDX_EXTRA_DELAY_MS : 0);
+      await sleep(delay);
     }
 
     console.log(`Fetching ${check.name}...`);
