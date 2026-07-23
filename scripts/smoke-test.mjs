@@ -10,7 +10,7 @@
  * Deliberately dependency-free plain Node so the workflow doesn't need a
  * build/typecheck step before running it.
  */
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
