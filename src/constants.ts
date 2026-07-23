@@ -455,4 +455,55 @@ export const TAIWAN_CITIES = [
   "連江縣"
 ] as const;
 
+// --- 交通部高速公路局「交通資料庫」(tisvcloud.freeway.gov.tw) ---
+//
+// First source in this project with zero authentication (no API key, no
+// OAuth) and the first with an XML wire format (see registry/highway.ts's
+// choice of `fast-xml-parser`) — every prior source (CWA/MOENV/TDX) is
+// JSON-over-API-key-or-OAuth.
+//
+// Path-finding here took real dispatch, not documentation, because the
+// documentation itself was hard to use: this host silently drops
+// connections from cloud/datacenter source IPs (confirmed unreachable from
+// both this repo's dev sandbox and GitHub Actions — see the extra-delay
+// comment below and AGENTS.md §6), AND separately refuses robots.txt-
+// respecting fetch tools (a client-behavior gate, not an IP block — this
+// is why WebFetch/WebSearch kept hitting 403s researching this platform's
+// own docs, not because the docs don't exist). The one environment that
+// could actually reach it was this project's own deployed Cloudflare
+// Worker, so a temporary debug route (`GET /debug/probe-tisvcloud`,
+// removed once its job was done — see git history) was used to explore
+// real responses directly instead: root turned out to be a JS-rendered
+// (Bootstrap + tisvcloud.js) landing page with no filenames in it, not a
+// real directory listing; `/history/motc20/` turned out to be a genuine
+// bare-autoindex "Index of ..." page (once the probe's body-extraction
+// targeted its `id="indexlist"` table instead of a flat character slice
+// that never got past a boilerplate usage-disclaimer preceding it) —
+// THAT listing is what revealed `LiveEvents.xml` as the real, live-updating
+// (last-modified minutes old at discovery time) road event feed, not any
+// of the `*_value.xml.gz` names guessed earlier from a third-party R
+// package's unrelated `Freeway_Shape()` helper.
+export const HIGHWAY_API_BASE_URL = "https://tisvcloud.freeway.gov.tw";
+
+/**
+ * Real-time road event feed (事故/施工/管制), confirmed via the real
+ * autoindex listing at /history/motc20/ — see the module comment above for
+ * how that path was found. Nationwide (all freeways), not per-city like
+ * TDX's entries; the only client-side filter this dataset supports is by
+ * road name (see `HighwayLiveEventsParams.road` in registry/highway.ts),
+ * because there is no county/city field on any record.
+ */
+export const HIGHWAY_LIVE_EVENTS_PATH = "history/motc20/LiveEvents.xml";
+
+/**
+ * Cache TTL for live road events. The real response's own `UpdateInterval`
+ * field says 60 seconds — matched exactly, same evidence-trusting approach
+ * as METRO_ALERT_CACHE_TTL_SECONDS/ROAD_TRAFFIC_CMS_CACHE_TTL_SECONDS. This
+ * also comfortably clears this platform's own usage rule (its terms
+ * require repeated fetches of the same file to be spaced at least 40
+ * seconds apart) rather than merely happening to satisfy it — 60 was
+ * chosen because it's what the data itself says, not because it's ≥ 40.
+ */
+export const HIGHWAY_LIVE_EVENTS_CACHE_TTL_SECONDS = 60;
+
 export type TaiwanCity = (typeof TAIWAN_CITIES)[number];

@@ -1,0 +1,195 @@
+{
+  "LiveEventList": {
+    "UpdateTime": "2026-07-23T15:31:11+08:00",
+    "UpdateInterval": "60",
+    "AuthorityCode": "NFB",
+    "LiveEvents": {
+      "LiveEvent": [
+        {
+          "EventID": "A15040100H-01-20260723082311474100021",
+          "EventTitle": "施工事件",
+          "Description": "國道三號 北向 54K+400 施工事件-施工維護",
+          "EventType": "2",
+          "EventSubType": "298",
+          "EventStep": "1",
+          "EffectiveTime": "2026-07-23T08:23:00+08:00",
+          "Positions": "POINT(121.323905 24.938822)",
+          "LocationType": "2",
+          "Location": {
+            "FreeExpressHighway": {
+              "Road": "國道三號",
+              "Direction": "北向",
+              "StartKM": "54K+400",
+              "EndKM": "54K+400",
+              "Interchange": "鶯歌系統",
+              "Ramp": {
+                "Direction": "北向",
+                "EntryExit": "出口"
+              }
+            }
+          },
+          "Impact": {
+            "Description": "部分阻斷交通",
+            "Severity": "1",
+            "Regulations": {
+              "Regulation": [
+                "2"
+              ]
+            },
+            "BlockWay": "1",
+            "BlockedLanes": "RS"
+          },
+          "Source": "電話",
+          "PublishTime": "2026-07-23T08:23:00+08:00",
+          "LastUpdateTime": "2026-07-23T08:23:00+08:00"
+        },
+        {
+          "EventID": "A15040100H-01-20260723090820443100021",
+          "EventTitle": "施工事件",
+          "Description": "國道一號 北向 25K+100 施工事件-施工維護",
+          "EventType": "2",
+          "EventSubType": "298",
+          "EventStep": "1",
+          "EffectiveTime": "2026-07-23T09:08:00+08:00",
+          "Positions": "POINT(121.514116 25.077662)",
+          "LocationType": "2",
+          "Location": {
+            "FreeExpressHighway": {
+              "Road": "國道一號",
+              "Direction": "北向",
+              "StartKM": "25K+100",
+              "EndKM": "25K+100",
+              "Interchange": "台北",
+              "Ramp": {
+                "Direction": "北向",
+                "EntryExit": "出口"
+              }
+            }
+          },
+          "Impact": {
+            "Description": "部分阻斷交通",
+            "Severity": "1",
+            "Regulations": {
+              "Regulation": [
+                "2"
+              ]
+            },
+            "BlockWay": "1",
+            "BlockedLanes": "0,RS"
+          },
+          "Source": "電話",
+          "PublishTime": "2026-07-23T09:08:00+08:00",
+          "LastUpdateTime": "2026-07-23T09:08:00+08:00"
+        },
+        {
+          "EventID": "A15040100H-01-20260723090844810100021",
+          "EventTitle": "施工事件",
+          "Description": "國道一號 北向 25K+100 施工事件-施工維護",
+          "EventType": "2",
+          "EventSubType": "298",
+          "EventStep": "1",
+          "EffectiveTime": "2026-07-23T09:08:00+08:00",
+          "Positions": "POINT(121.514116 25.077662)",
+          "LocationType": "2",
+          "Location": {
+            "FreeExpressHighway": {
+              "Road": "國道一號",
+              "Direction": "北向",
+              "StartKM": "25K+100",
+              "EndKM": "25K+100",
+              "Interchange": "台北",
+              "Ramp": {
+                "Direction": "北向",
+                "EntryExit": "入口"
+              }
+            }
+          },
+          "Impact": {
+            "Description": "部分阻斷交通",
+            "Severity": "1",
+            "Regulations": {
+              "Regulation": [
+                "2"
+              ]
+            },
+            "BlockWay": "1",
+            "BlockedLanes": "0,LS,RS"
+          },
+          "Source": "電話",
+          "PublishTime": "2026-07-23T09:08:00+08:00",
+          "LastUpdateTime": "2026-07-23T09:08:00+08:00"
+        },
+        {
+          "EventID": "A15040100H-01-20260723100125973100021",
+          "EventTitle": "施工事件",
+          "Description": "國道三號 南向 89K+600 施工事件-施工維護",
+          "EventType": "2",
+          "EventSubType": "298",
+          "EventStep": "1",
+          "EffectiveTime": "2026-07-23T10:01:00+08:00",
+          "Positions": "POINT(121.085325 24.771293)",
+          "LocationType": "0",
+          "Location": {
+            "FreeExpressHighway": {
+              "Road": "國道三號",
+              "Direction": "南向",
+              "StartKM": "89K+600",
+              "EndKM": "90K+300",
+              "SectionStart": "關西",
+              "SectionEnd": "寶山休息站"
+            }
+          },
+          "Impact": {
+            "Description": "部分阻斷交通",
+            "Severity": "1",
+            "Regulations": {
+              "Regulation": [
+                "2"
+              ]
+            },
+            "BlockWay": "1",
+            "BlockedLanes": "2,3,RS"
+          },
+          "Source": "電話",
+          "PublishTime": "2026-07-23T10:01:00+08:00",
+          "LastUpdateTime": "2026-07-23T10:01:00+08:00"
+        },
+        {
+          "EventID": "A15040100H-01-20260723101047585100033",
+          "EventTitle": "特殊管制事件",
+          "Description": "國道一號 南向 84K+500 特殊管制事件-機動開放路肩事件",
+          "EventType": "4",
+          "EventSubType": "498",
+          "EventStep": "1",
+          "EffectiveTime": "2026-07-23T10:10:00+08:00",
+          "Positions": "POINT(121.022455 24.873403)",
+          "LocationType": "0",
+          "Location": {
+            "FreeExpressHighway": {
+              "Road": "國道一號",
+              "Direction": "南向",
+              "StartKM": "84K+500",
+              "EndKM": "86K+200",
+              "SectionStart": "湖口",
+              "SectionEnd": "湖口服務區"
+            }
+          },
+          "Impact": {
+            "Description": "無影響",
+            "Severity": "0",
+            "Regulations": {
+              "Regulation": [
+                "0"
+              ]
+            },
+            "BlockWay": "0",
+            "BlockedLanes": "-1"
+          },
+          "Source": "設備監測2",
+          "PublishTime": "2026-07-23T10:10:00+08:00",
+          "LastUpdateTime": "2026-07-23T10:10:00+08:00"
+        }
+      ]
+    }
+  }
+}
