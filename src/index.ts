@@ -7,9 +7,10 @@ import { airQualityInputShape, handleAirQualityTool } from "./tools/air-quality.
 import { handleYouBikeTool, youBikeInputShape } from "./tools/bike.js";
 import { busEtaInputShape, handleBusEtaTool } from "./tools/bus-eta.js";
 import { handleRecentEarthquakesTool, recentEarthquakesInputShape } from "./tools/earthquake.js";
-import { parseHighwayXml } from "./adapters/highway.js";
+import { highwayAdapter } from "./adapters/highway.js";
+import { highwayLiveEventsEntry } from "./registry/highway.js";
 import { handleQueryDatasetTool, handleSearchDatasetsTool, queryDatasetInputShape, searchDatasetsInputShape } from "./tools/generic.js";
-import { handleHighwayTrafficTool, highwayLiveEventsInputShape } from "./tools/highway.js";
+import { formatHighwayTrafficText, handleHighwayTrafficTool, highwayLiveEventsInputShape } from "./tools/highway.js";
 import { handleMetroStatusTool, metroStatusInputShape } from "./tools/metro.js";
 import { handleRailTool, railInputShape } from "./tools/rail.js";
 import { handleTyphoonTool, typhoonNewsInputShape } from "./tools/typhoon.js";
@@ -368,70 +369,104 @@ const JSON_RPC_METHOD_NOT_ALLOWED = {
 /**
  * TEMPORARY diagnostic route, not part of the shipped API — remove once
  * its job is done (see AGENTS.md §6's debug-probe-on-a-real-deployment
- * methodology). Real user reports of tw_highway_traffic timing out three
- * times in a row (other tools unaffected) need real numbers: how big is
- * LiveEvents.xml right now, how long does each phase (fetch-to-headers,
- * body read, XML parse) actually take. Deliberately measures the body
- * read and parse phases *separately* from adapters/highway.ts's own
- * timeout, since code review already found that infra/http.ts's 5s
- * AbortController is cleared the moment fetch() resolves (response
- * headers), before any adapter ever calls response.text() — meaning the
- * body-read phase, which is what actually scales with this endpoint's
- * unfiltered nationwide payload, currently has NO timeout coverage at all.
+ * methodology). Supersedes the previous /debug/probe-highway-perf (PR
+ * #86): that probe hit tisvcloud.freeway.gov.tw directly and found the
+ * raw fetch fast (~315ms total, body-read and XML-parse both ~0ms) — far
+ * under the 5s timeout, so it does NOT explain three real, consecutive
+ * timeouts on tw_highway_traffic while every other tool responded
+ * normally. Crucially, that probe bypassed the parts of the *real* call
+ * path it never touched: the cache read/write (`withCacheTracked`,
+ * `infra/cache.ts`) and the client-side filter/format steps. This probe
+ * instruments those directly, calling the exact same real functions
+ * (`highwayAdapter.fetchDataset`, `highwayLiveEventsEntry.transform`,
+ * `formatHighwayTrafficText`) and the real `env.CACHE` binding — not a
+ * reimplementation — with explicit timing around each phase: cache GET,
+ * upstream fetch (adapter), transform/filter, cache PUT, text format.
+ *
+ * Query params: `?road=國道一號` (optional, matches the real tool's
+ * param), `?concurrency=3` (optional, default 1) — fires that many calls
+ * with `Promise.all` against the same cache key, to check for any
+ * lock/queueing behavior between concurrent KV reads/writes.
  */
-async function probeHighwayPerf(): Promise<Response> {
-  const url = "https://tisvcloud.freeway.gov.tw/history/motc20/LiveEvents.xml";
-  const t0 = Date.now();
-  try {
-    const response = await fetch(url, { headers: { accept: "application/xml" } });
-    const tHeaders = Date.now();
-    const rawXml = await response.text();
-    const tBody = Date.now();
-    let eventCount: number | string = "parse failed";
-    let parseError: string | undefined;
+async function probeHighwayFullPath(request: Request, env: Env): Promise<Response> {
+  const url = new URL(request.url);
+  const road = url.searchParams.get("road") ?? undefined;
+  const concurrency = Math.max(1, Number(url.searchParams.get("concurrency")) || 1);
+  const params = { road };
+  const cacheKey = `highway-live-events:${params.road ?? ""}`;
+
+  async function runOnce(label: string) {
+    const t0 = Date.now();
+    const timingMs: Record<string, number> = {};
+    let cachePutError: string | undefined;
     try {
-      const parsed = parseHighwayXml(rawXml) as { LiveEventList?: { LiveEvents?: { LiveEvent?: unknown[] } } };
-      eventCount = parsed.LiveEventList?.LiveEvents?.LiveEvent?.length ?? 0;
-    } catch (error) {
-      parseError = error instanceof Error ? error.message : String(error);
-    }
-    const tParse = Date.now();
-    return new Response(
-      JSON.stringify(
-        {
-          url,
-          status: response.status,
-          contentLengthHeader: response.headers.get("content-length"),
-          transferEncoding: response.headers.get("transfer-encoding"),
-          actualBodyBytes: new TextEncoder().encode(rawXml).length,
-          eventCount,
-          parseError,
-          timingMs: {
-            fetchToHeaders: tHeaders - t0,
-            bodyRead: tBody - tHeaders,
-            xmlParse: tParse - tBody,
-            total: tParse - t0
+      const tCacheGet = Date.now();
+      let cachedRaw: string | null = null;
+      if (env.CACHE) {
+        try {
+          cachedRaw = await env.CACHE.get(cacheKey, "text");
+        } catch {
+          cachedRaw = null;
+        }
+      }
+      timingMs.cacheGet = Date.now() - tCacheGet;
+
+      let data: ReturnType<typeof highwayLiveEventsEntry.transform>;
+      let cacheHit: boolean;
+
+      if (cachedRaw !== null) {
+        cacheHit = true;
+        data = JSON.parse(cachedRaw);
+      } else {
+        cacheHit = false;
+        const tFetch = Date.now();
+        const raw = await highwayAdapter.fetchDataset(highwayLiveEventsEntry, params, env);
+        timingMs.upstreamFetch = Date.now() - tFetch;
+
+        const tTransform = Date.now();
+        data = highwayLiveEventsEntry.transform(raw, params);
+        timingMs.transform = Date.now() - tTransform;
+
+        if (env.CACHE) {
+          const tCachePut = Date.now();
+          try {
+            await env.CACHE.put(cacheKey, JSON.stringify(data), { expirationTtl: highwayLiveEventsEntry.cacheTtlSeconds });
+          } catch (error) {
+            cachePutError = error instanceof Error ? error.message : String(error);
           }
-        },
-        null,
-        2
-      ),
-      { headers: { "content-type": "application/json" } }
-    );
-  } catch (error) {
-    return new Response(
-      JSON.stringify({ url, error: error instanceof Error ? error.message : String(error), elapsedMs: Date.now() - t0 }, null, 2),
-      { headers: { "content-type": "application/json" } }
-    );
+          timingMs.cachePut = Date.now() - tCachePut;
+        }
+      }
+
+      const tFormat = Date.now();
+      const text = formatHighwayTrafficText(data);
+      timingMs.format = Date.now() - tFormat;
+
+      return {
+        label,
+        cacheHit,
+        cachePutError,
+        eventCount: data.events.length,
+        textLength: text.length,
+        timingMs: { ...timingMs, total: Date.now() - t0 }
+      };
+    } catch (error) {
+      return { label, error: error instanceof Error ? error.message : String(error), timingMs: { ...timingMs, total: Date.now() - t0 } };
+    }
   }
+
+  const results = await Promise.all(Array.from({ length: concurrency }, (_, i) => runOnce(`call-${i}`)));
+  return new Response(JSON.stringify({ road: road ?? null, cacheKey, concurrency, results }, null, 2), {
+    headers: { "content-type": "application/json" }
+  });
 }
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
 
-    if (url.pathname === "/debug/probe-highway-perf") {
-      return probeHighwayPerf();
+    if (url.pathname === "/debug/probe-highway-full-path") {
+      return probeHighwayFullPath(request, env);
     }
 
     if (url.pathname === "/" || url.pathname === "/health") {
