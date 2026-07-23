@@ -2,7 +2,7 @@ import { XMLParser } from "fast-xml-parser";
 
 import { HIGHWAY_API_BASE_URL } from "../constants.js";
 import { ToolError } from "../infra/errors.js";
-import { httpGet, isTimeoutError } from "../infra/http.js";
+import { httpGetWithBody, isTimeoutError } from "../infra/http.js";
 import type { Env } from "../index.js";
 import type { DatasetEntry } from "../registry/index.js";
 import type { SourceAdapter } from "./types.js";
@@ -67,14 +67,29 @@ async function fetchDataset<TParams, TRaw>(
 ): Promise<TRaw> {
   const url = buildHighwayUrl(entry);
 
+  // `httpGetWithBody` (not plain `httpGet`) deliberately, so the 5s budget
+  // covers downloading the full response body too, not just time-to-
+  // headers — this endpoint fetches an unfiltered nationwide XML file on
+  // every call regardless of the `road` param, so unlike every other
+  // adapter in this project its body size (and therefore read time) isn't
+  // bounded by a per-city/per-station scope. Real measurement found this
+  // isn't currently slow (~0ms body read on top of a ~315ms fetch), but
+  // "currently fast" isn't the same as "bounded" — this closes that gap
+  // for whenever the live event count grows enough to matter.
   let response: Response;
+  let rawXml: string;
   try {
-    response = await httpGet(url.toString(), { headers: { accept: "application/xml" } }, fetchImpl);
+    ({ response, body: rawXml } = await httpGetWithBody(
+      url.toString(),
+      r => (r.ok ? r.text() : Promise.resolve("")),
+      { headers: { accept: "application/xml" } },
+      fetchImpl
+    ));
   } catch (error) {
     if (isTimeoutError(error)) {
       throw new ToolError({
         code: "UPSTREAM_TIMEOUT",
-        message: "交通部高速公路局「交通資料庫」連線逾時（5 秒）。請稍後再試；若持續發生，官方平台可能忙碌或維護中。"
+        message: "交通部高速公路局「交通資料庫」連線逾時（含下載回應內容，共 5 秒）。請稍後再試；若持續發生，官方平台可能忙碌或維護中。"
       });
     }
     throw new ToolError({
@@ -89,8 +104,6 @@ async function fetchDataset<TParams, TRaw>(
       message: `交通部高速公路局「交通資料庫」回應錯誤（HTTP ${response.status}）。請稍後再試。`
     });
   }
-
-  const rawXml = await response.text();
 
   // fast-xml-parser is deliberately lenient — it never throws on malformed
   // XML (an unclosed tag, garbage input, even an empty string all parse
