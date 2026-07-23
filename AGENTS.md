@@ -121,6 +121,8 @@ This server has no write tools and never will (see architecture doc §0 non-goal
 
 **同樣密集使用下，TDX 的 OAuth token 端點本身也觀察過回傳真實 HTTP 500（不是資料端點，是認證伺服器）**，且會讓同一次 dispatch 內「每一個」TDX entry 同時失敗（因為每個 TDX entry 都各自獨立打一次 token）。這也**不代表**任何一個資料集路徑或欄位有問題——如果同一次 dispatch 裡所有 TDX entry 同時、同樣地失敗，先假設是 TDX 認證伺服器暫時性問題（很可能與當天稍早對同一組 TDX_CLIENT_ID 的高頻使用有關），不要逐一排查每個資料集的路徑。
 
+**`tdx:road-traffic-cms` 只有可變訊息標誌的「設置位置」，沒有「目前顯示內容」，也不是「道路交通事件」資料集——這是查證過的結論，不是待補的缺口。** 已針對這兩個方向做過 WebSearch（含 TDX 官方文件、第三方介接教學、兩個獨立的 TDX API 包裝套件原始碼：Python 的 nycu-tdx-py、R 的 ChiaJung-Yeh/NYCU_TDX）：(1) 找不到任何「CMS 內容」端點——TDX 的 Road Traffic v2 群組裡沒有回傳看板目前顯示文字的資源；(2) 找不到任何 TDX 原生的「道路交通事件」REST 端點——唯一相關的東西是 R 套件裡呼叫 `tisvcloud.freeway.gov.tw/history/motc20/Event.xml` 的函式，但那**不是** TDX API：不同主機、不需要 TDX 的 OAuth、XML 格式、且只涵蓋國道（不含市區道路，與這筆 CMS entry 的縣市涵蓋範圍不對等）。若未來真的要收這個國道事件資料，那是一個全新的 source／adapter，不是修 TDX registry entry 能解決的。**除非該平台未來新增了相容於現有 TDX registry 慣例的端點，否則不要重複做這兩個方向的搜尋**——已經驗證過的負面結果，重查不會有新答案。
+
 **shape-diff.ts 的 `shapeOf` 只檢查陣列第一筆元素的結構，這在真實世界資料波動時會造成「假陽性」的欄位增減提示。** 已至少在兩個獨立資料集上重複驗證過這個現象：`tdx:bus-eta` 的 `EstimateTime`（有/無公車即時預估，純粹取決於抓取當下路線上是否真的有車在跑）與 `cwa:W-C0034-005` 的 `MovingPrediction`（取決於當下第一筆 `Fix` 記錄是否恰好帶有移動預測文字）都曾經在不同次 dispatch 之間互相「新增」又「移除」，但欄位本身在程式碼裡本來就是（且應該維持）optional，不是真的 schema 變動。**規範**：(1) 任何依賴這類欄位的測試，斷言用的樣本資料必須手寫（引用真實欄位值即可）而非依賴 fixture 陣列的固定位置索引（例如 `fixture[0]`），否則下一次 fixture 被真實資料重新整理時測試會脆弱地壞掉——這正是 tw_rail 那次 delay-notice 修復連帶發現、修掉的問題；(2) 看到這類欄位在 schema-drift PR 裡「新增」或「移除」時，先確認程式碼是否已經把它當 optional 處理，若是，只需要更新 fixture 本身，不需要當作真正的結構變動去修 transform。
 
 ## 7. What a PR must say

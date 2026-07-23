@@ -732,6 +732,40 @@ registerEntry(metroAlertEntry as unknown as DatasetEntry<never, unknown, unknown
 // reporting/admin backend for authorities to file incidents, not a public
 // read API) — this remains the closest real substitute found.
 //
+// Follow-up research (2026-07-23, prompted by a user question after this
+// entry shipped) specifically chased the two remaining possibilities
+// before accepting "location only" as final, so a future session doesn't
+// re-spend the same effort:
+//   1. A "CMS *content*" sibling endpoint (what a sign currently displays,
+//      as opposed to where it is) — not found. WebSearch across TDX's own
+//      docs, third-party integration guides, and two independent
+//      TDX API wrapper libraries' source (Python: nycu-tdx-py, R:
+//      ChiaJung-Yeh/NYCU_TDX) turned up no such path or function anywhere
+//      in TDX's Road Traffic v2 group.
+//   2. A standalone "road traffic event" (事故/施工/封閉) REST resource,
+//      separate from CMS — the only real hit was the R wrapper's
+//      `Freeway_Shape(geotype="event")`, which does NOT call TDX at all:
+//      it hits `tisvcloud.freeway.gov.tw/history/motc20/Event.xml`
+//      directly — a different host, different auth (none/public, not
+//      TDX's OAuth), different format (XML, not TDX's JSON convention),
+//      and scoped to national freeways only (not city/county roads,
+//      unlike this CMS entry's per-city coverage). Treating that as "the
+//      same dataset, just fix the transform" would be wrong — it's a
+//      structurally different source needing its own adapter, not a TDX
+//      registry fix. Out of scope unless a future task explicitly wants
+//      to add a new non-TDX source for national freeway incidents.
+//   Conclusion: this entry's "location only" framing is the accurate,
+//   final answer for what TDX itself exposes here, not a placeholder
+//   pending a better endpoint.
+//
+// Confirmed this is not just a documentation-only gap: runSearchDatasets()
+// (tools/generic.ts) matches only against `title`/`keywords`, never
+// `notes`, and neither of those two fields contains 路況/施工/事故/封路 —
+// so a caller searching those terms will not surface this entry in the
+// first place. The "設置位置" (location) framing in `title` was already
+// enough to avoid implying board content even for callers who do find it
+// via a CMS-related search.
+//
 // Long-tail entry per docs/ARCHITECTURE.md §3.2 — registry-only, no
 // curated tool. No per-record city/county field exists to defensively
 // re-filter on (per AGENTS.md §6) — the only city signal is the top-level
