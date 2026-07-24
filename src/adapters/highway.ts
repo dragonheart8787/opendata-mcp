@@ -67,29 +67,39 @@ async function fetchDataset<TParams, TRaw>(
 ): Promise<TRaw> {
   const url = buildHighwayUrl(entry);
 
-  // `httpGetWithBody` (not plain `httpGet`) deliberately, so the 5s budget
-  // covers downloading the full response body too, not just time-to-
-  // headers — this endpoint fetches an unfiltered nationwide XML file on
-  // every call regardless of the `road` param, so unlike every other
+  // `httpGetWithBody` (not plain `httpGet`) deliberately, so the timeout
+  // budget covers downloading the full response body too, not just time-
+  // to-headers — this endpoint fetches an unfiltered nationwide XML file
+  // on every call regardless of the `road` param, so unlike every other
   // adapter in this project its body size (and therefore read time) isn't
-  // bounded by a per-city/per-station scope. Real measurement found this
-  // isn't currently slow (~0ms body read on top of a ~315ms fetch), but
-  // "currently fast" isn't the same as "bounded" — this closes that gap
-  // for whenever the live event count grows enough to matter.
+  // bounded by a per-city/per-station scope.
+  //
+  // `timeoutMs: 9000` (not the infra default of 5000) because real
+  // production measurement (see AGENTS.md §6) found the shared default is
+  // now too tight for this specific upstream: of 6 real tools/call
+  // requests sent straight to the deployed server, 2 genuinely failed end
+  // to end at ~10.0-10.1s (two consecutive 5000ms-capped attempts, both
+  // aborted) and a 3rd only succeeded because its 2nd attempt happened to
+  // be fast after the 1st was aborted at 5000ms (total ~5.4s) — i.e. a
+  // single attempt at the old 5000ms budget was landing right at or past
+  // the wall often enough to reproduce as real user-facing timeouts, not
+  // one-off noise. 9000ms gives a real fetch that's merely "slow" (as
+  // opposed to genuinely hung) room to complete on the first attempt
+  // instead of guaranteeing an abort+retry round trip.
   let response: Response;
   let rawXml: string;
   try {
     ({ response, body: rawXml } = await httpGetWithBody(
       url.toString(),
       r => (r.ok ? r.text() : Promise.resolve("")),
-      { headers: { accept: "application/xml" } },
+      { headers: { accept: "application/xml" }, timeoutMs: 9000 },
       fetchImpl
     ));
   } catch (error) {
     if (isTimeoutError(error)) {
       throw new ToolError({
         code: "UPSTREAM_TIMEOUT",
-        message: "交通部高速公路局「交通資料庫」連線逾時（含下載回應內容，共 5 秒）。請稍後再試；若持續發生，官方平台可能忙碌或維護中。"
+        message: "交通部高速公路局「交通資料庫」連線逾時（含下載回應內容，共 9 秒）。請稍後再試；若持續發生，官方平台可能忙碌或維護中。"
       });
     }
     throw new ToolError({
