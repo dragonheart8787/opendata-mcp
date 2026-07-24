@@ -45,6 +45,32 @@
 
 ---
 
+## 接進其他 AI 平台
+
+本服務基於標準 MCP 協議建置，不限於 Claude 使用，支援任何 MCP 相容的 AI 平台，包括 ChatGPT、Cursor、Windsurf、Cline 等。
+
+### ChatGPT
+
+**Settings → Apps & Connectors → Advanced settings → 開啟 Developer Mode** → 新增自訂連接器，填入伺服器網址（同上），驗證方式選擇「無」（本服務不需要任何驗證）。
+
+⚠️ **已知差異**：ChatGPT 不會像 Claude 一樣主動判斷該不該呼叫外部工具，建議提問時明確提及要使用這個連接器，例如「請使用 OpenData MCP 查詢臺北市天氣」，而不是單純自然地問「臺北市天氣如何」——否則 ChatGPT 可能會用自己內建的知識或網路搜尋回答，不會主動想到查詢即時資料。
+
+### Cursor / Windsurf / Cline
+
+在 MCP servers 設定（通常是一個 JSON 設定檔）裡新增：
+
+```json
+{
+  "opendata-mcp": {
+    "url": "https://opendata-mcp.dragonheartliu1440.workers.dev/mcp"
+  }
+}
+```
+
+不需要額外的認證設定。
+
+---
+
 ## 支援的工具總覽
 
 ### 精選工具（9 個，直接可用）
