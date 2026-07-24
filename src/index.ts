@@ -33,7 +33,30 @@ export interface Env {
   CACHE?: CacheStore;
 }
 
-function createServer(env: Env): McpServer {
+/**
+ * TEMPORARY (see AGENTS.md §6 debug-route methodology): staged timing for
+ * one real, in-production tools/call request to tw_highway_traffic, to
+ * find out whether a genuinely-reproducible 5x timeout traces to the MCP
+ * protocol layer itself (request parsing/schema validation before the
+ * callback runs, or response serialization/SSE encoding after it returns)
+ * rather than the tool's own business logic (cache/upstream-fetch/
+ * transform), which a prior round already measured as fast (max 917ms)
+ * but *bypassing* this layer entirely. Only activates on the
+ * `x-debug-timing: 1` request header, and only affects tw_highway_traffic
+ * — every other request/tool is byte-identical to before. Remove this
+ * whole block (and the header check in `fetch`) once the investigation
+ * concludes.
+ */
+interface HighwayTimingTrace {
+  requestReceived: number;
+  connectStart?: number;
+  connectEnd?: number;
+  callbackStart?: number;
+  callbackEnd?: number;
+  handleRequestEnd?: number;
+}
+
+function createServer(env: Env, highwayTiming?: HighwayTimingTrace): McpServer {
   const server = new McpServer(
     { name: "taiwan-opendata-mcp-server", version: "1.2.0" },
     { jsonSchemaValidator: new CfWorkerJsonSchemaValidator() }
@@ -298,7 +321,12 @@ function createServer(env: Env): McpServer {
         openWorldHint: true
       }
     },
-    ({ road }) => handleHighwayTrafficTool({ road }, env)
+    async ({ road }) => {
+      if (highwayTiming) highwayTiming.callbackStart = Date.now();
+      const result = await handleHighwayTrafficTool({ road }, env);
+      if (highwayTiming) highwayTiming.callbackEnd = Date.now();
+      return result;
+    }
   );
 
   server.registerTool(
@@ -388,15 +416,24 @@ export default {
 
     // Stateless mode: a fresh McpServer + transport per request, per the SDK's
     // own guidance ("Create a new transport per request" for stateless servers).
-    const server = createServer(env);
+    const timing: HighwayTimingTrace | undefined =
+      request.headers.get("x-debug-timing") === "1" ? { requestReceived: Date.now() } : undefined;
+    const server = createServer(env, timing);
     const transport = new WebStandardStreamableHTTPServerTransport({
       sessionIdGenerator: undefined,
       enableJsonResponse: true
     });
 
     try {
+      if (timing) timing.connectStart = Date.now();
       await server.connect(transport);
-      return await transport.handleRequest(request);
+      if (timing) timing.connectEnd = Date.now();
+      const response = await transport.handleRequest(request);
+      if (timing) {
+        timing.handleRequestEnd = Date.now();
+        return await withDebugTimingInjected(response, timing);
+      }
+      return response;
     } catch (error) {
       console.error("Error handling MCP request:", error);
       return new Response(
@@ -409,3 +446,39 @@ export default {
     }
   }
 };
+
+/**
+ * TEMPORARY, paired with `HighwayTimingTrace` above — splices the staged
+ * timing onto the real JSON-RPC response body as a top-level
+ * `_debugTiming` field (sibling of `jsonrpc`/`id`/`result`) so a plain
+ * `tools/call` HTTP response carries its own breakdown, no separate
+ * log access needed. Only runs when `x-debug-timing: 1` was sent, so it
+ * never touches a normal client's response shape. Falls back to returning
+ * the response completely untouched if it isn't the JSON body shape this
+ * expects (e.g. an SSE stream, or a transport-level error response) —
+ * best-effort instrumentation, not something that should ever mask or
+ * alter the real response on failure.
+ */
+async function withDebugTimingInjected(response: Response, timing: HighwayTimingTrace): Promise<Response> {
+  if (!response.headers.get("content-type")?.includes("application/json")) return response;
+  const bodyText = await response.text();
+  try {
+    const body = JSON.parse(bodyText);
+    body._debugTiming = {
+      ...timing,
+      mcpConnectMs: timing.connectEnd !== undefined && timing.connectStart !== undefined ? timing.connectEnd - timing.connectStart : null,
+      mcpBeforeCallbackMs:
+        timing.callbackStart !== undefined && timing.connectEnd !== undefined ? timing.callbackStart - timing.connectEnd : null,
+      toolCallbackMs:
+        timing.callbackEnd !== undefined && timing.callbackStart !== undefined ? timing.callbackEnd - timing.callbackStart : null,
+      mcpAfterCallbackMs:
+        timing.handleRequestEnd !== undefined && timing.callbackEnd !== undefined ? timing.handleRequestEnd - timing.callbackEnd : null,
+      totalMs: timing.handleRequestEnd !== undefined ? timing.handleRequestEnd - timing.requestReceived : null
+    };
+    const headers = new Headers(response.headers);
+    headers.delete("content-length");
+    return new Response(JSON.stringify(body), { status: response.status, headers });
+  } catch {
+    return new Response(bodyText, { status: response.status, headers: response.headers });
+  }
+}
