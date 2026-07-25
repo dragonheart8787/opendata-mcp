@@ -45,6 +45,32 @@ No coding required — a few minutes to connect this to your own Claude:
 
 ---
 
+## Connecting from other AI platforms
+
+This server is built on the standard MCP protocol — it isn't Claude-specific, and works with any MCP-compatible AI platform, including ChatGPT, Cursor, Windsurf, and Cline.
+
+### ChatGPT
+
+**Settings → Apps & Connectors → Advanced settings → enable Developer Mode** → add a custom connector, enter the server URL (same as above), and set authentication to "None" (this service requires no authentication).
+
+⚠️ **Known difference**: unlike Claude, ChatGPT doesn't always proactively decide on its own whether to call an external tool. When asking a question, explicitly mention this connector — e.g. "Use the OpenData MCP connector to check the weather in Taipei" — rather than a plain "what's the weather in Taipei", or ChatGPT may just answer from its own built-in knowledge or a web search instead of thinking to query live data.
+
+### Cursor / Windsurf / Cline
+
+Add this to your MCP servers configuration (usually a JSON config file):
+
+```json
+{
+  "opendata-mcp": {
+    "url": "https://opendata-mcp.dragonheartliu1440.workers.dev/mcp"
+  }
+}
+```
+
+No additional authentication configuration needed.
+
+---
+
 ## Supported tools
 
 ### Curated tools (9, ready to use)
