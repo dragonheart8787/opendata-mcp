@@ -2,6 +2,8 @@
 
 台灣官方開放資料的統一 [MCP](https://modelcontextprotocol.io/)（Model Context Protocol）閘道——一句話問天氣、地震、空品、交通，Claude 直接幫你查。
 
+**👉 [看視覺化介紹頁面](https://opendata-mcp.dragonheartliu1440.workers.dev/)**——比起先啃這份純文字 README，更快看懂這個專案在做什麼。
+
 [English README](./README.en.md)
 
 ---

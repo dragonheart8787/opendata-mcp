@@ -2,6 +2,8 @@
 
 A unified [MCP](https://modelcontextprotocol.io/) (Model Context Protocol) gateway to Taiwan's official open government data — ask Claude one plain-language question about weather, earthquakes, air quality, or traffic and get a real, live answer.
 
+**👉 [See the visual overview page](https://opendata-mcp.dragonheartliu1440.workers.dev/)** — a faster way to understand what this project does than reading this plain-text README first.
+
 [中文說明（README.md）](./README.md)
 
 ---
