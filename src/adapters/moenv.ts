@@ -1,6 +1,6 @@
 import { MOENV_API_BASE_URL, MOENV_SIGNUP_URL } from "../constants.js";
 import { ToolError } from "../infra/errors.js";
-import { httpGet, isTimeoutError } from "../infra/http.js";
+import { httpGet, isTimeoutError, redactSecret } from "../infra/http.js";
 import type { Env } from "../index.js";
 import type { DatasetEntry } from "../registry/index.js";
 import type { MoenvApiEnvelope } from "../types.js";
@@ -128,7 +128,7 @@ async function fetchDataset<TParams, TRaw>(
     }
     throw new ToolError({
       code: "UPSTREAM_ERROR",
-      message: `無法連線到環境部開放資料平臺：${error instanceof Error ? error.message : String(error)}。請稍後再試。`
+      message: `無法連線到環境部開放資料平臺：${redactSecret(error instanceof Error ? error.message : String(error), apiKey)}。請稍後再試。`
     });
   }
 
@@ -161,7 +161,11 @@ async function fetchDataset<TParams, TRaw>(
   if (!records) {
     logFailureContext(url, response.status, rawBody);
     const envelope = parsed as MoenvApiEnvelope<unknown>;
-    const message = envelope?.message ?? "";
+    // Defense-in-depth: this is MOENV's own error text, not something we
+    // constructed — redact the caller's key from it before it can ever
+    // reach a user-facing message, in case MOENV's own response ever
+    // echoed it back (see redactSecret's doc comment).
+    const message = redactSecret(envelope?.message ?? "", apiKey);
     if (/api[_-]?key|not valid|invalid|授權|金鑰/i.test(message)) {
       throw new ToolError({ code: "AUTH_MISSING", message: invalidKeyMessage(message) });
     }

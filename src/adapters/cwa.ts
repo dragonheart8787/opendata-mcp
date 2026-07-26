@@ -1,6 +1,6 @@
 import { CWA_API_BASE_URL, CWA_AUTH_KEY_URL } from "../constants.js";
 import { ToolError } from "../infra/errors.js";
-import { httpGet, isTimeoutError } from "../infra/http.js";
+import { httpGet, isTimeoutError, redactSecret } from "../infra/http.js";
 import type { Env } from "../index.js";
 import type { DatasetEntry } from "../registry/index.js";
 import type { CwaApiEnvelope } from "../types.js";
@@ -61,7 +61,7 @@ async function fetchDataset<TParams, TRaw>(
     }
     throw new ToolError({
       code: "UPSTREAM_ERROR",
-      message: `無法連線到中央氣象署開放資料平臺：${error instanceof Error ? error.message : String(error)}。請稍後再試。`
+      message: `無法連線到中央氣象署開放資料平臺：${redactSecret(error instanceof Error ? error.message : String(error), apiKey)}。請稍後再試。`
     });
   }
 
@@ -86,7 +86,11 @@ async function fetchDataset<TParams, TRaw>(
   }
 
   if (payload.success !== "true") {
-    const message = payload.message ?? "";
+    // Defense-in-depth: this is CWA's own error text, not something we
+    // constructed — redact the caller's key from it before it can ever
+    // reach a user-facing message, in case CWA's own response ever echoed
+    // it back (see redactSecret's doc comment).
+    const message = redactSecret(payload.message ?? "", apiKey);
     if (/auth|key|授權|金鑰/i.test(message)) {
       throw new ToolError({ code: "AUTH_MISSING", message: invalidKeyMessage(message) });
     }

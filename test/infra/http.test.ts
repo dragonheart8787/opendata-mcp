@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { httpGet, httpGetWithBody, httpPost, isTimeoutError } from "../../src/infra/http.js";
+import { httpGet, httpGetWithBody, httpPost, isTimeoutError, redactSecret } from "../../src/infra/http.js";
 
 describe("httpGet", () => {
   it("returns the response on a normal successful call, without retrying", async () => {
@@ -238,5 +238,27 @@ describe("isTimeoutError", () => {
 
   it("does not treat a non-Error value as a timeout", () => {
     expect(isTimeoutError("aborted")).toBe(false);
+  });
+});
+
+describe("redactSecret", () => {
+  it("replaces every literal occurrence of the secret with [REDACTED]", () => {
+    expect(redactSecret("error fetching https://x/?api_key=abc123&foo=bar", "abc123")).toBe(
+      "error fetching https://x/?api_key=[REDACTED]&foo=bar"
+    );
+  });
+
+  it("replaces multiple occurrences, not just the first", () => {
+    expect(redactSecret("abc123 ... retried with abc123 again", "abc123")).toBe(
+      "[REDACTED] ... retried with [REDACTED] again"
+    );
+  });
+
+  it("returns the text unchanged when secret is undefined (no key configured)", () => {
+    expect(redactSecret("some upstream error text", undefined)).toBe("some upstream error text");
+  });
+
+  it("returns the text unchanged when the secret doesn't appear in it", () => {
+    expect(redactSecret("some upstream error text", "abc123")).toBe("some upstream error text");
   });
 });

@@ -3,13 +3,14 @@ import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/
 import { CfWorkerJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/cfworker";
 
 import type { CacheStore } from "./infra/cache.js";
+import { checkRateLimit, type RateLimiter } from "./infra/rate-limit.js";
+import { LANDING_PAGE_HTML, LANDING_PAGE_SCRIPT } from "./landing.js";
 import { airQualityInputShape, handleAirQualityTool } from "./tools/air-quality.js";
 import { handleYouBikeTool, youBikeInputShape } from "./tools/bike.js";
 import { busEtaInputShape, handleBusEtaTool } from "./tools/bus-eta.js";
 import { handleRecentEarthquakesTool, recentEarthquakesInputShape } from "./tools/earthquake.js";
 import { handleQueryDatasetTool, handleSearchDatasetsTool, queryDatasetInputShape, searchDatasetsInputShape } from "./tools/generic.js";
 import { handleHighwayTrafficTool, highwayLiveEventsInputShape } from "./tools/highway.js";
-import { LANDING_PAGE_HTML, LANDING_PAGE_SCRIPT } from "./landing.js";
 import { handleMetroStatusTool, metroStatusInputShape } from "./tools/metro.js";
 import { handleRailTool, railInputShape } from "./tools/rail.js";
 import { handleTyphoonTool, typhoonNewsInputShape } from "./tools/typhoon.js";
@@ -32,6 +33,13 @@ export interface Env {
    * different key namespace, no dedicated binding needed.
    */
   CACHE?: CacheStore;
+  /**
+   * Cloudflare's native Rate Limiting binding (binding name `RATE_LIMITER`
+   * in wrangler.toml), used to cap /mcp requests per client IP. Optional —
+   * same fail-soft treatment as CACHE: a missing binding just means no
+   * rate limiting is applied, it never blocks a real request.
+   */
+  RATE_LIMITER?: RateLimiter;
 }
 
 function createServer(env: Env): McpServer {
@@ -399,6 +407,18 @@ export default {
         status: 405,
         headers: { "content-type": "application/json" }
       });
+    }
+
+    // Per-IP rate limit, ahead of any real work (MCP server/transport
+    // setup, upstream calls) — protects this demo's own shared upstream
+    // API quota (CWA/MOENV/TDX) from abuse. `cf-connecting-ip` is the
+    // header Cloudflare's edge sets to the real client IP; local `wrangler
+    // dev` without that header falls back to a single shared bucket rather
+    // than skipping the check outright.
+    const clientIp = request.headers.get("cf-connecting-ip") ?? "unknown";
+    const rateLimitResponse = await checkRateLimit(env.RATE_LIMITER, clientIp);
+    if (rateLimitResponse) {
+      return rateLimitResponse;
     }
 
     // Stateless mode: a fresh McpServer + transport per request, per the SDK's
