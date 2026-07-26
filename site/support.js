@@ -243,134 +243,152 @@
         return;
       }
 
-      var accent = new THREE.Color(PROPS.accent);
-      var small = window.innerWidth < 720;
+      // Everything below touches WebGL/the real GPU, which can fail for
+      // reasons totally unrelated to the CDN import above (WebGL disabled,
+      // driver/context-creation issues, etc.) — wrapped so any such failure
+      // degrades to "no 3D background" instead of an unhandled rejection,
+      // matching the !THREE fallback above. The rest of the page (stats,
+      // demo board, tool cards, copy button) is already fully initialized
+      // by the time initScene() even runs, so it's unaffected either way.
+      try {
+        var accent = new THREE.Color(PROPS.accent);
+        var small = window.innerWidth < 720;
 
-      var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: !small, alpha: true, powerPreference: "low-power" });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, small ? 1.5 : 2));
-      var scene = new THREE.Scene();
-      scene.fog = new THREE.FogExp2(0x07100c, 0.055);
-      var camera = new THREE.PerspectiveCamera(52, 1, 0.1, 120);
-      camera.position.set(0, 0, 13);
+        var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: !small, alpha: true, powerPreference: "low-power" });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, small ? 1.5 : 2));
+        var scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x07100c, 0.055);
+        var camera = new THREE.PerspectiveCamera(52, 1, 0.1, 120);
+        camera.position.set(0, 0, 13);
 
-      var world = new THREE.Group();
-      scene.add(world);
+        var world = new THREE.Group();
+        scene.add(world);
 
-      // 中心閘道：雙層線框多面體
-      var core = new THREE.Group();
-      core.add(
-        new THREE.LineSegments(
-          new THREE.EdgesGeometry(new THREE.IcosahedronGeometry(1.55, 1)),
-          new THREE.LineBasicMaterial({ color: accent, transparent: true, opacity: 0.75 })
-        )
-      );
-      var shell = new THREE.LineSegments(
-        new THREE.EdgesGeometry(new THREE.IcosahedronGeometry(2.5, 0)),
-        new THREE.LineBasicMaterial({ color: accent, transparent: true, opacity: 0.18 })
-      );
-      core.add(shell);
-      world.add(core);
-
-      // 資料點雲（球殼）
-      var N = small ? 420 : 1100;
-      var pos = new Float32Array(N * 3);
-      for (var i2 = 0; i2 < N; i2++) {
-        var u = Math.random(),
-          v = Math.random();
-        var th = 2 * Math.PI * u,
-          ph = Math.acos(2 * v - 1);
-        var r0 = 6.4 + Math.random() * 2.2;
-        pos[i2 * 3] = r0 * Math.sin(ph) * Math.cos(th);
-        pos[i2 * 3 + 1] = r0 * Math.cos(ph) * 0.62;
-        pos[i2 * 3 + 2] = r0 * Math.sin(ph) * Math.sin(th);
-      }
-      var cloudGeo = new THREE.BufferGeometry();
-      cloudGeo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-      var cloud = new THREE.Points(
-        cloudGeo,
-        new THREE.PointsMaterial({ color: accent, size: 0.03, transparent: true, opacity: 0.34, sizeAttenuation: true })
-      );
-      world.add(cloud);
-
-      // 四個資料平台軌道環
-      var rings = [];
-      [
-        [5.2, 0.3],
-        [7.4, -0.75]
-      ].forEach(function (pair, i) {
-        var r = pair[0],
-          tilt = pair[1];
-        var g = new THREE.BufferGeometry();
-        var p = [];
-        for (var a = 0; a <= 160; a++) {
-          var t = (a / 160) * Math.PI * 2;
-          p.push(Math.cos(t) * r, 0, Math.sin(t) * r);
-        }
-        g.setAttribute("position", new THREE.Float32BufferAttribute(p, 3));
-        var ring = new THREE.Line(g, new THREE.LineBasicMaterial({ color: accent, transparent: true, opacity: 0.13 + i * 0.02 }));
-        ring.rotation.x = tilt;
-        ring.rotation.z = tilt * 0.4;
-        world.add(ring);
-
-        // 環上的節點 + 連回中心的線
-        var node = new THREE.Mesh(
-          new THREE.OctahedronGeometry(0.17, 0),
-          new THREE.MeshBasicMaterial({ color: accent, wireframe: true, transparent: true, opacity: 0.9 })
+        // 中心閘道：雙層線框多面體
+        var core = new THREE.Group();
+        core.add(
+          new THREE.LineSegments(
+            new THREE.EdgesGeometry(new THREE.IcosahedronGeometry(1.55, 1)),
+            new THREE.LineBasicMaterial({ color: accent, transparent: true, opacity: 0.75 })
+          )
         );
-        ring.add(node);
-        rings.push({ ring: ring, node: node, r: r, speed: 0.14 + i * 0.06 });
-      });
+        var shell = new THREE.LineSegments(
+          new THREE.EdgesGeometry(new THREE.IcosahedronGeometry(2.5, 0)),
+          new THREE.LineBasicMaterial({ color: accent, transparent: true, opacity: 0.18 })
+        );
+        core.add(shell);
+        world.add(core);
 
-      function resize() {
-        var w = Math.max(canvas.clientWidth, window.innerWidth || 0, 320);
-        var h = Math.max(canvas.clientHeight, window.innerHeight || 0, 320);
-        renderer.setSize(w, h, false);
-        camera.aspect = w / h;
-        camera.updateProjectionMatrix();
-      }
-      resize();
-      window.addEventListener("resize", resize);
+        // 資料點雲（球殼）
+        var N = small ? 420 : 1100;
+        var pos = new Float32Array(N * 3);
+        for (var i2 = 0; i2 < N; i2++) {
+          var u = Math.random(),
+            v = Math.random();
+          var th = 2 * Math.PI * u,
+            ph = Math.acos(2 * v - 1);
+          var r0 = 6.4 + Math.random() * 2.2;
+          pos[i2 * 3] = r0 * Math.sin(ph) * Math.cos(th);
+          pos[i2 * 3 + 1] = r0 * Math.cos(ph) * 0.62;
+          pos[i2 * 3 + 2] = r0 * Math.sin(ph) * Math.sin(th);
+        }
+        var cloudGeo = new THREE.BufferGeometry();
+        cloudGeo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+        var cloud = new THREE.Points(
+          cloudGeo,
+          new THREE.PointsMaterial({ color: accent, size: 0.03, transparent: true, opacity: 0.34, sizeAttenuation: true })
+        );
+        world.add(cloud);
 
-      var ptr = { x: 0, y: 0, tx: 0, ty: 0 };
-      function onMove(e) {
-        ptr.tx = (e.clientX / window.innerWidth - 0.5) * 2;
-        ptr.ty = (e.clientY / window.innerHeight - 0.5) * 2;
-      }
-      if (window.matchMedia("(hover: hover)").matches) window.addEventListener("mousemove", onMove, { passive: true });
+        // 四個資料平台軌道環
+        var rings = [];
+        [
+          [5.2, 0.3],
+          [7.4, -0.75]
+        ].forEach(function (pair, i) {
+          var r = pair[0],
+            tilt = pair[1];
+          var g = new THREE.BufferGeometry();
+          var p = [];
+          for (var a = 0; a <= 160; a++) {
+            var t = (a / 160) * Math.PI * 2;
+            p.push(Math.cos(t) * r, 0, Math.sin(t) * r);
+          }
+          g.setAttribute("position", new THREE.Float32BufferAttribute(p, 3));
+          var ring = new THREE.Line(g, new THREE.LineBasicMaterial({ color: accent, transparent: true, opacity: 0.13 + i * 0.02 }));
+          ring.rotation.x = tilt;
+          ring.rotation.z = tilt * 0.4;
+          world.add(ring);
 
-      var clock = new THREE.Clock();
-      function draw() {
-        var t = clock.getElapsedTime();
-        var p = state.progress;
-        ptr.x += (ptr.tx - ptr.x) * 0.05;
-        ptr.y += (ptr.ty - ptr.y) * 0.05;
-
-        core.rotation.y = t * 0.18;
-        core.rotation.x = Math.sin(t * 0.22) * 0.2;
-        shell.rotation.y = -t * 0.3;
-        cloud.rotation.y = t * 0.045;
-        rings.forEach(function (o) {
-          o.node.position.set(Math.cos(t * o.speed) * o.r, 0, Math.sin(t * o.speed) * o.r);
+          // 環上的節點 + 連回中心的線
+          var node = new THREE.Mesh(
+            new THREE.OctahedronGeometry(0.17, 0),
+            new THREE.MeshBasicMaterial({ color: accent, wireframe: true, transparent: true, opacity: 0.9 })
+          );
+          ring.add(node);
+          rings.push({ ring: ring, node: node, r: r, speed: 0.14 + i * 0.06 });
         });
 
-        // 滾動推進鏡頭：由外部俯視推近到穿過閘道
-        camera.position.z = 13 - p * 5.2;
-        camera.position.y = 1.1 - p * 1.2 + ptr.y * -0.5;
-        camera.position.x = ptr.x * 1.1;
-        world.rotation.y = p * 0.7;
-        world.rotation.x = 0.12 + p * 0.1;
-        camera.lookAt(0, 0, 0);
-        renderer.render(scene, camera);
-        requestAnimationFrame(draw);
-      }
+        function resize() {
+          var w = Math.max(canvas.clientWidth, window.innerWidth || 0, 320);
+          var h = Math.max(canvas.clientHeight, window.innerHeight || 0, 320);
+          renderer.setSize(w, h, false);
+          camera.aspect = w / h;
+          camera.updateProjectionMatrix();
+        }
+        resize();
+        window.addEventListener("resize", resize);
 
-      if (reduced) {
-        world.rotation.set(0.12, 0.4, 0);
-        camera.position.set(0, 1.2, 13);
-        camera.lookAt(0, 0, 0);
-        renderer.render(scene, camera);
-      } else {
-        draw();
+        var ptr = { x: 0, y: 0, tx: 0, ty: 0 };
+        function onMove(e) {
+          ptr.tx = (e.clientX / window.innerWidth - 0.5) * 2;
+          ptr.ty = (e.clientY / window.innerHeight - 0.5) * 2;
+        }
+        if (window.matchMedia("(hover: hover)").matches) window.addEventListener("mousemove", onMove, { passive: true });
+
+        var clock = new THREE.Clock();
+        function draw() {
+          try {
+            var t = clock.getElapsedTime();
+            var p = state.progress;
+            ptr.x += (ptr.tx - ptr.x) * 0.05;
+            ptr.y += (ptr.ty - ptr.y) * 0.05;
+
+            core.rotation.y = t * 0.18;
+            core.rotation.x = Math.sin(t * 0.22) * 0.2;
+            shell.rotation.y = -t * 0.3;
+            cloud.rotation.y = t * 0.045;
+            rings.forEach(function (o) {
+              o.node.position.set(Math.cos(t * o.speed) * o.r, 0, Math.sin(t * o.speed) * o.r);
+            });
+
+            // 滾動推進鏡頭：由外部俯視推近到穿過閘道
+            camera.position.z = 13 - p * 5.2;
+            camera.position.y = 1.1 - p * 1.2 + ptr.y * -0.5;
+            camera.position.x = ptr.x * 1.1;
+            world.rotation.y = p * 0.7;
+            world.rotation.x = 0.12 + p * 0.1;
+            camera.lookAt(0, 0, 0);
+            renderer.render(scene, camera);
+            requestAnimationFrame(draw);
+          } catch (err) {
+            // A per-frame render failure (lost WebGL context, etc.) after a
+            // successful start — stop looping and hide the canvas rather
+            // than spamming the console every frame.
+            canvas.style.display = "none";
+          }
+        }
+
+        if (reduced) {
+          world.rotation.set(0.12, 0.4, 0);
+          camera.position.set(0, 1.2, 13);
+          camera.lookAt(0, 0, 0);
+          renderer.render(scene, camera);
+        } else {
+          draw();
+        }
+      } catch (err) {
+        canvas.style.display = "none";
       }
     })();
   }

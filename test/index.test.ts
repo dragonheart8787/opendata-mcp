@@ -17,8 +17,24 @@ function mcpRequest(body: unknown): Request {
 }
 
 describe("worker fetch routing", () => {
-  it("responds to the health check on /", async () => {
+  it("serves the landing page on /", async () => {
     const res = await worker.fetch(new Request("https://example.com/"), env as never);
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toContain("text/html");
+    const body = await res.text();
+    expect(body).toContain("<!DOCTYPE html>");
+    expect(body).toContain("opendata-mcp");
+  });
+
+  it("serves the landing page's companion script on /support.js", async () => {
+    const res = await worker.fetch(new Request("https://example.com/support.js"), env as never);
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toContain("text/javascript");
+    expect(await res.text()).toContain("initScene");
+  });
+
+  it("responds to the health check on /health", async () => {
+    const res = await worker.fetch(new Request("https://example.com/health"), env as never);
     expect(res.status).toBe(200);
     expect(await res.text()).toContain("Taiwan OpenData MCP Server");
   });
