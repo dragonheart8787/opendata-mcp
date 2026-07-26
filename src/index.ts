@@ -9,6 +9,7 @@ import { busEtaInputShape, handleBusEtaTool } from "./tools/bus-eta.js";
 import { handleRecentEarthquakesTool, recentEarthquakesInputShape } from "./tools/earthquake.js";
 import { handleQueryDatasetTool, handleSearchDatasetsTool, queryDatasetInputShape, searchDatasetsInputShape } from "./tools/generic.js";
 import { handleHighwayTrafficTool, highwayLiveEventsInputShape } from "./tools/highway.js";
+import { LANDING_PAGE_HTML, LANDING_PAGE_SCRIPT } from "./landing.js";
 import { handleMetroStatusTool, metroStatusInputShape } from "./tools/metro.js";
 import { handleRailTool, railInputShape } from "./tools/rail.js";
 import { handleTyphoonTool, typhoonNewsInputShape } from "./tools/typhoon.js";
@@ -368,7 +369,21 @@ export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
 
-    if (url.pathname === "/" || url.pathname === "/health") {
+    if (url.pathname === "/") {
+      return new Response(LANDING_PAGE_HTML, {
+        status: 200,
+        headers: { "content-type": "text/html; charset=utf-8" }
+      });
+    }
+
+    if (url.pathname === "/support.js") {
+      return new Response(LANDING_PAGE_SCRIPT, {
+        status: 200,
+        headers: { "content-type": "text/javascript; charset=utf-8" }
+      });
+    }
+
+    if (url.pathname === "/health") {
       return new Response("Taiwan OpenData MCP Server is running. Send MCP requests to POST /mcp.\n", {
         status: 200,
         headers: { "content-type": "text/plain; charset=utf-8" }
