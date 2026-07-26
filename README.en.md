@@ -44,6 +44,8 @@ No coding required — a few minutes to connect this to your own Claude:
 5. Save, go back to your conversation, and try asking "What's the weather forecast for Taipei tomorrow?"
 
 > ⚠️ **This is a public demo deployment for testing only** — no auth, no dedicated quota guarantee. Under heavier load it may respond slowly, be temporarily unstable, or run into shared upstream API rate limits used up by other users. For any long-term or reliable use — especially the TDX-backed tools (bus/YouBike/rail/metro) — self-hosting is strongly recommended (see below): it's free, and you run it against your own API keys and your own Cloudflare account quota.
+>
+> This demo enforces a per-IP rate limit (60 requests/minute per IP) to protect the shared upstream API quota from being exhausted by a single source. Normal conversational use won't come close to this threshold; if you do hit it, you'll get a clear error message (with a suggested retry wait) instead of the connection just dropping.
 
 ---
 

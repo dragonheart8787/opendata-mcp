@@ -50,6 +50,22 @@ export function isTimeoutError(error: unknown): boolean {
   return error instanceof Error && error.name === "AbortError";
 }
 
+/**
+ * Strips every literal occurrence of `secret` out of `text`, replacing it
+ * with `[REDACTED]`. Defense-in-depth for adapters (cwa.ts/moenv.ts) that
+ * relay an upstream API's own error text to the caller: if an upstream
+ * ever echoed the caller's own API key back in that text, this keeps the
+ * key out of a message a caller/LLM could see — the same discipline
+ * `scripts/fixtures/refresh-fixtures.ts` already applies before writing a
+ * captured response to a committed fixture file. No known evidence CWA or
+ * MOENV actually do this; this is hardening against the possibility, not a
+ * fix for an observed leak.
+ */
+export function redactSecret(text: string, secret: string | undefined): string {
+  if (!secret) return text;
+  return text.split(secret).join("[REDACTED]");
+}
+
 async function request(
   method: "GET" | "POST",
   url: string,

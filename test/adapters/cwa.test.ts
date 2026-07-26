@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { cwaAdapter } from "../../src/adapters/cwa.js";
 import { ToolError } from "../../src/infra/errors.js";
 import type { DatasetEntry } from "../../src/registry/index.js";
-import { jsonFetch } from "../helpers.js";
+import { jsonFetch, rejectingFetch } from "../helpers.js";
 
 function makeEntry(overrides: Partial<DatasetEntry<{ x?: string }, unknown, unknown>> = {}): DatasetEntry<
   { x?: string },
@@ -117,6 +117,28 @@ describe("cwaAdapter", () => {
     } catch (error) {
       expect((error as ToolError).code).toBe("SCHEMA_MISMATCH");
       expect((error as ToolError).message).toMatch(/records/);
+    }
+  });
+
+  it("redacts the caller's own API key out of an upstream error message before it reaches the caller", async () => {
+    const fetchImpl = jsonFetch({ success: "false", message: "Authorization key secret-key-value-123 is invalid" });
+    try {
+      await cwaAdapter.fetchDataset(makeEntry(), {}, { CWA_API_KEY: "secret-key-value-123" }, fetchImpl);
+      expect.unreachable();
+    } catch (error) {
+      expect((error as ToolError).message).not.toContain("secret-key-value-123");
+      expect((error as ToolError).message).toContain("[REDACTED]");
+    }
+  });
+
+  it("redacts the caller's own API key out of a network-error message before it reaches the caller", async () => {
+    const fetchImpl = rejectingFetch(new Error("connect failed for key=secret-key-value-123"));
+    try {
+      await cwaAdapter.fetchDataset(makeEntry(), {}, { CWA_API_KEY: "secret-key-value-123" }, fetchImpl);
+      expect.unreachable();
+    } catch (error) {
+      expect((error as ToolError).message).not.toContain("secret-key-value-123");
+      expect((error as ToolError).message).toContain("[REDACTED]");
     }
   });
 });

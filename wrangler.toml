@@ -23,5 +23,21 @@ compatibility_flags = ["nodejs_compat"]
 binding = "CACHE"
 id = "f9ad969ae389420cb6512f8a55e8177f"
 
+# Per-IP rate limit on POST /mcp — protects this deployment's own shared
+# upstream API quota (CWA/MOENV/TDX) from abuse/scraping now that the repo
+# and its landing page are public. 60 requests per 60 seconds per IP: far
+# more than any real conversational use needs (even a busy multi-tool
+# conversation is nowhere near 1 request/second sustained), but caps
+# runaway automated traffic. Optional — remove this block and the server
+# still works, every request just skips the check (see infra/rate-limit.ts).
+# `namespace_id` is an arbitrary id you choose yourself, scoped to your own
+# Cloudflare account (unlike the KV namespace above, it isn't a resource
+# you pre-create with a separate command) — self-hosters can deploy with
+# this value unchanged.
+[[ratelimits]]
+name = "RATE_LIMITER"
+namespace_id = "1001"
+simple = { limit = 60, period = 60 }
+
 [observability]
 enabled = true

@@ -49,6 +49,78 @@ describe("worker fetch routing", () => {
     expect(res.status).toBe(405);
   });
 
+  it("proceeds normally through the real /mcp POST path when RATE_LIMITER allows the request", async () => {
+    const rateLimiterEnv = { ...env, RATE_LIMITER: { limit: async () => ({ success: true }) } };
+    const res = await worker.fetch(
+      mcpRequest({
+        jsonrpc: "2.0",
+        id: 1,
+        method: "initialize",
+        params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "test-client", version: "1.0.0" } }
+      }),
+      rateLimiterEnv as never
+    );
+    expect(res.status).toBe(200);
+  });
+
+  it("returns a 429 through the real /mcp POST path when RATE_LIMITER denies the request, without ever reaching the MCP server", async () => {
+    let limitCalls = 0;
+    const rateLimiterEnv = {
+      ...env,
+      RATE_LIMITER: {
+        limit: async () => {
+          limitCalls++;
+          return { success: false };
+        }
+      }
+    };
+    const res = await worker.fetch(
+      mcpRequest({
+        jsonrpc: "2.0",
+        id: 1,
+        method: "initialize",
+        params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "test-client", version: "1.0.0" } }
+      }),
+      rateLimiterEnv as never
+    );
+    expect(limitCalls).toBe(1);
+    expect(res.status).toBe(429);
+    expect(res.headers.get("content-type")).toContain("application/json");
+    expect(res.headers.get("retry-after")).toBe("60");
+    const body = (await res.json()) as { jsonrpc?: string; error?: { message?: string }; id?: unknown };
+    expect(body.jsonrpc).toBe("2.0");
+    expect(body.error?.message).toMatch(/Too many requests/);
+  });
+
+  it("keys the rate limit on the cf-connecting-ip header", async () => {
+    const receivedKeys: string[] = [];
+    const rateLimiterEnv = {
+      ...env,
+      RATE_LIMITER: {
+        limit: async (options: { key: string }) => {
+          receivedKeys.push(options.key);
+          return { success: true };
+        }
+      }
+    };
+    const req = new Request("https://example.com/mcp", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        accept: "application/json, text/event-stream",
+        "cf-connecting-ip": "198.51.100.42"
+      },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: 1,
+        method: "initialize",
+        params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "test-client", version: "1.0.0" } }
+      })
+    });
+    await worker.fetch(req, rateLimiterEnv as never);
+    expect(receivedKeys).toEqual(["198.51.100.42"]);
+  });
+
   it("completes an MCP initialize handshake and lists all registered tools", async () => {
     const initRes = await worker.fetch(
       mcpRequest({
