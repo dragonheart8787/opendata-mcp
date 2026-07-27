@@ -194,6 +194,98 @@ All data surfaced by this project is released under Taiwan's [Government Open Da
 
 ---
 
+## Privacy Policy
+
+Last updated: 2026-07-27
+
+This policy describes what the public demo deployment (`https://opendata-mcp.dragonheartliu1440.workers.dev`) actually does with data. It is written from this repository's actual source code rather than adapted from a template — every claim below can be checked against the code.
+
+### We collect no personal data
+
+The service has **no login, no accounts, no cookies, and no sessions**. The server is stateless: each request builds a fresh MCP server instance that is torn down when the request completes, retaining nothing across requests.
+
+We **do not** receive, and have no way to learn, your name, email, or your account identity on Claude, ChatGPT, or any other platform — the MCP protocol does not transmit any of that, and we have no mechanism to ask for it.
+
+The only identifying value we receive is `clientInfo` from the MCP `initialize` request: the name and version of the client **software** (e.g. `claude-ai`). That says which app connected, not who you are. We do not store it.
+
+Because no identity information exists anywhere in the system, **it is technically impossible for us to attribute any query to any person**.
+
+### What happens to your query parameters
+
+The content of your question (a city name like `臺北市`, a bus route like `615`, a station name like `板橋`) passes through exactly three places. Each is described honestly below.
+
+**1. Forwarded to the official open-data platforms**
+
+This is the core function of the service: query parameters are assembled into an API request and sent to the relevant government platform (CWA / Ministry of Environment / TDX / National Freeway Bureau). Those platforms see **this server's IP address and this service's API key — not yours**; from their perspective every query originates from a single source. Their handling of those requests is governed by their own privacy policies.
+
+**2. Cached briefly in Cloudflare KV (pure data cache, no identity)**
+
+To avoid hammering the upstream APIs (and to respect their published fetch-frequency rules), responses are cached for a short time. Concretely, what is stored is:
+
+- **Cache key**: `dataset name + query parameters`, e.g. `weather:臺北市`, `aqi:county:新北市`, `bus-eta:Taipei:615:`, `rail:板橋:花蓮`.
+- **Cache value**: the **public open data itself** as returned and reshaped from the upstream platform (weather, AQI, arrival times, etc). It contains nothing about the requester.
+
+The key point: **the key records only *what* was asked, never *who* asked**. There is no IP address, no user id, no session id, and no requester timestamp anywhere in it. The cache is also **globally shared**: all users share one set of keys, so anyone querying the same city hits and overwrites the same entry, indistinguishably from anyone else. Even a complete dump of the cache would reveal only "someone asked about Taipei recently" — not who, not how many people, and not which queries belong together.
+
+Retention follows each dataset's own update cadence, is expired automatically by KV, and is never archived by us:
+
+| Data type | Cache duration |
+|---|---|
+| Bus arrival estimates | 30 seconds |
+| YouBike, TRA board, metro status, freeway incidents | 60 seconds |
+| Earthquake reports | 5 minutes |
+| Air quality, typhoon bulletins, weather warnings | 10 minutes |
+| Weather forecasts, UV index, air-quality forecasts | 30 minutes |
+| Near-static lists such as station metadata | 24 hours |
+
+**3. Error diagnostics (only when a query fails, and still no identity)**
+
+**When a query succeeds, nothing about what you asked is written to any log.**
+
+There is one exception: when the Ministry of Environment's API (the source of air-quality data) breaks and your query fails, the system records one line to help us find out what went wrong. That line includes the county or station name you asked about (e.g. "New Taipei"), plus the beginning of the error the Ministry sent back (the first 500 characters). The API key is masked, and just as importantly **there is nothing in it that points to you — no IP address, no user identifier**.
+
+In plain terms: if the Ministry's API happens to be down when you ask about air quality, what gets recorded is "someone asked about New Taipei", not "you asked about New Taipei". Cloudflare deletes that line automatically per its default retention period; we do not export or back it up anywhere.
+
+### Source IP and rate limiting
+
+The service applies a per-IP rate limit to `/mcp` (60 requests per minute per IP), implemented by passing the source IP provided by Cloudflare's edge (`cf-connecting-ip`) as the **counter key** for Cloudflare's native Rate Limiting service.
+
+To be explicit: **we do not write that IP to KV, do not write it to logs, and do not associate it with the content of your query.** It functions only as an identifier for a Cloudflare-internal counter within a 60-second window, and expires when that window does. No line of this service's code stores or records it.
+
+Separately, Cloudflare — as the hosting provider — necessarily processes your request (and therefore sees your source IP) and retains its own operational logs under Cloudflare's own privacy policy. This is inherent to using any hosting provider and is not something we can opt out of on your behalf; we disclose it here for completeness.
+
+### Do we share data with third parties
+
+**We do not sell, rent, or share data with anyone for advertising or analytics purposes. The service runs no analytics of any kind — no Google Analytics, no tracking pixels, no ad SDKs.**
+
+Data necessarily reaches the following parties in order for the service to function:
+
+- **Government open-data platforms** (CWA / Ministry of Environment / TDX / National Freeway Bureau): receive query parameters, as described above.
+- **Cloudflare**: the hosting platform, handling request processing, KV caching, and rate limiting.
+
+Additionally, **if you open this project's landing page in a browser** (this affects that web page only, and has nothing to do with calling the tools from Claude): the page loads fonts (Google Fonts) and the library that draws its 3D background (Three.js) from outside servers. Your browser fetches those files directly from those servers, so **they see your IP address and your browser version information**. This happens with any web page that loads external fonts or libraries; it is not specific to this service.
+
+In plain terms: Google only learns that "someone opened this web page" — it **does not learn anything about what you asked Claude**. The landing page is a purely static page, entirely separate from the query functionality. If you only use this service through Claude and never open the landing page, none of this paragraph applies to you.
+
+The landing page itself sets **no cookies, leaves nothing stored in your browser, and sends no queries of its own** — the demo content shown on it is hardcoded sample text, not a live query. The domains it actually contacts: `fonts.googleapis.com` / `fonts.gstatic.com` (fonts) and `cdn.jsdelivr.net` (Three.js, falling back to `esm.sh` / `unpkg.com`).
+
+### Self-hosting
+
+If you deploy your own instance following the "Self-hosting" section, your queries **never touch our deployment at all** — everything flows through your own Cloudflare account and your own API keys, and nothing in this policy applies to you. If privacy matters to you, this is the most direct answer.
+
+### Contact
+
+For any privacy question, concern, or correction request, reach us through GitHub:
+
+- **Open an issue**: [github.com/dragonheart8787/opendata-mcp/issues](https://github.com/dragonheart8787/opendata-mcp/issues)
+- **Project home**: [github.com/dragonheart8787/opendata-mcp](https://github.com/dragonheart8787/opendata-mcp)
+
+### Changes to this policy
+
+This policy lives in this repository's README, so every revision is recorded in git history and the full change log is publicly auditable.
+
+---
+
 ## Contributing
 
 PRs welcome. This project is deliberately structured so adding a new dataset is cheap — one registry entry + one transform function + one fixture + one test suite, with no need to touch any existing tool's code.
