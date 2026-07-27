@@ -109,7 +109,7 @@ const HIGHWAY_EXTRA_DELAY_MS = 40000;
  * `hadFetchFailure` (see main()), so it doesn't fail the CI run the way a
  * genuine, unexpected failure on any other source should.
  */
-const KNOWN_UNREACHABLE_FROM_CI_SOURCES = new Set(["highway"]);
+const KNOWN_UNREACHABLE_FROM_CI_SOURCES = new Set(["highway", "pcc"]);
 
 function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));

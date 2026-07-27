@@ -1,5 +1,52 @@
 import type { ZodTypeAny } from "zod";
 
+/** Every upstream this server can talk to. Adding one means adding an adapter with the same id. */
+export type SourceId = "cwa" | "moenv" | "tdx" | "highway" | "pcc";
+
+/**
+ * Whether a source is the agency publishing its own data, or a third party
+ * republishing someone else's.
+ *
+ * - `official`: a government agency's own platform. The agency is both the
+ *   data's author and its publisher, and its response is authoritative.
+ * - `community-mirror`: a volunteer/community-run service that re-publishes
+ *   an agency's data. Useful (often far more queryable than the official
+ *   site), but it is a *copy*: it can lag, drop records, or go stale
+ *   without the originating agency knowing or caring, and nothing about it
+ *   is binding for any official purpose.
+ *
+ * This distinction is machine-readable rather than prose because it has to
+ * reach the caller: `tw_search_datasets` labels entries with it, and the
+ * response envelope carries it on every call (infra/envelope.ts's
+ * `provenance`). A caller's LLM deciding whether to present a result as
+ * fact should not have to infer trustworthiness from a hostname.
+ */
+export type SourceProvenance = "official" | "community-mirror";
+
+/**
+ * The authoritative source-to-provenance mapping. Lives here (not on the
+ * adapter) so the registry and the generic tools can classify an entry
+ * without importing the adapter layer — `adapters/` imports from
+ * `registry/`, so the reverse would be circular.
+ */
+export const SOURCE_PROVENANCE: Record<SourceId, SourceProvenance> = {
+  cwa: "official",
+  moenv: "official",
+  tdx: "official",
+  highway: "official",
+  // g0v/開放文化基金會's mirror of 政府電子採購網 — the first non-official
+  // source in this project. See src/constants.ts's PCC_* block.
+  pcc: "community-mirror"
+};
+
+export function getSourceProvenance(source: SourceId): SourceProvenance {
+  return SOURCE_PROVENANCE[source];
+}
+
+export function isOfficialSource(source: SourceId): boolean {
+  return SOURCE_PROVENANCE[source] === "official";
+}
+
 /**
  * A dataset registered with the server: everything needed to expose it
  * through a tool without that tool knowing anything about the upstream API.
@@ -25,7 +72,7 @@ import type { ZodTypeAny } from "zod";
 export interface DatasetEntry<TParams = never, TRaw = unknown, TResult = unknown> {
   /** e.g. "cwa:F-C0032-001" */
   id: string;
-  source: "cwa" | "moenv" | "tdx" | "highway";
+  source: SourceId;
   /** Dataset id/path used by the adapter to build the upstream URL. */
   path: string;
   title: string;

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { buildFailureEnvelope, buildSuccessEnvelope } from "../../src/infra/envelope.js";
+import { buildFailureEnvelope, buildSuccessEnvelope, type EnvelopeProvenance } from "../../src/infra/envelope.js";
 import { ToolError } from "../../src/infra/errors.js";
+import { SOURCE_PROVENANCE } from "../../src/registry/index.js";
 
 describe("buildSuccessEnvelope", () => {
   it("builds an ok:true envelope with a fresh fetchedAt timestamp", () => {
@@ -48,6 +49,52 @@ describe("buildSuccessEnvelope", () => {
       data: {}
     });
     expect(envelope.issuedAt).toBe("2026-07-19T14:32:10+08:00");
+  });
+});
+
+describe("envelope provenance", () => {
+  it("omits `provenance` entirely for official sources, keeping their response shape unchanged", () => {
+    const envelope = buildSuccessEnvelope({
+      source: "中央氣象署",
+      provenance: "official",
+      dataset: "F-C0032-001",
+      cached: false,
+      updateFrequency: "每日數次",
+      data: {}
+    });
+    expect("provenance" in envelope).toBe(false);
+  });
+
+  it("omits `provenance` when not supplied at all (every pre-existing caller)", () => {
+    const envelope = buildSuccessEnvelope({
+      source: "中央氣象署",
+      dataset: "F-C0032-001",
+      cached: false,
+      updateFrequency: "每日數次",
+      data: {}
+    });
+    expect("provenance" in envelope).toBe(false);
+  });
+
+  it("emits `provenance` for a non-official source, so callers can detect mirrored data programmatically", () => {
+    const envelope = buildSuccessEnvelope({
+      source: "g0v 標案資料鏡像（資料源自政府電子採購網）",
+      provenance: "community-mirror",
+      dataset: "pcc:searchbytitle",
+      cached: false,
+      updateFrequency: "非即時",
+      data: {}
+    });
+    expect(envelope.provenance).toBe("community-mirror");
+  });
+
+  it("stays in sync with the registry's SourceProvenance union", () => {
+    // infra/ must not import registry/ (AGENTS.md §1), so EnvelopeProvenance
+    // is a duplicated literal union. This asserts the duplication hasn't
+    // drifted: every provenance value the registry can produce must be a
+    // valid envelope provenance.
+    const registryValues: EnvelopeProvenance[] = Object.values(SOURCE_PROVENANCE);
+    expect(new Set(registryValues)).toEqual(new Set(["official", "community-mirror"]));
   });
 });
 

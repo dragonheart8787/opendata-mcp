@@ -506,4 +506,76 @@ export const HIGHWAY_LIVE_EVENTS_PATH = "history/motc20/LiveEvents.xml";
  */
 export const HIGHWAY_LIVE_EVENTS_CACHE_TTL_SECONDS = 60;
 
+// --- 政府標案（g0v 社群維護的非官方鏡像） ---
+//
+// THIS IS THE FIRST NON-OFFICIAL SOURCE IN THIS PROJECT. Every other source
+// (CWA/MOENV/TDX/highway) is an agency publishing its own data directly.
+// This one is a community-run mirror of 政府電子採購網's announcements,
+// maintained by g0v/開放文化基金會 — see `SOURCE_PROVENANCE` in
+// registry/index.ts, which is what actually makes that distinction
+// machine-readable rather than leaving it as a comment here.
+//
+// Endpoints/params below were verified against the service's own OpenAPI
+// spec (webdata/swagger.json) and the PHP implementation
+// (webdata/controllers/ApiController.php) in openfunltd/pcc.g0v.ronny.tw,
+// not from memory — the live site is unreachable from this sandbox (the
+// egress proxy denies the domain outright), so the repo was the only
+// verifiable source available at build time.
+export const PCC_SITE_BASE_URL = "https://pcc.g0v.ronny.tw";
+export const PCC_API_BASE_URL = `${PCC_SITE_BASE_URL}/api`;
+
+/** The authoritative official source. Every response tells the caller to defer to this for anything binding. */
+export const PCC_OFFICIAL_SITE_URL = "https://web.pcc.gov.tw/";
+
+/** Search-by-tender-title endpoint. Verified in swagger.json as `/api/searchbytitle` taking `query` + optional `page`. */
+export const PCC_TENDER_SEARCH_PATH = "searchbytitle";
+
+/**
+ * Verbatim 著作權聲明 as published by pcc.g0v.ronny.tw itself (its homepage
+ * template, webdata/views/index/index.phtml), quoting 政府電子採購網's own
+ * statement. Reproduced exactly — this is deliberately NOT the
+ * 政府資料開放授權條款第 1 版 that every other source in this project uses;
+ * it is a narrower, 著作權法 fair-use-based permission, and paraphrasing it
+ * would misstate the terms.
+ */
+export const PCC_COPYRIGHT_NOTICE = [
+  "(1)本採購網上所刊載以行政院公共工程委員會名義公開發表之著作，即著作人為行政院公共工程委員會者，在合理範圍內，得重製、公開播送或公開傳輸，利用時，並請註明出處。",
+  "(2)本採購網上之資訊，可為個人或家庭非營利之目的而重製。",
+  "(3)為報導、評論、教學、研究或其他正當目的，在合理範圍內，得引用本採購網上之資訊，引用時，並請註明出處。",
+  "(4)其他合理使用情形，請參考著作權法第44條至第65條之規定。"
+] as const;
+
+/**
+ * Source-credibility disclosure. Unlike the delay/latency disclaimers on
+ * tw_typhoon / tw_metro_status / tw_highway_traffic, this one is about
+ * *who published the data*, not how fresh it is — so it has to travel with
+ * the data itself. `tools/tender.ts` puts this into both the formatted text
+ * and `structuredContent.data`, not just the tool description (see AGENTS.md
+ * on the tw_rail lesson: a disclosure that lives only in a description is
+ * one the caller's LLM can drop when it summarizes).
+ */
+export const PCC_SOURCE_NOTICE =
+  "資料來源為 g0v 社群維護之非官方鏡像服務（pcc.g0v.ronny.tw），非行政院公共工程委員會直接提供，" +
+  `資料可能有延遲或缺漏，正式決標資訊請以政府電子採購網（${PCC_OFFICIAL_SITE_URL}）為準。`;
+
+/**
+ * 30 minutes. Tender announcements are published on a daily cadence (this
+ * mirror re-crawls 政府電子採購網 rather than receiving a push feed), so a
+ * short TTL buys nothing but load on a volunteer-run service. Deliberately
+ * more conservative than any official source's TTL here: the API code
+ * contains a usage-metering hook (`OpenFunAPIHelper::checkUsage`) whose
+ * actual thresholds are not publicly documented, so "be a light client" is
+ * the only safe posture — we cannot verify how close we are to a limit.
+ */
+export const TENDER_SEARCH_CACHE_TTL_SECONDS = 30 * 60;
+
+/**
+ * Upstream returns a fixed 100 records per page (hardcoded `'size' => 100`
+ * in ApiController.php). That blows the ≤2,000-token response budget in
+ * docs/ARCHITECTURE.md §2.3, so the transform truncates and tells the
+ * caller to narrow the query — same approach as YOUBIKE_MAX_STATIONS_RETURNED
+ * and RAIL_LIVEBOARD_MAX_TRAINS_RETURNED.
+ */
+export const TENDER_SEARCH_MAX_RESULTS_RETURNED = 10;
+
 export type TaiwanCity = (typeof TAIWAN_CITIES)[number];
