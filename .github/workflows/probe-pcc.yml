@@ -28,7 +28,41 @@ jobs:
   probe:
     runs-on: ubuntu-latest
     steps:
-      - name: Reachability + searchbytitle response shape
+      - name: New host (pcc-api.openfun.app) direct probe
+        run: |
+          set -uo pipefail
+          # Probe 2 found pcc.g0v.ronny.tw 301s to https://pcc-api.openfun.app
+          # (X-Target header), the redirect DROPS the path+query, and the new
+          # origin answered `/` with a Cloudflare managed challenge (403).
+          # Question this step answers: is the API itself challenged too, or
+          # was that only the bare `/` landing page?
+          NEW="https://pcc-api.openfun.app/api"
+          UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
+
+          for path in "getinfo" "searchbytitle?query=%E9%96%8B%E6%94%BE%E6%94%BF%E5%BA%9C"; do
+            echo "===== GET $NEW/$path (default UA) ====="
+            curl -sS -m 30 -o r.txt -w "HTTP=%{http_code} TIME=%{time_total}s SIZE=%{size_download} CT=%{content_type}\n" \
+              "$NEW/$path" || echo "FAILED: $?"
+            head -c 300 r.txt; echo; echo
+
+            echo "===== GET $NEW/$path (browser UA) ====="
+            curl -sS -m 30 -o r2.txt -A "$UA" \
+              -w "HTTP=%{http_code} TIME=%{time_total}s SIZE=%{size_download} CT=%{content_type}\n" \
+              "$NEW/$path" || echo "FAILED: $?"
+            if head -c 1 r2.txt | grep -q '[{[]'; then
+              echo "JSON RECEIVED — top-level keys:"
+              jq -r 'keys[]' r2.txt 2>&1 | head -20
+              echo "--- first record ---"
+              jq '.records[0] // .' r2.txt 2>&1 | head -50
+            else
+              echo "NOT JSON (first 300 bytes):"
+              head -c 300 r2.txt; echo
+            fi
+            echo
+            sleep 4
+          done
+
+      - name: Original host response shape (expected to redirect away)
         run: |
           set -uo pipefail
           BASE="https://pcc.g0v.ronny.tw/api"
