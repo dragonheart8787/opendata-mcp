@@ -33,16 +33,28 @@ jobs:
           set -uo pipefail
           BASE="https://pcc.g0v.ronny.tw/api"
 
-          echo "===== 1. GET /api/getinfo (cheapest liveness check) ====="
-          curl -sS -m 30 -w "\nHTTP=%{http_code} TIME=%{time_total}s SIZE=%{size_download}\n" \
+          echo "===== 0. Redirect chain (first probe got HTTP 301) ====="
+          # The service 301s. Find out where to, because the adapter should
+          # target the real final URL rather than relying on redirect-following.
+          curl -sS -m 30 -D - -o /dev/null "$BASE/getinfo" 2>&1 | head -20
+          echo "--- following redirects ---"
+          curl -sSL -m 30 -o /dev/null \
+            -w "FINAL_URL=%{url_effective}\nHTTP=%{http_code} REDIRECTS=%{num_redirects} TIME=%{time_total}s\n" \
+            "$BASE/getinfo" || echo "FAILED: $?"
+
+          sleep 3
+
+          echo
+          echo "===== 1. GET /api/getinfo (following redirects) ====="
+          curl -sSL -m 30 -w "\nHTTP=%{http_code} TIME=%{time_total}s SIZE=%{size_download}\n" \
             "$BASE/getinfo" || echo "FAILED: $?"
 
           sleep 3
 
           echo
           echo "===== 2. GET /api/searchbytitle?query=開放政府 ====="
-          curl -sS -m 30 -o search.json \
-            -w "HTTP=%{http_code} TIME=%{time_total}s SIZE=%{size_download}\n" \
+          curl -sSL -m 30 -o search.json \
+            -w "FINAL_URL=%{url_effective}\nHTTP=%{http_code} TIME=%{time_total}s SIZE=%{size_download}\n" \
             --get --data-urlencode "query=開放政府" "$BASE/searchbytitle" || echo "FAILED: $?"
 
           echo "--- top-level keys ---"
@@ -67,7 +79,7 @@ jobs:
           JOB=$(jq -r '.records[0].job_number // empty' search.json)
           echo "unit_id=$UNIT job_number=$JOB"
           if [ -n "$UNIT" ] && [ -n "$JOB" ]; then
-            curl -sS -m 30 -o tender.json \
+            curl -sSL -m 30 -o tender.json \
               -w "HTTP=%{http_code} TIME=%{time_total}s SIZE=%{size_download}\n" \
               --get --data-urlencode "unit_id=$UNIT" --data-urlencode "job_number=$JOB" \
               "$BASE/tender" || echo "FAILED: $?"
