@@ -1,5 +1,5 @@
 import type { Env } from "../index.js";
-import type { DatasetEntry } from "../registry/index.js";
+import type { DatasetEntry, SourceId } from "../registry/index.js";
 
 /**
  * One module per upstream data source. `fetchDataset` owns everything
@@ -17,7 +17,7 @@ import type { DatasetEntry } from "../registry/index.js";
  * addition — same pattern the pre-refactor CWA/MOENV clients already used.
  */
 export interface SourceAdapter {
-  id: "cwa" | "moenv" | "tdx" | "highway";
+  id: SourceId;
   displayName: string;
   fetchDataset<TParams, TRaw>(
     entry: DatasetEntry<TParams, TRaw, unknown>,

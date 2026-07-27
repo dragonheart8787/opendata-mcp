@@ -7,7 +7,7 @@ import type { SourceAdapter } from "../adapters/types.js";
 import { withCacheTracked } from "../infra/cache.js";
 import { buildFailureEnvelope, buildSuccessEnvelope } from "../infra/envelope.js";
 import { ToolError, toToolError } from "../infra/errors.js";
-import { listDatasetEntries, type DatasetEntry } from "../registry/index.js";
+import { getSourceProvenance, listDatasetEntries, type DatasetEntry, type SourceProvenance } from "../registry/index.js";
 import type { Env } from "../index.js";
 import type { McpToolResult } from "./types.js";
 
@@ -56,6 +56,15 @@ export interface DatasetSearchResultItem {
   title: string;
   params: DatasetSearchParamInfo[];
   source: string;
+  /**
+   * Whether `source` is the publishing agency itself or a third-party
+   * republisher. Surfaced here (not only on a curated tool's response)
+   * because this is the discovery path: a caller browsing the registry
+   * should be able to tell an official dataset from a community mirror
+   * before deciding to query it. Every registered dataset is currently
+   * "official".
+   */
+  provenance: SourceProvenance;
 }
 
 export interface SearchDatasetsResult {
@@ -86,7 +95,8 @@ export function runSearchDatasets(query: string, source?: DatasetEntry<never, un
       datasetId: entry.id,
       title: entry.title,
       params: describeParams(entry),
-      source: ADAPTERS[entry.source].displayName
+      source: ADAPTERS[entry.source].displayName,
+      provenance: getSourceProvenance(entry.source)
     }));
   return { query, results };
 }
@@ -99,6 +109,11 @@ export function formatSearchDatasetsText(result: SearchDatasetsResult): string {
   for (const item of result.results) {
     lines.push(`## ${item.datasetId} — ${item.title}`);
     lines.push(`- 資料來源：${item.source}`);
+    // Never fires today (every registered source is official) — present so
+    // a future community-mirror dataset can't be listed without the caveat.
+    if (item.provenance !== "official") {
+      lines.push("- ⚠️ 非官方來源：社群維護的鏡像服務，資料可能有延遲或缺漏，正式資訊請以原始官方平台為準。");
+    }
     if (item.params.length === 0) {
       lines.push(`- 參數：無`);
     } else {
@@ -228,6 +243,12 @@ export async function handleQueryDatasetTool(
 
     const envelope = buildSuccessEnvelope({
       source: adapter.displayName,
+      // Derived from the entry's own source rather than hard-coded, so any
+      // future non-official dataset reached through this generic path
+      // carries the same caveat a curated tool would have carried. Resolves
+      // to "official" for every dataset registered today, which
+      // buildSuccessEnvelope omits from the envelope entirely.
+      provenance: getSourceProvenance(entry.source),
       dataset: entry.path,
       cached,
       updateFrequency: entry.updateFrequency,
