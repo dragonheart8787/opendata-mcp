@@ -238,11 +238,13 @@ Retention follows each dataset's own update cadence, is expired automatically by
 | Weather forecasts, UV index, air-quality forecasts | 30 minutes |
 | Near-static lists such as station metadata | 24 hours |
 
-**3. Error diagnostics (failure paths only, still no identity)**
+**3. Error diagnostics (only when a query fails, and still no identity)**
 
-On the **normal, successful request path, nothing about your query is written to any log**.
+**When a query succeeds, nothing about what you asked is written to any log.**
 
-The single exception is when an upstream request to the Ministry of Environment (MOENV) fails: the adapter writes one diagnostic line to Cloudflare Workers Logs containing the request URL (**with the API key masked**, though the URL does carry the query parameter, e.g. a county name) plus the first 500 characters of the upstream response body, purely to diagnose upstream breakage. That log line likewise **contains no requester identity** — no IP, no user identifier. Retention follows Cloudflare's default for Workers Logs; we do not export it elsewhere or keep our own copy.
+There is one exception: when the Ministry of Environment's API (the source of air-quality data) breaks and your query fails, the system records one line to help us find out what went wrong. That line includes the county or station name you asked about (e.g. "New Taipei"), plus the beginning of the error the Ministry sent back (the first 500 characters). The API key is masked, and just as importantly **there is nothing in it that points to you — no IP address, no user identifier**.
+
+In plain terms: if the Ministry's API happens to be down when you ask about air quality, what gets recorded is "someone asked about New Taipei", not "you asked about New Taipei". Cloudflare deletes that line automatically per its default retention period; we do not export or back it up anywhere.
 
 ### Source IP and rate limiting
 
@@ -261,7 +263,11 @@ Data necessarily reaches the following parties in order for the service to funct
 - **Government open-data platforms** (CWA / Ministry of Environment / TDX / National Freeway Bureau): receive query parameters, as described above.
 - **Cloudflare**: the hosting platform, handling request processing, KV caching, and rate limiting.
 
-Additionally, **only when visiting the landing page in a browser** (this does not affect MCP tool calls): that page loads Google Fonts (`fonts.googleapis.com` / `fonts.gstatic.com`) and Three.js from a CDN (`cdn.jsdelivr.net`, falling back to `esm.sh` / `unpkg.com`) to render its typography and 3D background. Loading those external resources means your browser connects to those CDNs directly, so **they see your IP address and browser User-Agent**. This is inherent to loading any third-party CDN asset. The landing page itself sets **no cookies, uses no localStorage, and makes no API requests** — the demo content shown on it is hardcoded sample text, not a live query.
+Additionally, **if you open this project's landing page in a browser** (this affects that web page only, and has nothing to do with calling the tools from Claude): the page loads fonts (Google Fonts) and the library that draws its 3D background (Three.js) from outside servers. Your browser fetches those files directly from those servers, so **they see your IP address and your browser version information**. This happens with any web page that loads external fonts or libraries; it is not specific to this service.
+
+In plain terms: Google only learns that "someone opened this web page" — it **does not learn anything about what you asked Claude**. The landing page is a purely static page, entirely separate from the query functionality. If you only use this service through Claude and never open the landing page, none of this paragraph applies to you.
+
+The landing page itself sets **no cookies, leaves nothing stored in your browser, and sends no queries of its own** — the demo content shown on it is hardcoded sample text, not a live query. The domains it actually contacts: `fonts.googleapis.com` / `fonts.gstatic.com` (fonts) and `cdn.jsdelivr.net` (Three.js, falling back to `esm.sh` / `unpkg.com`).
 
 ### Self-hosting
 
