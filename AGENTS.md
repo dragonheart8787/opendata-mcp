@@ -135,6 +135,28 @@ This server has no write tools and never will (see architecture doc §0 non-goal
 
 （以下這段結論在第四輪排查後已知有誤，保留是為了記錄排查過程本身，不要重新採信其結論）**這次 `httpGetWithBody` 的修正，是一次「查證時發現的真實架構缺陷，但排查後確認跟事發的實際問題無關」的案例，兩者要分開記錄，不要因為修了東西就默認是原因。** 真實事件：`tw_highway_traffic` 連續三次呼叫逾時，其他工具（天氣、search_datasets）正常。完整排查順序：(1) 先懷疑上游 fetch/XML 解析——用 debug 路由直接對 `tisvcloud.freeway.gov.tw` 量測，真實數字是 fetch-to-headers 315ms、body 讀取與 XML 解析都約 0ms，遠低於 5 秒 timeout，**排除**這個理論；(2) 但這個 debug 路由繞過了真正的呼叫路徑（快取讀寫、client-side 篩選、格式化），所以又做了第二個 debug 路由，直接呼叫真正的 adapter/registry/cache 函式（不是另外重寫一份邏輯）並分段計時，外加併發測試——真實數字是全程最慢 917ms、併發呼叫互不拖慢，**排除**快取層與並發是原因；(3) 兩輪真實數據都排除了程式碼邏輯層面的問題，唯一還沒被這兩次 debug 路由涵蓋到的是 MCP 協定層本身（schema 驗證、`McpServer`/transport 生命週期）——但這層是所有工具共用的通用程式碼，並非 highway 專屬，而真實事件裡「其他工具都正常、只有這個工具逾時」這個選擇性現象，本身就是不利於「共用協定層」這個假設的證據。**結論（已知有誤，見上）**：這次連續三次逾時很可能是那次呼叫當下的一次性網路雜訊（例如 `tisvcloud.freeway.gov.tw` 本身、或 Cloudflare 到它的路由，短暫地慢或不穩定），不是本專案程式碼裡可重現的系統性問題。
 
+### 政府標案資料：已評估過的來源與結論（不要重複調查）
+
+三條路都查過了，結論與**查證日期 2026-07** 一併記在這裡。要再動這個題目之前先讀完這一段，避免重跑同樣的調查。
+
+| # | 來源 | 結論 |
+|---|---|---|
+| 1 | `pcc-api.openfun.app`（g0v 社群鏡像，原 `pcc.g0v.ronny.tw`） | **不可用**——Cloudflare managed challenge。詳見下一則。實作保留在 `feat/pcc-tender-search`。 |
+| 2 | `web.pcc.gov.tw` 的「資料集下載」頁（`/tps/tp/OpenData/showList`） | **已評估，不採用**——理由見下方，**不是** robots.txt 的緣故。 |
+| 3 | `data.gov.tw`（國家開放資料平台） | **尚未查證完成，是下一個該查的方向**——見下方。 |
+
+**#2 的判斷過程與結論（重要：「robots.txt 禁止」這個前提是錯的，不要再引用它）**
+
+- **`web.pcc.gov.tw` 根本沒有 robots.txt。** 實測 `https://web.pcc.gov.tw/robots.txt` 回 **HTTP 302，轉址到 `/pis`**（即網站首頁），不是 robots 檔案。`data.gov.tw/robots.txt` 則回 **404**。依 RFC 9309，robots.txt 取不到（4xx／轉址後不是有效的 robots 內容）等同「未設限」，**不是**「禁止」。所以「因為 robots.txt 不允許所以不能做」這個論述不成立，不要再拿它當理由。
+- **但仍然不採用，理由是授權範圍，不是 robots.txt。** 政府電子採購網的著作權聲明（原文逐字收在 `feat/pcc-tender-search` 的 `PCC_COPYRIGHT_NOTICE`）只允許「為**個人或家庭非營利**之目的而重製」，以及「為報導、評論、教學、研究或其他正當目的，**在合理範圍內**引用並註明出處」。本專案是**公開的 MCP 服務，對不特定第三人轉散布**，把整批標案資料鏡像下來再對外提供，既不是個人/家庭非營利重製，也很難主張是「合理範圍內的引用」。聲明本身也把大量／商業利用**明確導向另外提供的開放資料集**，而不是這個網站本身。
+- **而那個被指向的開放資料管道已經失效。** g0v 首頁引用的 `web.pcc.gov.tw/tpsreport/transfer/dataTransfer.do?method=getOkfnOpenDataXml` 實測回 **HTTP 200 但轉址到 `/pis/` 首頁、Content-Type 是 `text/html`（257KB HTML，不是 XML）**。也就是官方自己指定的「大量利用請走這裡」入口目前拿不到東西。
+- **站台對擷取工具的態度不一致，訊號不明確。** WebFetch（會遵守 robots 語意的擷取工具）對 `web.pcc.gov.tw` 一律拿到 **HTTP 403**；但從 GitHub Actions 用瀏覽器 User-Agent 的純 GET 可以拿到 200（約 4 秒）。存在應用層的 bot 過濾，但**沒有** Cloudflare challenge——這點與 #1 不同。
+- **未完成的查證**（若日後要重啟這個方向，從這裡接續）：`showList` 頁面實際提供的檔案格式／大小／更新頻率、以及「近半年GPA資料集下載」的實際內容與涵蓋欄位，都還沒實際取得（sandbox 的 egress proxy 拒絕 `web.pcc.gov.tw`，最後一次探測的 workflow 因 YAML 錯誤沒跑起來）。**但即使查清楚，上面的授權範圍問題仍在**，所以那是次要問題，先解授權再談格式。
+
+**#3：`data.gov.tw` 是下一個該查的方向，理由是授權而不是技術。** 該平台的資料集適用**政府資料開放授權條款第 1 版**——與本專案現有四個官方來源一致，是我們已經在用、且明確允許再散布的授權，沒有 #2 那個「僅限個人/家庭非營利」的限制。sandbox 的 egress proxy 同樣拒絕這個網域（`connect_rejected`），本次未完成查證。若要查，重點是：平台上有沒有工程會發布的標案／決標資料集、更新頻率、以及檔案量級（決定用 KV 還是 D1）。
+
+**（架構備註，若日後真的走「定期同步靜態快照」這條路）** 這會是本專案第一個「非即時查詢」的來源，與現有 registry/adapter 的假設（每次 tool call 打一次上游）不同：需要一個排程同步（比照 `fixtures-refresh.yml`）把快照寫進儲存層，工具查的是快照而非上游。儲存層的選擇取決於量級——KV 適合「少量 key、整包讀取」，一旦需要依關鍵字/機關做逐筆查詢與篩選，KV 會退化成「把整包讀出來再在記憶體過濾」，那就該用 D1（SQLite，支援索引與 LIKE 查詢）。這個決定在拿到真實檔案大小與筆數之前不要先定。
+
 **政府標案資料來源（`pcc-api.openfun.app`，原 `pcc.g0v.ronny.tw`）目前無法程式化存取——完整實作保留在 `feat/pcc-tender-search` 分支，待來源恢復可存取時直接接續，不要重新開發。**
 
 - **現況**：`pcc.g0v.ronny.tw` 已搬遷，一律回 `301`，`Location`／`X-Target` 皆為 `https://pcc-api.openfun.app`——**是裸網域，不帶路徑**，跟隨轉址會把 `/api/...` 路徑與 query string 整個丟掉。新站台位於 Cloudflare **managed challenge** 之後：實測 `/api/getinfo` 與 `/api/searchbytitle`、預設 UA 與瀏覽器 UA 共四種組合，**全部回 HTTP 403 + 「Just a moment...」challenge 頁**；challenge 內的 `cUPMDTk` 欄位就是 `/api/getinfo?__cf_chl_tk=...`，證明 challenge 打在 **API 路徑本身**，不只是首頁。
