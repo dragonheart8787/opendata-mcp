@@ -173,7 +173,7 @@ infra/     HTTP client（timeout/retry）、KV 快取、統一回應信封、錯
 
 | Workflow | 觸發時機 | 做什麼 |
 | --- | --- | --- |
-| [`ci.yml`](./.github/workflows/ci.yml) | 每個 PR | typecheck、跑全部單元測試（目前 333 個）、`wrangler deploy --dry-run` 確認建置成功。任一步驟失敗，PR 會顯示紅叉、不可合併。 |
+| [`ci.yml`](./.github/workflows/ci.yml) | 每個 PR | typecheck、跑全部單元測試（目前 351 個）、`wrangler deploy --dry-run` 確認建置成功。任一步驟失敗，PR 會顯示紅叉、不可合併。 |
 | [`fixtures-refresh.yml`](./.github/workflows/fixtures-refresh.yml) | 每週一次（也可手動觸發） | 對每個已註冊資料集打一次真實 API，跟 `test/fixtures/` 裡的樣本做結構性比對（欄位、型別，不比對實際數值）。發現上游改格式，自動開一個標記 `schema-drift` 的 PR 更新 fixture 並開 issue 通知——在盲寫 fixture 猜錯格式的問題真正影響到使用者之前，先在自動化流程裡抓到。 |
 | [`post-deploy-smoke-test.yml`](./.github/workflows/post-deploy-smoke-test.yml) | push 到 `main` 後（也可手動觸發） | 對正式部署的網址發送真實 MCP 請求：`initialize` → `tools/list`（確認所有工具都正確曝光）→ 依序真實呼叫其中幾個工具，確認回應信封格式正確。失敗會自動開一個標記 `smoke-test-failed` 的 issue。 |
 

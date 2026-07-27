@@ -173,7 +173,7 @@ Three GitHub Actions workflows provide continuous, automation-first quality gati
 
 | Workflow | Trigger | What it does |
 | --- | --- | --- |
-| [`ci.yml`](./.github/workflows/ci.yml) | Every PR | Typecheck, run the full unit test suite (333 tests as of this writing), `wrangler deploy --dry-run` to confirm the build is deployable. Any failing step blocks merge. |
+| [`ci.yml`](./.github/workflows/ci.yml) | Every PR | Typecheck, run the full unit test suite (351 tests as of this writing), `wrangler deploy --dry-run` to confirm the build is deployable. Any failing step blocks merge. |
 | [`fixtures-refresh.yml`](./.github/workflows/fixtures-refresh.yml) | Weekly (also manually triggerable) | Hits every registered dataset's real API and structurally diffs the response against `test/fixtures/` (field names/types, not values). On drift, auto-opens a PR labeled `schema-drift` with the updated fixture plus a notifying issue — catches an upstream format change before it becomes a silent production bug. |
 | [`post-deploy-smoke-test.yml`](./.github/workflows/post-deploy-smoke-test.yml) | After every push to `main` (also manually triggerable) | Sends real MCP requests to the live deployment: `initialize` → `tools/list` (confirms every tool is actually exposed) → real calls to several tools, checking the response envelope shape. Failures auto-open an issue labeled `smoke-test-failed`. |
 
