@@ -13,7 +13,6 @@ import { handleQueryDatasetTool, handleSearchDatasetsTool, queryDatasetInputShap
 import { handleHighwayTrafficTool, highwayLiveEventsInputShape } from "./tools/highway.js";
 import { handleMetroStatusTool, metroStatusInputShape } from "./tools/metro.js";
 import { handleRailTool, railInputShape } from "./tools/rail.js";
-import { handleTenderSearchTool, tenderSearchInputShape } from "./tools/tender.js";
 import { handleTyphoonTool, typhoonNewsInputShape } from "./tools/typhoon.js";
 import { handleWeatherForecastTool, weatherForecastInputShape } from "./tools/weather.js";
 
@@ -309,42 +308,6 @@ function createServer(env: Env): McpServer {
       }
     },
     ({ road }) => handleHighwayTrafficTool({ road }, env)
-  );
-
-  server.registerTool(
-    "tw_tender_search",
-    {
-      title: "台灣政府採購標案搜尋（g0v 非官方鏡像）",
-      description:
-        "依標案名稱關鍵字搜尋台灣政府採購公告，回傳標案名稱、招標機關、公告類型（招標公告／決標公告等）、" +
-        "公告日期、標的分類、相關廠商與詳細頁面連結。" +
-        "**資料來源為 g0v 社群維護之非官方鏡像服務（pcc.g0v.ronny.tw），非行政院公共工程委員會直接提供，" +
-        "資料可能有延遲或缺漏，正式決標資訊請以政府電子採購網（web.pcc.gov.tw）為準。**" +
-        "本工具僅轉載該鏡像收錄的公告內容，不自行判斷標案合理性、不做得標預測、也不提供任何投標建議。\n\n" +
-        "參數：\n" +
-        "- title：必填，標案名稱關鍵字（例如「開放政府國家行動方案」）。多個關鍵字以空格分隔，會以 AND 條件比對；" +
-        "**只比對標案名稱欄位，不是全文檢索**，因此用機關名稱或廠商名稱當關鍵字通常查不到東西。\n" +
-        "- unitName：選填，機關名稱關鍵字（部分比對，例如「臺北市政府」）。注意這是本伺服器取得結果後自行篩選的——" +
-        "上游 API 沒有依機關名稱搜尋的功能，所以它只能縮小「這一頁結果」的範圍，不等於全站依機關查詢。\n" +
-        "- page：選填，頁數（從 1 開始，預設 1），上游每頁固定 100 筆。\n\n" +
-        "適用情境：使用者詢問「有沒有關於 XXX 的政府標案」「XXX 標案是哪個機關發的」「XXX 標案是誰得標的」。\n\n" +
-        "不適用：本工具**不提供預算金額與截止投標日期**——此查詢端點的回應本身就不含這兩個欄位（不是本伺服器省略），" +
-        "需要這些資訊請點開回應中的詳細連結或直接查政府電子採購網；也不支援依招標狀態（招標中／已決標）篩選，" +
-        "上游 API 沒有這個參數，只能從每筆結果的「公告類型」自行判讀；不支援依廠商或機關代碼搜尋。\n\n" +
-        "資料範圍限制：這是社群志工維護的鏡像，涵蓋範圍與更新時間都不保證與政府電子採購網一致，" +
-        "**查無資料不代表該標案不存在**，只代表這個鏡像目前沒有收錄到；任何具法律效力或商業決策用途的採購資訊，" +
-        "一律以政府電子採購網為準。本資料依政府電子採購網著作權聲明使用（限個人或家庭非營利目的重製，" +
-        "或為報導、評論、教學、研究等正當目的在合理範圍內引用並註明出處），與本專案其他資料來源適用的" +
-        "「政府資料開放授權條款第 1 版」不同，商業利用請改用政府採購網另行提供的開放資料集。",
-      inputSchema: tenderSearchInputShape,
-      annotations: {
-        readOnlyHint: true,
-        destructiveHint: false,
-        idempotentHint: true,
-        openWorldHint: true
-      }
-    },
-    ({ title, unitName, page }) => handleTenderSearchTool({ title, unitName, page }, env)
   );
 
   server.registerTool(

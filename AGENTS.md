@@ -135,6 +135,14 @@ This server has no write tools and never will (see architecture doc §0 non-goal
 
 （以下這段結論在第四輪排查後已知有誤，保留是為了記錄排查過程本身，不要重新採信其結論）**這次 `httpGetWithBody` 的修正，是一次「查證時發現的真實架構缺陷，但排查後確認跟事發的實際問題無關」的案例，兩者要分開記錄，不要因為修了東西就默認是原因。** 真實事件：`tw_highway_traffic` 連續三次呼叫逾時，其他工具（天氣、search_datasets）正常。完整排查順序：(1) 先懷疑上游 fetch/XML 解析——用 debug 路由直接對 `tisvcloud.freeway.gov.tw` 量測，真實數字是 fetch-to-headers 315ms、body 讀取與 XML 解析都約 0ms，遠低於 5 秒 timeout，**排除**這個理論；(2) 但這個 debug 路由繞過了真正的呼叫路徑（快取讀寫、client-side 篩選、格式化），所以又做了第二個 debug 路由，直接呼叫真正的 adapter/registry/cache 函式（不是另外重寫一份邏輯）並分段計時，外加併發測試——真實數字是全程最慢 917ms、併發呼叫互不拖慢，**排除**快取層與並發是原因；(3) 兩輪真實數據都排除了程式碼邏輯層面的問題，唯一還沒被這兩次 debug 路由涵蓋到的是 MCP 協定層本身（schema 驗證、`McpServer`/transport 生命週期）——但這層是所有工具共用的通用程式碼，並非 highway 專屬，而真實事件裡「其他工具都正常、只有這個工具逾時」這個選擇性現象，本身就是不利於「共用協定層」這個假設的證據。**結論（已知有誤，見上）**：這次連續三次逾時很可能是那次呼叫當下的一次性網路雜訊（例如 `tisvcloud.freeway.gov.tw` 本身、或 Cloudflare 到它的路由，短暫地慢或不穩定），不是本專案程式碼裡可重現的系統性問題。
 
+**`pcc.g0v.ronny.tw`（g0v 標案資料 API）已搬遷至 `pcc-api.openfun.app`，且新站台在 Cloudflare managed challenge 之後，任何伺服器對伺服器的 HTTP 客戶端都無法取用——這是實測結論，不要再嘗試接入，除非該服務改變其存取政策。** 實測證據（GitHub Actions，2026-07）：
+- `pcc.g0v.ronny.tw` **連得到**（約 0.6 秒回應，**不是**像 `tisvcloud` 那樣被靜默丟包），但一律回 `301`，`Location` 與 `X-Target` 皆為 `https://pcc-api.openfun.app`——**是裸網域，不帶路徑**，所以跟隨轉址會把 `/api/...` 路徑與 query string 整個丟掉，落到 `/`。
+- 直接打新站台的正確路徑（`https://pcc-api.openfun.app/api/getinfo`、`/api/searchbytitle?query=...`），**四種組合（兩個路徑 × 預設 UA／瀏覽器 UA）全部回 HTTP 403 + Cloudflare「Just a moment...」challenge 頁**。challenge 內容裡的 `cUPMDTk` 欄位就是 `/api/getinfo?__cf_chl_tk=...`，證明 **challenge 是打在 API 路徑本身**，不只是首頁。
+- challenge 型別是 `cType: 'managed'`——需要執行 JavaScript 並接受 cookie 才能通過。`fetch()`（含 Cloudflare Worker 內的 fetch）沒有 JS 執行環境與 cookie jar，因此**換 User-Agent、換出口 IP、或改從 Worker 發請求都不會通過**；這與 `tisvcloud` 的「雲端 IP 被靜默丟包」是**不同的機制**，不要套用同一套 debug-probe 結論去期待「從 Worker 打就會通」。
+- **不要嘗試繞過這個 challenge**（headless browser、challenge solver、cookie 收割等）。這是服務營運方對自己的志工維運基礎設施刻意設下的存取控制，繞過它是規避他人的存取控制，不在本專案的做法範圍內。
+- 唯一未實測的環境是本專案部署後的 Cloudflare Worker。基於上述機制（JS interstitial 而非 IP 信譽），研判結果相同；若未來要確認，用既有的 debug-probe 手法打一次即可，但預期仍是 403 challenge。
+- 相關程式碼（`adapters/pcc.ts`、`registry/pcc.ts`、`tools/tender.ts` 與其測試）已寫好並通過測試，但**刻意沒有在 `src/index.ts` 註冊成工具**，以免對外曝光一個必定失敗的工具。若該服務日後恢復可程式化存取，重新啟用只需要在 `index.ts` 加回 `registerTool` 區塊。
+
 **shape-diff.ts 的 `shapeOf` 只檢查陣列第一筆元素的結構，這在真實世界資料波動時會造成「假陽性」的欄位增減提示。** 已至少在兩個獨立資料集上重複驗證過這個現象：`tdx:bus-eta` 的 `EstimateTime`（有/無公車即時預估，純粹取決於抓取當下路線上是否真的有車在跑）與 `cwa:W-C0034-005` 的 `MovingPrediction`（取決於當下第一筆 `Fix` 記錄是否恰好帶有移動預測文字）都曾經在不同次 dispatch 之間互相「新增」又「移除」，但欄位本身在程式碼裡本來就是（且應該維持）optional，不是真的 schema 變動。**規範**：(1) 任何依賴這類欄位的測試，斷言用的樣本資料必須手寫（引用真實欄位值即可）而非依賴 fixture 陣列的固定位置索引（例如 `fixture[0]`），否則下一次 fixture 被真實資料重新整理時測試會脆弱地壞掉——這正是 tw_rail 那次 delay-notice 修復連帶發現、修掉的問題；(2) 看到這類欄位在 schema-drift PR 裡「新增」或「移除」時，先確認程式碼是否已經把它當 optional 處理，若是，只需要更新 fixture 本身，不需要當作真正的結構變動去修 transform。
 
 ## 7. What a PR must say

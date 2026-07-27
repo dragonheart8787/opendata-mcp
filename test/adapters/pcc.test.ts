@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildPccUrl, pccAdapter } from "../../src/adapters/pcc.js";
+import { PCC_API_BASE_URL } from "../../src/constants.js";
 import { ToolError } from "../../src/infra/errors.js";
 import type { DatasetEntry } from "../../src/registry/index.js";
 import { jsonFetch, rejectingFetch, textFetch } from "../helpers.js";
@@ -36,7 +37,7 @@ describe("pccAdapter", () => {
 
   it("builds the upstream URL from the entry's path and query params", () => {
     const url = buildPccUrl(makeEntry(), { title: "開放政府" });
-    expect(url.origin + url.pathname).toBe("https://pcc.g0v.ronny.tw/api/searchbytitle");
+    expect(url.origin + url.pathname).toBe(`${PCC_API_BASE_URL}/searchbytitle`);
     expect(url.searchParams.get("query")).toBe("開放政府");
   });
 

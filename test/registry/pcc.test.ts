@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PCC_COPYRIGHT_NOTICE, TENDER_SEARCH_MAX_RESULTS_RETURNED } from "../../src/constants.js";
+import { PCC_COPYRIGHT_NOTICE, PCC_SITE_BASE_URL, TENDER_SEARCH_MAX_RESULTS_RETURNED } from "../../src/constants.js";
 import { formatAnnouncedDate, matchesTenderFilters, tenderSearchEntry, type PccSearchResponse } from "../../src/registry/pcc.js";
 
 function record(overrides: Record<string, unknown> = {}) {
@@ -89,7 +89,7 @@ describe("tenderSearchEntry.transform", () => {
       announcedDate: "2023-08-29",
       jobNumber: "ndc109050",
       companies: ["開放文化基金會"],
-      detailUrl: "https://pcc.g0v.ronny.tw/index/entry/20230829/BDM-1-70370443"
+      detailUrl: `${PCC_SITE_BASE_URL}/index/entry/20230829/BDM-1-70370443`
     });
   });
 

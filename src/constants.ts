@@ -521,8 +521,21 @@ export const HIGHWAY_LIVE_EVENTS_CACHE_TTL_SECONDS = 60;
 // not from memory — the live site is unreachable from this sandbox (the
 // egress proxy denies the domain outright), so the repo was the only
 // verifiable source available at build time.
-export const PCC_SITE_BASE_URL = "https://pcc.g0v.ronny.tw";
+//
+// ⚠️ THIS SOURCE IS CURRENTLY NOT CONSUMABLE, and nothing here is wired
+// into a registered tool (see AGENTS.md §6 for the full measurement).
+// Short version, measured from GitHub Actions: `pcc.g0v.ronny.tw` answers
+// in ~0.6s but 301s to `pcc-api.openfun.app` with the path stripped, and
+// that host serves a Cloudflare `managed` challenge (HTTP 403, "Just a
+// moment...") on the API paths themselves — for every User-Agent tried.
+// A managed challenge needs JS execution + cookies, which no `fetch()`
+// (Worker included) can provide. The constants stay so the finished
+// adapter/registry/tool can be re-enabled by a one-line change in
+// index.ts if the service ever restores programmatic access.
+export const PCC_SITE_BASE_URL = "https://pcc-api.openfun.app";
 export const PCC_API_BASE_URL = `${PCC_SITE_BASE_URL}/api`;
+/** The pre-migration hostname, kept only to document what the g0v docs still advertise. */
+export const PCC_LEGACY_SITE_BASE_URL = "https://pcc.g0v.ronny.tw";
 
 /** The authoritative official source. Every response tells the caller to defer to this for anything binding. */
 export const PCC_OFFICIAL_SITE_URL = "https://web.pcc.gov.tw/";
