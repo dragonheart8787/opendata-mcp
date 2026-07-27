@@ -58,6 +58,37 @@ describe("runSearchDatasets", () => {
     expect(result.results).toEqual([]);
   });
 
+  it("labels every currently-registered dataset as official", () => {
+    const result = runSearchDatasets("地震");
+    expect(result.results.length).toBeGreaterThan(0);
+    expect(result.results.every(r => r.provenance === "official")).toBe(true);
+  });
+
+  it("does NOT print a non-official warning for official datasets", () => {
+    expect(formatSearchDatasetsText(runSearchDatasets("地震"))).not.toContain("非官方來源");
+  });
+
+  it("prints a non-official warning when a result is a community mirror", () => {
+    // No registered dataset is a mirror yet, so the warning branch is
+    // exercised through a synthetic result — otherwise this formatting
+    // path would ship with zero coverage until the first mirror is added,
+    // which is exactly when getting it wrong would matter most.
+    const text = formatSearchDatasetsText({
+      query: "標案",
+      results: [
+        {
+          datasetId: "example:mirrored",
+          title: "某個社群鏡像資料集",
+          params: [],
+          source: "某社群鏡像服務",
+          provenance: "community-mirror"
+        }
+      ]
+    });
+    expect(text).toContain("非官方來源");
+    expect(text).toContain("正式資訊請以原始官方平台為準");
+  });
+
   it("describes each param's name, description, and required-ness", () => {
     const result = runSearchDatasets("36 小時天氣預報");
     const weather = result.results.find(r => r.datasetId === "cwa:F-C0032-001");

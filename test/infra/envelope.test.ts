@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { buildFailureEnvelope, buildSuccessEnvelope } from "../../src/infra/envelope.js";
+import { buildFailureEnvelope, buildSuccessEnvelope, type EnvelopeProvenance } from "../../src/infra/envelope.js";
 import { ToolError } from "../../src/infra/errors.js";
+import { SOURCE_PROVENANCE } from "../../src/registry/index.js";
 
 describe("buildSuccessEnvelope", () => {
   it("builds an ok:true envelope with a fresh fetchedAt timestamp", () => {
@@ -48,6 +49,49 @@ describe("buildSuccessEnvelope", () => {
       data: {}
     });
     expect(envelope.issuedAt).toBe("2026-07-19T14:32:10+08:00");
+  });
+});
+
+describe("envelope provenance", () => {
+  const base = { source: "中央氣象署", dataset: "F-C0032-001", cached: false, updateFrequency: "每日數次", data: {} };
+
+  it("omits `provenance` when not supplied at all — the shape every existing caller produces", () => {
+    expect("provenance" in buildSuccessEnvelope(base)).toBe(false);
+  });
+
+  it("omits `provenance` for an explicitly official source, so official responses stay byte-identical", () => {
+    expect("provenance" in buildSuccessEnvelope({ ...base, provenance: "official" })).toBe(false);
+  });
+
+  it("emits `provenance` for a non-official source, so callers can detect mirrored data programmatically", () => {
+    expect(buildSuccessEnvelope({ ...base, provenance: "community-mirror" }).provenance).toBe("community-mirror");
+  });
+
+  it("keeps the official envelope's exact key set unchanged", () => {
+    expect(Object.keys(buildSuccessEnvelope(base))).toEqual([
+      "ok",
+      "source",
+      "dataset",
+      "fetchedAt",
+      "cached",
+      "updateFrequency",
+      "data"
+    ]);
+  });
+
+  it("every provenance value the registry can produce is a valid envelope provenance", () => {
+    // infra/ must not import registry/ (AGENTS.md §1), so EnvelopeProvenance
+    // is a duplicated literal union. This asserts the duplication hasn't
+    // drifted — a registry value the envelope can't express would be a
+    // compile error here, and an unknown value a runtime failure.
+    const valid: EnvelopeProvenance[] = ["official", "community-mirror"];
+    for (const value of Object.values(SOURCE_PROVENANCE)) {
+      expect(valid).toContain(value);
+    }
+  });
+
+  it("every source registered today is official", () => {
+    expect(Object.values(SOURCE_PROVENANCE).every(p => p === "official")).toBe(true);
   });
 });
 
