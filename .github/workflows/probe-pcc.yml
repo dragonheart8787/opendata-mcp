@@ -1,23 +1,22 @@
 # TEMPORARY — MUST BE DELETED BEFORE THIS PR IS MERGED.
 #
-# Why this exists: `pcc.g0v.ronny.tw` is unreachable from the dev sandbox
-# (the egress proxy denies the domain at CONNECT), so `adapters/pcc.ts` and
-# `registry/pcc.ts` were built against the service's own OpenAPI spec and
-# PHP source rather than a captured real response. AGENTS.md §6 requires
-# that kind of skeleton be verified against the real upstream before it can
-# be trusted, using a throwaway probe that is removed in the same PR.
+# See the PR description for why this exists: pcc.g0v.ronny.tw is
+# unreachable from the dev sandbox (egress proxy denies the domain), so the
+# adapter/registry skeleton was built from the service's OpenAPI spec and
+# PHP source and needs verifying against the real upstream (AGENTS.md §6).
 #
-# This is the GitHub Actions variant of that pattern rather than the
-# `/debug/probe-*` Worker route used for `tisvcloud.freeway.gov.tw`, because
-# tisvcloud was blocked from Actions too (Azure IPs silently dropped), while
-# this host is a normal CORS-open community service with no evidence of
-# IP-based blocking. Probing from Actions avoids shipping a debug route to
-# production entirely — if it turns out Actions can't reach it either, fall
-# back to the Worker debug-route approach.
+# Findings so far, from runs 1-3 of this workflow:
+#   - pcc.g0v.ronny.tw responds in ~0.6s from Actions (NOT silently dropped
+#     the way tisvcloud.freeway.gov.tw is), but 301s to
+#     https://pcc-api.openfun.app — and the Location header is the bare
+#     origin, so the redirect DISCARDS the /api/... path and query string.
+#   - Following that redirect lands on `/`, which answers HTTP 403 with a
+#     Cloudflare "Just a moment..." managed-challenge page.
 #
-# Deliberately a light client: 3 requests total, spaced, matching the
-# "be a good citizen toward volunteer-run infrastructure" reasoning in
-# src/constants.ts's TENDER_SEARCH_CACHE_TTL_SECONDS.
+# Open question this run answers: does the NEW host serve the API when
+# asked for the correct path directly? Output is deliberately terse (a
+# one-line verdict per request, no HTML dumps) so the answer is readable
+# without paging through challenge markup.
 name: probe-pcc (TEMPORARY)
 
 on:
@@ -28,101 +27,42 @@ jobs:
   probe:
     runs-on: ubuntu-latest
     steps:
-      - name: New host (pcc-api.openfun.app) direct probe
+      - name: Verdict per candidate URL
         run: |
           set -uo pipefail
-          # Probe 2 found pcc.g0v.ronny.tw 301s to https://pcc-api.openfun.app
-          # (X-Target header), the redirect DROPS the path+query, and the new
-          # origin answered `/` with a Cloudflare managed challenge (403).
-          # Question this step answers: is the API itself challenged too, or
-          # was that only the bare `/` landing page?
-          NEW="https://pcc-api.openfun.app/api"
           UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
+          Q="query=%E9%96%8B%E6%94%BE%E6%94%BF%E5%BA%9C"
 
-          for path in "getinfo" "searchbytitle?query=%E9%96%8B%E6%94%BE%E6%94%BF%E5%BA%9C"; do
-            echo "===== GET $NEW/$path (default UA) ====="
-            curl -sS -m 30 -o r.txt -w "HTTP=%{http_code} TIME=%{time_total}s SIZE=%{size_download} CT=%{content_type}\n" \
-              "$NEW/$path" || echo "FAILED: $?"
-            head -c 300 r.txt; echo; echo
-
-            echo "===== GET $NEW/$path (browser UA) ====="
-            curl -sS -m 30 -o r2.txt -A "$UA" \
-              -w "HTTP=%{http_code} TIME=%{time_total}s SIZE=%{size_download} CT=%{content_type}\n" \
-              "$NEW/$path" || echo "FAILED: $?"
-            if head -c 1 r2.txt | grep -q '[{[]'; then
-              echo "JSON RECEIVED — top-level keys:"
-              jq -r 'keys[]' r2.txt 2>&1 | head -20
-              echo "--- first record ---"
-              jq '.records[0] // .' r2.txt 2>&1 | head -50
+          probe () { # $1=label $2=url $3=extra curl args
+            code=$(curl -sS -m 30 -o body.bin -w "%{http_code}" $3 "$2" 2>/dev/null || echo "ERR")
+            size=$(wc -c < body.bin 2>/dev/null || echo 0)
+            if head -c 1 body.bin 2>/dev/null | grep -q '[{[]'; then
+              verdict="JSON ✅"
+            elif grep -qi "just a moment\|cf_chl_opt" body.bin 2>/dev/null; then
+              verdict="CLOUDFLARE_CHALLENGE ❌"
             else
-              echo "NOT JSON (first 300 bytes):"
-              head -c 300 r2.txt; echo
+              verdict="OTHER/NON-JSON"
             fi
-            echo
+            echo "[$1] HTTP=$code size=$size -> $verdict"
+            if [ "$verdict" = "JSON ✅" ]; then
+              echo "    top-level keys: $(jq -rc 'keys' body.bin 2>&1 | head -c 300)"
+              echo "    records[0]: $(jq -c '.records[0] // empty' body.bin 2>&1 | head -c 600)"
+            fi
             sleep 4
-          done
+          }
 
-      - name: Original host response shape (expected to redirect away)
-        run: |
-          set -uo pipefail
-          BASE="https://pcc.g0v.ronny.tw/api"
-
-          echo "===== 0. Redirect chain (first probe got HTTP 301) ====="
-          # The service 301s. Find out where to, because the adapter should
-          # target the real final URL rather than relying on redirect-following.
-          curl -sS -m 30 -D - -o /dev/null "$BASE/getinfo" 2>&1 | head -20
-          echo "--- following redirects ---"
-          curl -sSL -m 30 -o /dev/null \
-            -w "FINAL_URL=%{url_effective}\nHTTP=%{http_code} REDIRECTS=%{num_redirects} TIME=%{time_total}s\n" \
-            "$BASE/getinfo" || echo "FAILED: $?"
-
-          sleep 3
+          echo "===== NEW HOST, direct path ====="
+          probe "new /api/getinfo"                "https://pcc-api.openfun.app/api/getinfo" ""
+          probe "new /api/getinfo (browser UA)"   "https://pcc-api.openfun.app/api/getinfo" "-A '$UA'"
+          probe "new /api/searchbytitle"          "https://pcc-api.openfun.app/api/searchbytitle?$Q" ""
+          probe "new /api/searchbytitle (br UA)"  "https://pcc-api.openfun.app/api/searchbytitle?$Q" "-A '$UA'"
 
           echo
-          echo "===== 1. GET /api/getinfo (following redirects) ====="
-          curl -sSL -m 30 -w "\nHTTP=%{http_code} TIME=%{time_total}s SIZE=%{size_download}\n" \
-            "$BASE/getinfo" || echo "FAILED: $?"
-
-          sleep 3
+          echo "===== OLD HOST, no redirect follow (does it serve directly?) ====="
+          probe "old /api/getinfo (no -L)"        "https://pcc.g0v.ronny.tw/api/getinfo" ""
+          probe "old /api/searchbytitle (no -L)"  "https://pcc.g0v.ronny.tw/api/searchbytitle?$Q" ""
 
           echo
-          echo "===== 2. GET /api/searchbytitle?query=開放政府 ====="
-          curl -sSL -m 30 -o search.json \
-            -w "FINAL_URL=%{url_effective}\nHTTP=%{http_code} TIME=%{time_total}s SIZE=%{size_download}\n" \
-            --get --data-urlencode "query=開放政府" "$BASE/searchbytitle" || echo "FAILED: $?"
-
-          echo "--- top-level keys ---"
-          jq -r 'keys[]' search.json 2>&1 | head -20
-          echo "--- pagination fields ---"
-          jq -c '{query, page, total_records, total_pages, records_len: (.records|length)}' search.json 2>&1
-          echo "--- FIRST RECORD (verbatim, this is the real shape) ---"
-          jq '.records[0]' search.json 2>&1 | head -60
-          echo "--- union of record keys across the page ---"
-          jq -r '[.records[]? | keys[]] | unique[]' search.json 2>&1 | head -30
-          echo "--- union of brief.* keys ---"
-          jq -r '[.records[]?.brief | keys[]] | unique[]' search.json 2>&1 | head -30
-
-          sleep 3
-
-          echo
-          echo "===== 3. GET /api/tender for the first hit ====="
-          echo "(this returns the FULL announcement record — its keys are exactly"
-          echo " the valid columns[] names, which is how we learn whether"
-          echo " 預算金額 / 截止投標日期 exist and what they are really called)"
-          UNIT=$(jq -r '.records[0].unit_id // empty' search.json)
-          JOB=$(jq -r '.records[0].job_number // empty' search.json)
-          echo "unit_id=$UNIT job_number=$JOB"
-          if [ -n "$UNIT" ] && [ -n "$JOB" ]; then
-            curl -sSL -m 30 -o tender.json \
-              -w "HTTP=%{http_code} TIME=%{time_total}s SIZE=%{size_download}\n" \
-              --get --data-urlencode "unit_id=$UNIT" --data-urlencode "job_number=$JOB" \
-              "$BASE/tender" || echo "FAILED: $?"
-            echo "--- tender top-level keys ---"
-            jq -r 'keys[]' tender.json 2>&1 | head -20
-            echo "--- ALL detail field names (candidate columns[] values) ---"
-            jq -r '[.records[]?.detail // {} | keys[]] | unique[]' tender.json 2>&1 | head -80
-            echo "--- any field mentioning 預算 / 投標 / 決標金額 ---"
-            jq -r '[.records[]?.detail // {} | keys[]] | unique[] | select(test("預算|投標|金額|截止"))' tender.json 2>&1 | head -40
-          else
-            echo "SKIPPED: no unit_id/job_number in the search response"
-          fi
+          echo "===== Is the viewer's own origin usable? ====="
+          probe "openfunltd.github.io viewer"     "https://openfunltd.github.io/pcc-viewer/" ""
+          echo "DONE — see verdicts above"
