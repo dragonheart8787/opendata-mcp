@@ -374,10 +374,22 @@ describe("typhoonNewsEntry", () => {
     expect(result.typhoons).toHaveLength(1);
 
     const typhoon = result.typhoons[0];
-    expect(typhoon.cwaNumber).toBe(rawCyclone.CwaTdNo);
-    expect(typhoon.name).toBeNull();
-    expect(typhoon.internationalName).toBeNull();
-    expect(typhoon.isNamedTyphoon).toBe(false);
+
+    // Deliberately NOT asserting "this system is an unnamed depression".
+    // The fixture is a real capture, and the very same system can be
+    // upgraded and named between refreshes — which is exactly what
+    // happened (熱帶性低氣壓 14 became 颱風 白海豚/DOLPHIN, CwaTyNo 13) and
+    // broke the previous hardcoded `CwaTdNo` / `isNamedTyphoon: false`
+    // assertions. Named-vs-unnamed behavior is pinned by the hand-written
+    // tests below instead; what this fixture test checks is faithful
+    // transcription, which holds either way.
+    expect(typhoon.cwaNumber).not.toBeNull();
+    expect([rawCyclone.CwaTyNo, rawCyclone.CwaTdNo]).toContain(typhoon.cwaNumber);
+    expect(typhoon.name).toBe(rawCyclone.CwaTyphoonName ?? null);
+    expect(typhoon.internationalName).toBe(rawCyclone.TyphoonName ?? null);
+    // Invariant rather than a fixed expectation: the flag must agree with
+    // whether any name actually came through.
+    expect(typhoon.isNamedTyphoon).toBe(typhoon.name !== null || typhoon.internationalName !== null);
 
     expect(typhoon.latestPosition).not.toBeNull();
     expect(typhoon.latestPosition!.time).toBe(rawLatestFix.DateTime);
