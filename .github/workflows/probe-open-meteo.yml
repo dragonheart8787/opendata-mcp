@@ -16,14 +16,17 @@ jobs:
       - run: npm ci
       - name: Run the REAL adapter+registry+tool against the LIVE Open-Meteo API
         run: |
-          set -u
-          cat > /tmp/live.test.ts <<'TS'
+          set -euo pipefail
+          # Must live under test/ — vitest's include is `test/**/*.test.ts`.
+          cat > test/live-openmeteo.test.ts <<'TS'
           import { describe, expect, it } from "vitest";
-          import { handleGlobalWeatherTool } from "./src/tools/global-weather.js";
-          import { runQueryDataset } from "./src/tools/generic.js";
+          import { handleGlobalWeatherTool } from "../src/tools/global-weather.js";
+          import { runQueryDataset } from "../src/tools/generic.js";
+          import { openMeteoAdapter } from "../src/adapters/open-meteo.js";
+          import { openMeteoForecastEntry } from "../src/registry/open-meteo.js";
 
-          // No fetchImpl passed -> the global fetch, i.e. a REAL request to
-          // the real Open-Meteo API through the real adapter/registry code.
+          // No fetchImpl passed -> the global fetch, i.e. REAL requests to the
+          // real Open-Meteo API through the real adapter/registry/tool code.
           describe("live Open-Meteo", () => {
             it("global_weather returns a populated envelope for Tokyo", async () => {
               const result = await handleGlobalWeatherTool({ latitude: 35.6785, longitude: 139.6823, forecastDays: 3 }, {});
@@ -31,30 +34,33 @@ jobs:
               console.log("ENVELOPE KEYS:", Object.keys(env).join(", "));
               console.log("provenance:", env.provenance);
               console.log("licence:", JSON.stringify(env.licence));
-              console.log("resolved:", JSON.stringify(env.data.resolved));
               console.log("requested:", JSON.stringify(env.data.requested));
+              console.log("resolved:", JSON.stringify(env.data.resolved));
               console.log("timezone:", env.data.timezone, env.data.utcOffsetSeconds);
               console.log("current:", JSON.stringify(env.data.current));
               console.log("daily[0]:", JSON.stringify(env.data.daily[0]));
-              console.log("daily count:", env.data.daily.length);
-              console.log("attribution present:", env.data.attribution.length > 0);
-              console.log("--- TEXT ---");
+              console.log("--- HUMAN-READABLE TEXT ---");
               console.log(result.content[0].text);
               expect(result.isError).toBeUndefined();
               expect(env.ok).toBe(true);
               expect(env.provenance).toBe("third-party-aggregator");
               expect(env.licence.id).toBe("cc-by-4.0");
+              expect(env.licence.commercialUseAllowed).toBe(false);
               expect(env.data.daily.length).toBe(3);
               expect(env.data.current.temperatureC).toBeTypeOf("number");
               expect(env.data.timezone).toBe("Asia/Tokyo");
+              expect(env.data.attribution).toContain("Weather data by Open-Meteo.com");
+              // Grid snapping really happens against the live API.
+              expect(env.data.resolved.latitude).not.toBe(env.data.requested.latitude);
             }, 30000);
 
-            it("southern-hemisphere + antimeridian coordinate also works", async () => {
+            it("southern hemisphere works too (Wellington)", async () => {
               const result = await handleGlobalWeatherTool({ latitude: -41.2865, longitude: 174.7762, forecastDays: 1 }, {});
               const env = result.structuredContent as any;
-              console.log("NZ timezone:", env.data.timezone, "current:", JSON.stringify(env.data.current));
+              console.log("NZ:", env.data.timezone, JSON.stringify(env.data.current), JSON.stringify(env.data.daily));
               expect(env.ok).toBe(true);
               expect(env.data.daily.length).toBe(1);
+              expect(env.data.timezone).toContain("Auckland");
             }, 30000);
 
             it("geocoding via tw_query_dataset resolves a name to coordinates", async () => {
@@ -62,6 +68,7 @@ jobs:
               console.log("GEOCODING:", JSON.stringify(data));
               expect((data as any).places.length).toBeGreaterThan(0);
               expect((data as any).places[0].latitude).toBeTypeOf("number");
+              expect((data as any).attribution).toContain("Open-Meteo.com");
             }, 30000);
 
             it("a no-match geocoding query returns an empty list, not a crash", async () => {
@@ -70,15 +77,21 @@ jobs:
               expect((data as any).places).toEqual([]);
             }, 30000);
 
-            it("a genuinely bad request surfaces upstream's own reason as INVALID_PARAMS", async () => {
-              // Bypasses the Zod schema on purpose to exercise the adapter's
-              // real 400 handling against the real API.
-              const { openMeteoAdapter } = await import("./src/adapters/open-meteo.js");
-              const { openMeteoForecastEntry } = await import("./src/registry/open-meteo.js");
-              const broken = { ...openMeteoForecastEntry, buildQueryParams: () => ({ latitude: "999", longitude: "121", current: "temperature_2m" }) };
-              await expect(openMeteoAdapter.fetchDataset(broken as any, {} as any, {})).rejects.toMatchObject({ code: "INVALID_PARAMS" });
+            it("a real 400 surfaces upstream's own reason as INVALID_PARAMS", async () => {
+              // Bypasses the Zod schema deliberately, to exercise the
+              // adapter's real 400 handling against the real API.
+              const broken = {
+                ...openMeteoForecastEntry,
+                buildQueryParams: () => ({ latitude: "999", longitude: "121", current: "temperature_2m" })
+              };
+              await expect(openMeteoAdapter.fetchDataset(broken as any, {} as any, {}))
+                .rejects.toMatchObject({ code: "INVALID_PARAMS" });
+              try {
+                await openMeteoAdapter.fetchDataset(broken as any, {} as any, {});
+              } catch (e: any) {
+                console.log("REAL 400 MESSAGE:", e.message);
+              }
             }, 30000);
           });
           TS
-          cp /tmp/live.test.ts ./live.test.ts
-          npx vitest run live.test.ts --reporter=verbose 2>&1 | tail -90
+          npx vitest run test/live-openmeteo.test.ts --reporter=verbose
