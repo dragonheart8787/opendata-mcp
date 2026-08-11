@@ -1,0 +1,125 @@
+name: probe-open-meteo (TEMPORARY)
+on:
+  push:
+    branches: [chore/probe-open-meteo]
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Probe the real Open-Meteo API
+        run: |
+          set -u
+          UA="opendata-mcp-probe/1.0"
+          F="https://api.open-meteo.com/v1/forecast"
+          G="https://geocoding-api.open-meteo.com/v1/search"
+
+          echo "########## 0. robots.txt ##########"
+          for u in "https://open-meteo.com/robots.txt" "https://api.open-meteo.com/robots.txt"; do
+            echo "--- $u ---"
+            curl -sS -m 20 -A "$UA" -w "\nHTTP=%{http_code} ct=%{content_type}\n" "$u" | head -25
+          done
+
+          echo
+          echo "########## 1. forecast: current + hourly + daily ##########"
+          curl -sS -m 30 -A "$UA" -D h1.txt -o f1.json -w "HTTP=%{http_code} bytes=%{size_download} ct=%{content_type}\n" \
+            "$F?latitude=35.6785&longitude=139.6823&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,rain,showers,snowfall,weather_code,cloud_cover,pressure_msl,surface_pressure,wind_speed_10m,wind_direction_10m,wind_gusts_10m&hourly=temperature_2m,precipitation_probability,precipitation,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,sunrise,sunset,precipitation_sum,precipitation_probability_max,wind_speed_10m_max&timezone=auto&forecast_days=3"
+          echo "--- response headers ---"
+          grep -iE '^(HTTP/|content-type|x-|cache|date|access-control)' h1.txt | head -20 || true
+          echo "--- top-level keys ---"
+          jq -r 'keys | join(", ")' f1.json
+          echo "--- scalar top-level values ---"
+          jq -r 'to_entries | map(select((.value|type) != "object" and (.value|type) != "array")) | map("\(.key) = \(.value|tostring)") | .[]' f1.json
+          echo "--- current_units ---"; jq -c '.current_units' f1.json
+          echo "--- current ---";       jq -c '.current' f1.json
+          echo "--- hourly_units ---";  jq -c '.hourly_units' f1.json
+          echo "--- hourly keys + first 3 values each ---"
+          jq -r '.hourly | to_entries | map("\(.key): \(.value[0:3]|tostring)  (len=\(.value|length))") | .[]' f1.json
+          echo "--- daily_units ---";   jq -c '.daily_units' f1.json
+          echo "--- daily (full) ---";  jq -c '.daily' f1.json
+
+          sleep 2
+          echo
+          echo "########## 2. minimal call: no timezone, no forecast_days ##########"
+          curl -sS -m 30 -A "$UA" -o f2.json -w "HTTP=%{http_code} bytes=%{size_download}\n" \
+            "$F?latitude=25.033&longitude=121.5654&current=temperature_2m,weather_code"
+          jq -c '{latitude,longitude,timezone,timezone_abbreviation,utc_offset_seconds,elevation,generationtime_ms,current}' f2.json
+
+          sleep 2
+          echo
+          echo "########## 3. error shapes ##########"
+          for label in "3a missing-longitude:latitude=25.03&current=temperature_2m" \
+                       "3b lat-out-of-range:latitude=999&longitude=121&current=temperature_2m" \
+                       "3c unknown-variable:latitude=25.03&longitude=121.56&current=not_a_real_variable" \
+                       "3d non-numeric-lat:latitude=abc&longitude=121.56&current=temperature_2m" \
+                       "3e forecast_days=99:latitude=25.03&longitude=121.56&current=temperature_2m&forecast_days=99"; do
+            name="${label%%:*}"; q="${label#*:}"
+            echo "--- $name ---"
+            curl -sS -m 20 -A "$UA" -w "\nHTTP=%{http_code} ct=%{content_type}\n" "$F?$q" | head -8
+          done
+
+          sleep 2
+          echo
+          echo "########## 4. geocoding API ##########"
+          echo "--- 4a Tokyo (en) ---"
+          curl -sS -m 20 -A "$UA" -o g1.json -w "HTTP=%{http_code} bytes=%{size_download} ct=%{content_type}\n" \
+            "$G?name=Tokyo&count=3&language=en&format=json"
+          jq -r 'keys|join(", ")' g1.json
+          jq -c '.results[0]' g1.json
+          echo "--- 4b 東京 (zh) ---"
+          curl -sS -m 20 -A "$UA" -o g2.json -w "HTTP=%{http_code}\n" "$G?name=%E6%9D%B1%E4%BA%AC&count=3&language=zh&format=json"
+          jq -c '{topKeys: (.|keys), first: .results[0]}' g2.json
+          echo "--- 4c no match ---"
+          curl -sS -m 20 -A "$UA" -w "\nHTTP=%{http_code}\n" "$G?name=zzzzqqqqxxxx&count=3&format=json" | head -5
+
+          sleep 2
+          echo
+          echo "########## 5. docs page: variable names, WMO codes, licence ##########"
+          curl -sSL -m 30 -A "$UA" -o docs.html -w "HTTP=%{http_code} bytes=%{size_download}\n" "https://open-meteo.com/en/docs"
+          python3 - <<'PY'
+          import re, html
+          raw = open("docs.html", encoding="utf-8", errors="replace").read()
+          def strip(h):
+              h = re.sub(r"(?is)<(script|style)[^>]*>.*?</\1>", " ", h)
+              h = re.sub(r"(?s)<[^>]+>", " ", h)
+              return re.sub(r"[ \t\r\n]+", " ", html.unescape(h)).strip()
+          for grp in ("current", "hourly", "daily"):
+              names = sorted(set(re.findall(r'name="%s"[^>]*value="([a-z0-9_]+)"' % grp, raw)))
+              if not names:
+                  names = sorted(set(re.findall(r'id="%s_([a-z0-9_]+)"' % grp, raw)))
+              print("[%s variables] (%d) %s" % (grp, len(names), ", ".join(names)))
+          print()
+          print("[WMO weather code table]")
+          m = re.search(r"(?i)wmo\s*weather\s*(?:interpretation\s*)?codes?", raw)
+          if m:
+              print(" ", strip(raw[max(0, m.start()-200):m.start()+2600])[:2400])
+          else:
+              print("  (not found on this page)")
+          print()
+          print("[licence / rate-limit mentions]")
+          seen = set()
+          for m in re.finditer(r"(?i)(CC[ -]?BY|creative commons|attribution|non-commercial|commercial use|API key|rate limit|10,000|10000)", raw):
+              t = strip(raw[max(0, m.start()-260):m.start()+320])
+              if t not in seen:
+                  seen.add(t)
+                  print("  >>", t[:400])
+              if len(seen) >= 12:
+                  break
+          PY
+
+          sleep 2
+          echo
+          echo "########## 6. terms / licence pages ##########"
+          for u in "https://open-meteo.com/en/terms" "https://open-meteo.com/en/license"; do
+            echo "=== $u ==="
+            curl -sSL -m 30 -A "$UA" -o t.html -w "HTTP=%{http_code} bytes=%{size_download} final=%{url_effective}\n" "$u"
+            python3 - <<'PY'
+          import re, html
+          raw = open("t.html", encoding="utf-8", errors="replace").read()
+          raw = re.sub(r"(?is)<(script|style)[^>]*>.*?</\1>", " ", raw)
+          raw = re.sub(r"(?s)<[^>]+>", " ", raw)
+          print(re.sub(r"[ \t\r\n]+", " ", html.unescape(raw)).strip()[:3000])
+          PY
+            echo
+          done
+          echo "SWEEP DONE"
