@@ -7,64 +7,36 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: WMO code table + licence conditions
+      - name: Capture real fixtures with the exact production query strings
         run: |
           set -u
           UA="opendata-mcp-probe/1.0"
-          curl -sSL -m 30 -A "$UA" -o docs.html -w "docs HTTP=%{http_code} bytes=%{size_download}\n" "https://open-meteo.com/en/docs"
-          curl -sSL -m 30 -A "$UA" -o lic.html -w "licence HTTP=%{http_code} bytes=%{size_download} final=%{url_effective}\n" "https://open-meteo.com/en/license"
-          python3 - <<'PY'
-          import re, html
-          raw = open("docs.html", encoding="utf-8", errors="replace").read()
+          # These two URLs are byte-for-byte what buildOpenMeteoUrl produces
+          # for each entry's sampleParams (current/daily variable lists,
+          # timezone=auto, forecast_days, count/language/format).
+          FQ="latitude=35.6785&longitude=139.6823&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,rain,showers,snowfall,weather_code,cloud_cover,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,sunrise,sunset,precipitation_sum,precipitation_probability_max,wind_speed_10m_max&timezone=auto&forecast_days=3"
+          GQ="name=Tokyo&count=3&language=en&format=json"
 
-          def strip(h):
-              h = re.sub(r"(?is)<(script|style)[^>]*>.*?</\1>", " ", h)
-              h = re.sub(r"(?s)<[^>]+>", "\t", h)
-              return re.sub(r"[ \r\n]+", " ", html.unescape(h))
-
-          print("===== every <table> whose text mentions a WMO code meaning =====")
-          for t in re.findall(r"(?is)<table.*?</table>", raw):
-              txt = strip(t)
-              if re.search(r"(?i)clear sky|Mainly clear|Drizzle|Thunderstorm|fog", txt):
-                  rows = re.findall(r"(?is)<tr.*?</tr>", t)
-                  print("  TABLE with %d rows" % len(rows))
-                  for r in rows:
-                      cells = [re.sub(r"\s+", " ", strip(c)).replace("\t", " ").strip()
-                               for c in re.findall(r"(?is)<t[dh].*?</t[dh]>", r)]
-                      cells = [c for c in cells if c]
-                      if cells:
-                          print("   ", " | ".join(cells)[:200])
-                  print()
-
-          print("===== raw text around 'Clear sky' (fallback if not in a table) =====")
-          m = re.search(r"(?i)clear sky", raw)
-          if m:
-              print(" ", re.sub(r"\s+", " ", strip(raw[max(0, m.start()-1500):m.start()+3000]))[:3500])
-
-          print()
-          print("===== licence page =====")
-          lic = open("lic.html", encoding="utf-8", errors="replace").read()
-          print("  raw length:", len(lic))
-          print("  raw content:", lic[:600])
-          print("  links:", sorted(set(re.findall(r'href="([^"]+)"', lic)))[:30])
-
-          print()
-          print("===== docs page: attribution / CC-BY link targets =====")
-          for u in sorted(set(re.findall(r'href="([^"]*(?:creativecommons|licen[cs]e|attribution)[^"]*)"', raw, re.I))):
-              print("  ", u)
-          PY
+          echo "===== FORECAST FIXTURE ====="
+          curl -sS -m 30 -A "$UA" -o f.json -w "HTTP=%{http_code} bytes=%{size_download}\n" \
+            "https://api.open-meteo.com/v1/forecast?$FQ"
+          python3 -m json.tool f.json
 
           echo
-          echo "===== licence via the docs' own linked page ====="
-          curl -sSL -m 30 -A "$UA" -w "\nHTTP=%{http_code} final=%{url_effective}\n" "https://open-meteo.com/en/features" -o feat.html
+          echo "===== GEOCODING FIXTURE ====="
+          curl -sS -m 30 -A "$UA" -o g.json -w "HTTP=%{http_code} bytes=%{size_download}\n" \
+            "https://geocoding-api.open-meteo.com/v1/search?$GQ"
+          python3 -m json.tool g.json
+
+          echo
+          echo "===== licence page (/en/licence, British spelling) ====="
+          curl -sSL -m 30 -A "$UA" -o lic.html -w "HTTP=%{http_code} bytes=%{size_download} final=%{url_effective}\n" \
+            "https://open-meteo.com/en/licence"
           python3 - <<'PY'
           import re, html
-          raw = open("feat.html", encoding="utf-8", errors="replace").read()
+          raw = open("lic.html", encoding="utf-8", errors="replace").read()
           raw = re.sub(r"(?is)<(script|style)[^>]*>.*?</\1>", " ", raw)
           txt = re.sub(r"(?s)<[^>]+>", " ", raw)
-          txt = re.sub(r"[ \t\r\n]+", " ", html.unescape(txt))
-          for m in re.finditer(r"(?i)(CC[ -]?BY|attribution|licen[cs]e)", txt):
-              print("  >>", txt[max(0, m.start()-200):m.start()+300].strip()[:450])
-              break
+          print(re.sub(r"[ \t\r\n]+", " ", html.unescape(txt)).strip()[:2500])
           PY
           echo "SWEEP DONE"
