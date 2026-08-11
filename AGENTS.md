@@ -135,6 +135,18 @@ This server has no write tools and never will (see architecture doc §0 non-goal
 
 （以下這段結論在第四輪排查後已知有誤，保留是為了記錄排查過程本身，不要重新採信其結論）**這次 `httpGetWithBody` 的修正，是一次「查證時發現的真實架構缺陷，但排查後確認跟事發的實際問題無關」的案例，兩者要分開記錄，不要因為修了東西就默認是原因。** 真實事件：`tw_highway_traffic` 連續三次呼叫逾時，其他工具（天氣、search_datasets）正常。完整排查順序：(1) 先懷疑上游 fetch/XML 解析——用 debug 路由直接對 `tisvcloud.freeway.gov.tw` 量測，真實數字是 fetch-to-headers 315ms、body 讀取與 XML 解析都約 0ms，遠低於 5 秒 timeout，**排除**這個理論；(2) 但這個 debug 路由繞過了真正的呼叫路徑（快取讀寫、client-side 篩選、格式化），所以又做了第二個 debug 路由，直接呼叫真正的 adapter/registry/cache 函式（不是另外重寫一份邏輯）並分段計時，外加併發測試——真實數字是全程最慢 917ms、併發呼叫互不拖慢，**排除**快取層與並發是原因；(3) 兩輪真實數據都排除了程式碼邏輯層面的問題，唯一還沒被這兩次 debug 路由涵蓋到的是 MCP 協定層本身（schema 驗證、`McpServer`/transport 生命週期）——但這層是所有工具共用的通用程式碼，並非 highway 專屬，而真實事件裡「其他工具都正常、只有這個工具逾時」這個選擇性現象，本身就是不利於「共用協定層」這個假設的證據。**結論（已知有誤，見上）**：這次連續三次逾時很可能是那次呼叫當下的一次性網路雜訊（例如 `tisvcloud.freeway.gov.tw` 本身、或 Cloudflare 到它的路由，短暫地慢或不穩定），不是本專案程式碼裡可重現的系統性問題。
 
+**Open-Meteo（`openmeteo`）是本專案第一個非台灣、非官方、且不適用政府資料開放授權條款的來源，加新來源前先讀這一則。**
+
+- **沙箱連不到，驗證一律走 GitHub Actions。** 這個 sandbox 的 egress proxy 對 `api.open-meteo.com` 與 `open-meteo.com` 都回 `connect_rejected`，WebFetch 則回 `EGRESS_BLOCKED`。端點、參數名、回應欄位、錯誤格式、WMO 代碼對照表、授權條文，**全部**都是從 GitHub Actions 打真實 API／真實文件頁抓回來的，沒有一項是從記憶填的。這與 tisvcloud 那次的處置相同（見上方 debug-probe 筆記），差別只在這裡連 Actions 都能直連，所以最後的端對端驗證是直接在 Actions 裡跑真正的 adapter/registry/tool 程式碼打真實 API，不需要部署後才驗。
+- **`api.open-meteo.com/robots.txt` 是 `Disallow: /`，但這不構成本專案的紅線。** 主網域 `open-meteo.com/robots.txt` 是 `Allow: /`；API 主機那條是擋搜尋引擎索引 JSON 回應的慣例設定，不是「不歡迎 API 用戶端」——同一個營運者公開發布這個 API 供程式化使用，並明文列出每分鐘/每小時/每日的呼叫額度，那種額度只對 API 用戶端有意義。本專案是在額度內依文件使用該 API，不是爬它的網站，與 pcc-api.openfun.app 那次「繞過 Cloudflare challenge」的性質完全不同。**這個區分要記住**：robots.txt 出現在 API 主機上時，不能直接套用「站台不歡迎自動存取」的結論。
+- **`SourceProvenance` 擴充成三值，`SourceLicence` 是另外新增的一條軸線，兩者不要混為一談。** `provenance`（`official` / `community-mirror` / `third-party-aggregator`）回答「這份資料有多少權威性」；`SourceLicence` 回答「我可以拿它做什麼」。兩者正交——官方機關的資料可以是 CC BY，非官方服務的資料也可以是公眾領域——所以把授權塞進 provenance 的 enum（例如加一個 `cc-by-noncommercial` 值）會讓同一個欄位承擔兩件不相干的事，且表達不出真實存在的組合。加來源時請照這個分工填 `SOURCE_PROVENANCE` 與 `SOURCE_LICENCE` 兩張表。
+- **信封的 `provenance` 與 `licence` 都只在「與預設不同」時才出現。** 預設是 `official` + 政府資料開放授權條款第 1 版；四個台灣政府來源因此完全不受影響，回應的 key 集合與加這兩個欄位之前一模一樣（`test/infra/envelope.test.ts` 有斷言鎖住）。新增來源時不要改成無條件輸出。
+- **CC BY 4.0 的姓名標示是授權條件，所以標示文字放進回應 DATA（`data.attribution`），不是只放 description。** 這是 `RAIL_LIVEBOARD_DELAY_NOTICE` 那次的教訓的第二次應用：description 是給呼叫端 LLM 的指引，不保證會傳達給終端使用者；只寫在人類可讀字串裡則會被只讀 `structuredContent` 的 client 丟掉。Open-Meteo 授權頁明文要求的寫法是 `Weather data by Open-Meteo.com` 並附連結，常數裡用的就是這句原文，不是改寫版。
+- **兩個端點在不同主機**（forecast 在 `api.open-meteo.com`，geocoding 在 `geocoding-api.open-meteo.com`）。主機選擇放在 adapter 內的 entry-id 對照表，**沒有**為此新增第四個 `DatasetEntry` 欄位——URL 組裝本來就是 adapter 的職責（§1），而「哪個主機服務哪個端點」是關於這個上游的知識，不是關於資料集的知識。
+- **geocoding 查無結果時，上游回應會完全沒有 `results` 這個鍵**（實測回傳就只有 `{"generationtime_ms": ...}`），不是空陣列。直接讀 `.results.length` 會在最容易發生的情境（使用者打錯地名）炸掉。
+- **回應座標會被吸附到模式網格點**（實測 35.6785 → 35.7），且所有時間欄位**不帶時區位移**（`"2026-08-11T17:45"`）；不送 `timezone=auto` 時上游會安靜地用 GMT 回答。這三件事都已在 registry 的 transform 與工具回應裡明確處理與揭露，不要在後續修改時「簡化」掉。
+- **fixtures-refresh 沒有為這個來源加額外延遲，這是算過的決定**，理由寫在 `scripts/fixtures/refresh-fixtures.ts` 的 `HIGHWAY_EXTRA_DELAY_MS` 下方註解裡（每分鐘 600 次的額度 vs. 既有 750ms 基礎延遲）。真正需要注意額度的是對外服務的 Worker，不是這支每週跑一次的腳本——所以 429 在 adapter 裡有專屬的錯誤訊息與 hint。
+
 ### 政府標案資料：已評估過的來源與結論（不要重複調查）
 
 四條路都查過了，結論與查證日期一併記在這裡。要再動這個題目之前先讀完這一段，避免重跑同樣的調查。

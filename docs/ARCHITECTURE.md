@@ -34,9 +34,11 @@
 | 交通部高速公路局「交通資料庫」 | tisvcloud.freeway.gov.tw | 無（公開下載，免金鑰） | — | ✅ 已接（`tw_highway_traffic`）——不在原規劃內，第一個 XML 格式、零認證的來源，見 AGENTS.md §6 |
 | 水利署 WRA | data.gov.tw 轉介 / 防災資訊服務網 | 多數免金鑰 | — | 🔜 Phase 4 |
 | 其他（農業部價格、衛福部藥局等） | data.gov.tw | 各異 | — | Backlog |
+| Open-Meteo（**非官方**第三方全球氣象服務） | open-meteo.com | 無（免金鑰、免註冊） | — | ✅ 已接（`global_weather`）——**不在原規劃內**，本專案第一個非台灣來源，也是第一個非政府資料開放授權條款（CC BY 4.0、免費方案限非商業）的來源，見 AGENTS.md §6 |
 
 **每個來源的已知地雷**
 - CWA：縣市名稱必須用「臺」；部分資料集（鄉鎮預報 F-D0047-*）是每縣市一個代碼，需要對照表
+- Open-Meteo：回應座標會被吸附到模式網格點（非查詢座標本身）；時間欄位不帶時區位移，且不送 `timezone=auto` 時預設用 GMT；geocoding 查無結果時整個 `results` 鍵消失而非空陣列；授權與其他四個來源不同，需在信封與 README 分開標示
 - MOENV：缺值標記混亂（`""` / `"-"` / `"ND"`），已在 adapter 統一正規化為 `null`；欄位名稱歷史上改過大小寫，fixtures 過期風險高
 - TDX：OAuth token 有效期約 1 天，必須在 Worker 內做 token 快取（KV），且免費方案有流量限制，快取是必要不是加分
 - 資料集代碼未經實測前一律標記「待確認」，session 內必須先打官方 swagger/文件驗證，不可憑記憶寫死
@@ -222,7 +224,8 @@ export interface DatasetEntry {
 
 - 每個回應信封帶 `source` 顯名標示；README 維持授權條款、免責、防災以官方為準的聲明
 - 工具描述與 transform 中禁止出現「本工具預測/建議」語意；颱風、特報類工具描述明確寫「轉載中央氣象署發布內容」
-- LICENSE：程式碼 MIT；資料依政府資料開放授權條款第 1 版，README 分開標示兩者
+- LICENSE：程式碼 MIT；資料依來源而異——台灣政府來源為政府資料開放授權條款第 1 版，Open-Meteo 為 CC BY 4.0（免費方案限非商業用途），README 分開標示三者
+- 授權與來源權威性是**兩條獨立的軸線**（`SourceProvenance` 與 `SourceLicence`），回應信封在且僅在與預設不同時才輸出對應欄位，避免既有官方來源的回應格式改變
 
 ---
 
