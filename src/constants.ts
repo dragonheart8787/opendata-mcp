@@ -507,3 +507,221 @@ export const HIGHWAY_LIVE_EVENTS_PATH = "history/motc20/LiveEvents.xml";
 export const HIGHWAY_LIVE_EVENTS_CACHE_TTL_SECONDS = 60;
 
 export type TaiwanCity = (typeof TAIWAN_CITIES)[number];
+
+// --- Open-Meteo (open-meteo.com) ---
+//
+// First non-Taiwan source in this project, and the first whose data is NOT
+// under 政府資料開放授權條款第 1 版 — see `OPEN_METEO_LICENCE_*` below and
+// registry/index.ts's `SOURCE_LICENCE`. Also the first source that is not a
+// government agency at all: Open-Meteo is a third party that ingests and
+// interpolates national weather-service model output (DWD ICON, NOAA HRRR,
+// Météo-France AROME and others) — hence `provenance:
+// "third-party-aggregator"`, not "official".
+//
+// Every endpoint, parameter name and response field encoded below was
+// confirmed against the REAL API from GitHub Actions on 2026-08-11, not from
+// memory or from the docs page alone: this sandbox's egress proxy denies
+// both api.open-meteo.com and open-meteo.com (`connect_rejected`, and
+// WebFetch returns EGRESS_BLOCKED), so the same debug-probe discipline
+// AGENTS.md §6 established for tisvcloud applies here.
+//
+// Note on robots.txt: `open-meteo.com/robots.txt` is `Allow: /`, but
+// `api.open-meteo.com/robots.txt` is `User-agent: * / Disallow: /`. That is
+// a crawler directive on an API host (it stops search engines indexing JSON
+// responses); it is not a statement that API clients are unwelcome — the
+// same operator publishes this API for programmatic use with documented
+// per-minute/hour/day call limits, which only make sense for API clients.
+// This server consumes the documented API within those limits rather than
+// crawling the host, so it follows the terms of use, and there is nothing
+// here resembling the access-control bypass this project declined to build
+// for pcc-api.openfun.app. Recorded explicitly so the distinction is on the
+// record rather than silently glossed over.
+export const OPEN_METEO_FORECAST_BASE_URL = "https://api.open-meteo.com/v1";
+
+/**
+ * Geocoding lives on a DIFFERENT host from the forecast API (confirmed by
+ * real calls to both). `adapters/open-meteo.ts` selects the base per entry
+ * id — the first source in this project needing that, which is why the
+ * mapping lives in the adapter (URL assembly is explicitly the adapter's
+ * job per AGENTS.md §1) rather than as a new `DatasetEntry` field.
+ */
+export const OPEN_METEO_GEOCODING_BASE_URL = "https://geocoding-api.open-meteo.com/v1";
+
+export const OPEN_METEO_FORECAST_PATH = "forecast";
+export const OPEN_METEO_GEOCODING_PATH = "search";
+
+/** Docs page for the Forecast API. */
+export const OPEN_METEO_FORECAST_DOC_URL = "https://open-meteo.com/en/docs";
+/** Docs page for the Geocoding API. */
+export const OPEN_METEO_GEOCODING_DOC_URL = "https://open-meteo.com/en/docs/geocoding-api";
+/** Terms of use, including the free-tier call limits and the CC BY 4.0 acceptance quoted below. */
+export const OPEN_METEO_TERMS_URL = "https://open-meteo.com/en/terms";
+
+/**
+ * The `current=` variables this server requests. Every name here was
+ * confirmed present in a real response's `current` AND `current_units`
+ * objects — not copied from the docs page (whose variable checkboxes are
+ * rendered client-side and could not be scraped reliably).
+ */
+export const OPEN_METEO_CURRENT_VARIABLES = [
+  "temperature_2m",
+  "relative_humidity_2m",
+  "apparent_temperature",
+  "is_day",
+  "precipitation",
+  "rain",
+  "showers",
+  "snowfall",
+  "weather_code",
+  "cloud_cover",
+  "pressure_msl",
+  "wind_speed_10m",
+  "wind_direction_10m",
+  "wind_gusts_10m"
+] as const;
+
+/** Same provenance as OPEN_METEO_CURRENT_VARIABLES — all confirmed in a real `daily`/`daily_units` response. */
+export const OPEN_METEO_DAILY_VARIABLES = [
+  "weather_code",
+  "temperature_2m_max",
+  "temperature_2m_min",
+  "apparent_temperature_max",
+  "apparent_temperature_min",
+  "sunrise",
+  "sunset",
+  "precipitation_sum",
+  "precipitation_probability_max",
+  "wind_speed_10m_max"
+] as const;
+
+/**
+ * Upper bound this server accepts for `forecast_days`. This is OUR cap, not
+ * a verified upstream maximum — the real upstream limit was NOT determined
+ * (a probe with `forecast_days=99` neither returned a 400 nor completed; the
+ * connection simply hung until the 20s client timeout). 7 days keeps the
+ * response inside the ~2,000-token budget (docs/ARCHITECTURE.md §2.3) and
+ * well inside whatever the real ceiling is, so a caller never discovers the
+ * upstream's undefined behavior through this server.
+ */
+export const OPEN_METEO_MAX_FORECAST_DAYS = 7;
+export const OPEN_METEO_DEFAULT_FORECAST_DAYS = 3;
+
+/**
+ * Cache TTL for the forecast endpoint. Evidence-based the same way as
+ * METRO_ALERT_CACHE_TTL_SECONDS/HIGHWAY_LIVE_EVENTS_CACHE_TTL_SECONDS: the
+ * real response's own `current.interval` field reports 900 (seconds), i.e.
+ * Open-Meteo itself says the current-conditions block advances every 15
+ * minutes. Matching it exactly means this server's cache never adds
+ * staleness beyond what the upstream already has.
+ */
+export const OPEN_METEO_FORECAST_CACHE_TTL_SECONDS = 900;
+
+/** Geocoding results (a place's coordinates) are effectively static — same reasoning as YOUBIKE_STATION_CACHE_TTL_SECONDS/RAIL_TRA_STATION_CACHE_TTL_SECONDS. */
+export const OPEN_METEO_GEOCODING_CACHE_TTL_SECONDS = 24 * 60 * 60;
+
+/** Cap on geocoding matches returned, mirroring the upstream `count` parameter's role. */
+export const OPEN_METEO_GEOCODING_MAX_RESULTS = 10;
+export const OPEN_METEO_GEOCODING_DEFAULT_RESULTS = 5;
+
+/**
+ * CC BY 4.0 attribution, embedded directly in `global_weather`'s response
+ * DATA (`GlobalWeatherResult.attribution`), not only in the tool description
+ * or this comment.
+ *
+ * This placement is the direct lesson from `RAIL_LIVEBOARD_DELAY_NOTICE`: a
+ * tool `description` is guidance for the calling LLM and is not guaranteed
+ * to reach the end user on any given call, and text that only exists in the
+ * human-readable `content` string gets dropped by clients that read
+ * `structuredContent` instead. CC BY 4.0 makes attribution a *condition of
+ * the licence*, so it has to survive whichever representation the caller
+ * actually reads.
+ *
+ * Two upstream statements this reflects, both fetched 2026-08-11:
+ *
+ * - Terms of use (OPEN_METEO_TERMS_URL), verbatim: "You may only use the
+ *   free API services for non-commercial purposes. You accept to the CC-BY
+ *   4.0 licence, as specified in the licence conditions."
+ * - Licence page (OPEN_METEO_LICENCE_PAGE_URL), verbatim: "You must include
+ *   a link next to any location Open-Meteo data are displayed, for example:
+ *   `<a href="https://open-meteo.com/">Weather data by Open-Meteo.com</a>`"
+ *
+ * That second sentence is why the exact phrase "Weather data by
+ * Open-Meteo.com" and the URL appear below rather than a paraphrase — it is
+ * the credit line the licensor actually asks for.
+ */
+export const OPEN_METEO_ATTRIBUTION =
+  "Weather data by Open-Meteo.com（https://open-meteo.com/）——" +
+  "本筆全球天氣資料來源為 Open-Meteo.com，依 CC BY 4.0（姓名標示 4.0 國際）授權；" +
+  "依其授權條款，顯示這份資料的任何位置都必須一併標示上述來源與連結。" +
+  "⚠️ 注意：這與本伺服器其他資料來源（中央氣象署、環境部、交通部）所適用的" +
+  "「政府資料開放授權條款第 1 版」是不同的授權條款，不可混用或互相套用。" +
+  "Open-Meteo 的免費方案僅限非商業用途（每日 10,000 次、每小時 5,000 次、每分鐘 600 次），" +
+  "商業使用需另行向 Open-Meteo 訂閱付費方案。" +
+  "Open-Meteo 本身彙整自各國氣象單位的開放資料（DWD、ECMWF、NOAA NCEP、Météo-France、JMA 等），" +
+  "各上游來源有其各自的授權條款。";
+
+/** The licence page quoted in OPEN_METEO_ATTRIBUTION (note the British spelling — `/en/license` redirects here). */
+export const OPEN_METEO_LICENCE_PAGE_URL = "https://open-meteo.com/en/licence";
+
+/** Licence identifier/name/url for the Open-Meteo source, surfaced in the response envelope — see registry/index.ts's SOURCE_LICENCE. */
+export const OPEN_METEO_LICENCE_ID = "cc-by-4.0";
+export const OPEN_METEO_LICENCE_NAME = "CC BY 4.0（姓名標示 4.0 國際）";
+export const OPEN_METEO_LICENCE_URL = "https://creativecommons.org/licenses/by/4.0/";
+
+/**
+ * WMO weather interpretation codes, transcribed VERBATIM from Open-Meteo's
+ * own documentation table (open-meteo.com/en/docs, "WMO Weather
+ * interpretation codes (WW)"), fetched 2026-08-11. `description` is the
+ * upstream's exact English wording for that code's group; `descriptionZh` is
+ * THIS SERVER'S translation of it, labelled as such in the tool response so
+ * a caller can tell transcription from translation.
+ *
+ * The upstream table groups codes ("1, 2, 3 | Mainly clear, partly cloudy,
+ * and overcast"), so each code below carries the specific meaning its
+ * position in that group denotes. Codes absent from the table are left
+ * absent here rather than guessed — an unknown code surfaces as the raw
+ * number with a null description, never an invented label (same discipline
+ * as highway's opaque EventType/Severity passthrough).
+ */
+export const WMO_WEATHER_CODES: Record<number, { description: string; descriptionZh: string }> = {
+  0: { description: "Clear sky", descriptionZh: "晴朗無雲" },
+  1: { description: "Mainly clear", descriptionZh: "大致晴朗" },
+  2: { description: "Partly cloudy", descriptionZh: "局部多雲" },
+  3: { description: "Overcast", descriptionZh: "陰天" },
+  45: { description: "Fog", descriptionZh: "有霧" },
+  48: { description: "Depositing rime fog", descriptionZh: "凍霧（霧淞）" },
+  51: { description: "Drizzle: Light intensity", descriptionZh: "毛毛雨：小" },
+  53: { description: "Drizzle: Moderate intensity", descriptionZh: "毛毛雨：中" },
+  55: { description: "Drizzle: Dense intensity", descriptionZh: "毛毛雨：密集" },
+  56: { description: "Freezing Drizzle: Light intensity", descriptionZh: "凍毛毛雨：小" },
+  57: { description: "Freezing Drizzle: Dense intensity", descriptionZh: "凍毛毛雨：密集" },
+  61: { description: "Rain: Slight intensity", descriptionZh: "降雨：小雨" },
+  63: { description: "Rain: Moderate intensity", descriptionZh: "降雨：中雨" },
+  65: { description: "Rain: Heavy intensity", descriptionZh: "降雨：大雨" },
+  66: { description: "Freezing Rain: Light intensity", descriptionZh: "凍雨：小" },
+  67: { description: "Freezing Rain: Heavy intensity", descriptionZh: "凍雨：大" },
+  71: { description: "Snow fall: Slight intensity", descriptionZh: "降雪：小雪" },
+  73: { description: "Snow fall: Moderate intensity", descriptionZh: "降雪：中雪" },
+  75: { description: "Snow fall: Heavy intensity", descriptionZh: "降雪：大雪" },
+  77: { description: "Snow grains", descriptionZh: "雪粒" },
+  80: { description: "Rain showers: Slight", descriptionZh: "陣雨：小" },
+  81: { description: "Rain showers: Moderate", descriptionZh: "陣雨：中" },
+  82: { description: "Rain showers: Violent", descriptionZh: "陣雨：劇烈" },
+  85: { description: "Snow showers slight", descriptionZh: "陣雪：小" },
+  86: { description: "Snow showers heavy", descriptionZh: "陣雪：大" },
+  95: { description: "Thunderstorm: Slight or moderate", descriptionZh: "雷雨：小或中等" },
+  96: { description: "Thunderstorm with slight hail", descriptionZh: "雷雨並伴隨小冰雹" },
+  99: { description: "Thunderstorm with heavy hail", descriptionZh: "雷雨並伴隨大冰雹" }
+};
+
+/**
+ * Open-Meteo's own footnote on the thunderstorm codes, transcribed from the
+ * same docs table (the `*` marker on rows "95 *" and "96, 99 *"): those
+ * codes are only available in Central Europe. Surfaced in the response when
+ * one of them appears, so a caller doesn't read "no thunderstorm" as
+ * meaningful outside that region.
+ */
+export const WMO_THUNDERSTORM_CODES_REGIONAL_NOTE =
+  "⚠️ Open-Meteo 文件註明：雷雨相關代碼（95、96、99）僅在中歐地區提供，" +
+  "其他地區即使實際有雷雨也可能不會出現這些代碼——沒有出現不等於沒有雷雨。";
+

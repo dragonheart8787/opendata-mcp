@@ -9,6 +9,7 @@ import { airQualityInputShape, handleAirQualityTool } from "./tools/air-quality.
 import { handleYouBikeTool, youBikeInputShape } from "./tools/bike.js";
 import { busEtaInputShape, handleBusEtaTool } from "./tools/bus-eta.js";
 import { handleRecentEarthquakesTool, recentEarthquakesInputShape } from "./tools/earthquake.js";
+import { globalWeatherInputShape, handleGlobalWeatherTool } from "./tools/global-weather.js";
 import { handleQueryDatasetTool, handleSearchDatasetsTool, queryDatasetInputShape, searchDatasetsInputShape } from "./tools/generic.js";
 import { handleHighwayTrafficTool, highwayLiveEventsInputShape } from "./tools/highway.js";
 import { handleMetroStatusTool, metroStatusInputShape } from "./tools/metro.js";
@@ -308,6 +309,47 @@ function createServer(env: Env): McpServer {
       }
     },
     ({ road }) => handleHighwayTrafficTool({ road }, env)
+  );
+
+  server.registerTool(
+    "global_weather",
+    {
+      title: "全球天氣查詢（台灣以外地區，Open-Meteo）",
+      description:
+        "查詢 Open-Meteo（open-meteo.com）的全球天氣預報，依經緯度座標回傳該地點的目前天氣" +
+        "（氣溫、體感溫度、相對濕度、降水量、風速風向陣風、雲量、天氣狀況）與未來數天的每日預報" +
+        "（最高/最低氣溫、降雨機率、累積雨量、日出日落）。⚠️ Open-Meteo 不是官方氣象機關，" +
+        "而是彙整並內插各國氣象單位數值預報模式（DWD ICON、NOAA HRRR、Météo-France AROME 等）的" +
+        "第三方服務，回傳值不一定等同任何一國官方發布的預報數字。\n\n" +
+        "參數：\n" +
+        "- latitude：必填，緯度（-90 到 90 的十進位度數，北緯為正、南緯為負）。\n" +
+        "- longitude：必填，經度（-180 到 180 的十進位度數，東經為正、西經為負）。\n" +
+        "- forecastDays：選填，每日預報天數（1 到 7，預設 3）。上限 7 是本伺服器為控制回應長度自行" +
+        "設定的，不是 Open-Meteo 的上限。\n" +
+        "本工具只接受座標，不接受地名。若只知道地名，請先用 tw_query_dataset 查詢資料集 " +
+        "openmeteo:geocoding（參數 name），取得座標後再呼叫本工具。\n\n" +
+        "適用情境：使用者詢問**台灣以外**任何地點的天氣，例如「東京現在幾度」「這週冰島天氣如何」" +
+        "「我下週要去曼谷，會下雨嗎」。\n\n" +
+        "不適用：**台灣地區的天氣請優先使用 tw_weather_forecast**（中央氣象署官方資料，是台灣的法定" +
+        "氣象主管機關，對台灣本地查詢更準確也更具權威性）；本工具不提供颱風動態（台灣周邊颱風請用 " +
+        "tw_typhoon）、不提供天氣特報或警報、不提供空氣品質、不接受地名查詢（見上）、" +
+        "也不提供逐小時預報（本次僅收錄目前天氣與每日預報）。\n\n" +
+        "資料範圍限制：上游會把查詢座標**吸附到模式網格點**（例如 35.6785 會變成 35.7），回應同時附上" +
+        "查詢座標與實際取用的網格點座標，兩者通常不同；所有時間欄位**不帶時區位移**，是該座標的當地時間，" +
+        "須搭配同一筆回應的 timezone／utcOffsetSeconds 判讀；天氣狀況為 WMO 數字代碼，對照文字逐字轉錄自 " +
+        "Open-Meteo 官方文件，中文為本伺服器翻譯，查無對照的代碼會保留原始數字而不臆測；雷雨代碼" +
+        "（95、96、99）依官方文件僅在中歐地區提供。⚠️ 授權：本資料為 CC BY 4.0，**與本伺服器其他資料集" +
+        "所用的「政府資料開放授權條款第 1 版」不同**，且 Open-Meteo 免費方案**僅限非商業用途**——" +
+        "轉載或再散布時必須標示 Open-Meteo.com 為來源（回應內容本身也附有這段標示文字）。",
+      inputSchema: globalWeatherInputShape,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: true
+      }
+    },
+    ({ latitude, longitude, forecastDays }) => handleGlobalWeatherTool({ latitude, longitude, forecastDays }, env)
   );
 
   server.registerTool(

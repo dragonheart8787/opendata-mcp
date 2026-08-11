@@ -1,0 +1,52 @@
+{
+    "results": [
+        {
+            "id": 1850147,
+            "name": "Tokyo",
+            "latitude": 35.6895,
+            "longitude": 139.69171,
+            "elevation": 44.0,
+            "feature_code": "PPLC",
+            "country_code": "JP",
+            "admin1_id": 1850144,
+            "timezone": "Asia/Tokyo",
+            "population": 9733276,
+            "country_id": 1861060,
+            "country": "Japan",
+            "admin1": "Tokyo"
+        },
+        {
+            "id": 2085290,
+            "name": "Tokyo",
+            "latitude": -8.4,
+            "longitude": 147.15,
+            "elevation": 2047.0,
+            "feature_code": "PPL",
+            "country_code": "PG",
+            "admin1_id": 2133763,
+            "timezone": "Pacific/Port_Moresby",
+            "country_id": 2088628,
+            "country": "Papua New Guinea",
+            "admin1": "Central Province"
+        },
+        {
+            "id": 7945384,
+            "name": "Tokyo",
+            "latitude": 29.16998,
+            "longitude": 83.16319,
+            "elevation": 4288.0,
+            "feature_code": "PPLL",
+            "country_code": "NP",
+            "admin1_id": 12095452,
+            "admin2_id": 12095470,
+            "admin3_id": 12095634,
+            "timezone": "Asia/Kathmandu",
+            "country_id": 1282988,
+            "country": "Nepal",
+            "admin1": "Karnali Pradesh",
+            "admin2": "Dolpa",
+            "admin3": "Dolpo Buddha"
+        }
+    ],
+    "generationtime_ms": 1.1225939
+}
