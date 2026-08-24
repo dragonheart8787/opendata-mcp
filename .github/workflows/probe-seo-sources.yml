@@ -7,52 +7,67 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Fetch primary sources for crawler UAs and the llms.txt spec
+      - name: llms.txt spec + OpenAI/Anthropic crawler UAs
         run: |
           set -u
           UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
-          fetch() {
-            echo "===================================================="
-            echo "=== $1"
-            curl -sSL -m 30 -A "$UA" -o p.html -w "HTTP=%{http_code} bytes=%{size_download} final=%{url_effective}\n" "$1" || echo "curl rc=$?"
-            python3 - "$2" <<'PY'
-          import re, html, sys
-          raw = open("p.html", encoding="utf-8", errors="replace").read()
-          raw = re.sub(r"(?is)<(script|style|nav|svg)\b.*?</\1>", " ", raw)
-          txt = re.sub(r"(?s)<[^>]+>", "\n", raw)
-          txt = html.unescape(txt)
-          txt = re.sub(r"[ \t]+", " ", txt)
-          txt = "\n".join(l.strip() for l in txt.split("\n") if l.strip())
-          limit = int(sys.argv[1])
-          print(txt[:limit])
-          PY
-            echo
-            sleep 1
-          }
 
-          echo "##################### 1. llms.txt SPEC (verbatim) #####################"
-          fetch "https://llmstxt.org/" 6000
-
-          echo "##################### 2. OpenAI bots #####################"
-          fetch "https://platform.openai.com/docs/bots" 3500
-
-          echo "##################### 3. Anthropic ClaudeBot #####################"
-          fetch "https://support.anthropic.com/en/articles/8896518-does-anthropic-crawl-data-from-the-web-and-how-can-site-owners-block-the-crawler" 3500
-
-          echo "##################### 4. Perplexity bots #####################"
-          fetch "https://docs.perplexity.ai/guides/bots" 3500
-
-          echo "##################### 5. Google crawlers (Google-Extended) #####################"
-          curl -sSL -m 30 -A "$UA" -o g.html -w "HTTP=%{http_code} bytes=%{size_download}\n" "https://developers.google.com/search/docs/crawling-indexing/google-common-crawlers"
+          echo "############ 1. llmstxt.org — the spec itself ############"
+          curl -sSL -m 30 -A "$UA" -o s.html -w "HTTP=%{http_code} bytes=%{size_download}\n" "https://llmstxt.org/"
           python3 - <<'PY'
           import re, html
-          raw = open("g.html", encoding="utf-8", errors="replace").read()
+          raw = open("s.html", encoding="utf-8", errors="replace").read()
           raw = re.sub(r"(?is)<(script|style|svg)\b.*?</\1>", " ", raw)
-          txt = re.sub(r"(?s)<[^>]+>", "\n", raw)
+          # Keep code blocks visible - they hold the literal format example.
+          raw = raw.replace("</pre>", "\n[/CODE]\n").replace("<pre>", "\n[CODE]\n")
+          txt = re.sub(r"(?s)<[^>]+>", " ", raw)
           txt = re.sub(r"[ \t]+", " ", html.unescape(txt))
           txt = "\n".join(l.strip() for l in txt.split("\n") if l.strip())
-          for m in re.finditer(r"(?i)(google-extended|googlebot|user agent token)", txt):
-              print(">>", txt[max(0,m.start()-150):m.start()+250].replace("\n", " | ")[:380])
-              print()
+          print(txt[:5200])
           PY
+
+          echo
+          echo "############ 2. OpenAI bots ############"
+          for u in "https://platform.openai.com/docs/bots" "https://openai.com/gptbot"; do
+            echo "--- $u ---"
+            curl -sSL -m 30 -A "$UA" -o o.html -w "HTTP=%{http_code} bytes=%{size_download}\n" "$u" || true
+            python3 - <<'PY'
+          import re, html
+          raw = open("o.html", encoding="utf-8", errors="replace").read()
+          raw = re.sub(r"(?is)<(script|style|svg)\b.*?</\1>", " ", raw)
+          txt = re.sub(r"(?s)<[^>]+>", " ", raw)
+          txt = re.sub(r"[ \t]+", " ", html.unescape(txt))
+          txt = "\n".join(l.strip() for l in txt.split("\n") if l.strip())
+          hits = [m.start() for m in re.finditer(r"(?i)(GPTBot|OAI-SearchBot|ChatGPT-User|user-agent)", txt)]
+          if hits:
+              for h in hits[:8]:
+                  print(">>", txt[max(0,h-180):h+260].replace("\n"," | ")[:420]); print()
+          else:
+              print("(no crawler names found; first 600 chars):", txt[:600])
+          PY
+          done
+
+          echo
+          echo "############ 3. Anthropic ClaudeBot ############"
+          for u in "https://support.anthropic.com/en/articles/8896518-does-anthropic-crawl-data-from-the-web-and-how-can-site-owners-block-the-crawler" "https://darkvisitors.com/agents/agents/claudebot"; do
+            echo "--- $u ---"
+            curl -sSL -m 30 -A "$UA" -o a.html -w "HTTP=%{http_code} bytes=%{size_download}\n" "$u" || true
+            python3 - <<'PY'
+          import re, html
+          raw = open("a.html", encoding="utf-8", errors="replace").read()
+          raw = re.sub(r"(?is)<(script|style|svg)\b.*?</\1>", " ", raw)
+          txt = re.sub(r"(?s)<[^>]+>", " ", raw)
+          txt = re.sub(r"[ \t]+", " ", html.unescape(txt))
+          txt = "\n".join(l.strip() for l in txt.split("\n") if l.strip())
+          hits = [m.start() for m in re.finditer(r"(?i)(ClaudeBot|Claude-User|Claude-SearchBot|anthropic-ai)", txt)]
+          if hits:
+              seen=set()
+              for h in hits[:10]:
+                  frag = txt[max(0,h-200):h+280].replace("\n"," | ")[:440]
+                  if frag[:60] in seen: continue
+                  seen.add(frag[:60]); print(">>", frag); print()
+          else:
+              print("(no names found; first 600):", txt[:600])
+          PY
+          done
           echo "SWEEP DONE"
