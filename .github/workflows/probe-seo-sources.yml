@@ -1,0 +1,58 @@
+name: probe-seo-sources (TEMPORARY)
+on:
+  push:
+    branches: [chore/probe-seo-sources]
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Fetch primary sources for crawler UAs and the llms.txt spec
+        run: |
+          set -u
+          UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
+          fetch() {
+            echo "===================================================="
+            echo "=== $1"
+            curl -sSL -m 30 -A "$UA" -o p.html -w "HTTP=%{http_code} bytes=%{size_download} final=%{url_effective}\n" "$1" || echo "curl rc=$?"
+            python3 - "$2" <<'PY'
+          import re, html, sys
+          raw = open("p.html", encoding="utf-8", errors="replace").read()
+          raw = re.sub(r"(?is)<(script|style|nav|svg)\b.*?</\1>", " ", raw)
+          txt = re.sub(r"(?s)<[^>]+>", "\n", raw)
+          txt = html.unescape(txt)
+          txt = re.sub(r"[ \t]+", " ", txt)
+          txt = "\n".join(l.strip() for l in txt.split("\n") if l.strip())
+          limit = int(sys.argv[1])
+          print(txt[:limit])
+          PY
+            echo
+            sleep 1
+          }
+
+          echo "##################### 1. llms.txt SPEC (verbatim) #####################"
+          fetch "https://llmstxt.org/" 6000
+
+          echo "##################### 2. OpenAI bots #####################"
+          fetch "https://platform.openai.com/docs/bots" 3500
+
+          echo "##################### 3. Anthropic ClaudeBot #####################"
+          fetch "https://support.anthropic.com/en/articles/8896518-does-anthropic-crawl-data-from-the-web-and-how-can-site-owners-block-the-crawler" 3500
+
+          echo "##################### 4. Perplexity bots #####################"
+          fetch "https://docs.perplexity.ai/guides/bots" 3500
+
+          echo "##################### 5. Google crawlers (Google-Extended) #####################"
+          curl -sSL -m 30 -A "$UA" -o g.html -w "HTTP=%{http_code} bytes=%{size_download}\n" "https://developers.google.com/search/docs/crawling-indexing/google-common-crawlers"
+          python3 - <<'PY'
+          import re, html
+          raw = open("g.html", encoding="utf-8", errors="replace").read()
+          raw = re.sub(r"(?is)<(script|style|svg)\b.*?</\1>", " ", raw)
+          txt = re.sub(r"(?s)<[^>]+>", "\n", raw)
+          txt = re.sub(r"[ \t]+", " ", html.unescape(txt))
+          txt = "\n".join(l.strip() for l in txt.split("\n") if l.strip())
+          for m in re.finditer(r"(?i)(google-extended|googlebot|user agent token)", txt):
+              print(">>", txt[max(0,m.start()-150):m.start()+250].replace("\n", " | ")[:380])
+              print()
+          PY
+          echo "SWEEP DONE"
