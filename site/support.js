@@ -21,7 +21,15 @@
     { label: "台鐵", q: "板橋車站台鐵現在有沒有誤點？", a: "板橋　自強 152 次 往樹林 誤點 6 分　區間 2178 次 準點", src: "資料來源：交通部運輸資料流通服務（TDX）" }
   ];
 
-  var targets = { n9: 9, n2: 2, n4: 4, n19: 19, n333: 333 };
+  // Stat targets are read from the DOM (`data-count-to`), not hard-coded
+  // here. index.html now ships the real numbers as each element's static
+  // text so a crawler (or anyone with JS off) reads the true figures instead
+  // of the "0" placeholders this file used to animate away from — which also
+  // means the numbers now live in exactly one place, rather than drifting
+  // between a hard-coded map here and the markup (the old map still said
+  // 333 tests long after that stopped being true).
+  var statEls = Array.prototype.slice.call(document.querySelectorAll("[data-count-to]"));
+
 
   var state = { i: 0, typed: "", progress: 0 };
   var typeTimer = null;
@@ -108,22 +116,23 @@
 
   // --- animated stat counters ---
   function countUp() {
-    var keys = Object.keys(targets);
-    if (reduced) {
-      keys.forEach(function (k) {
-        document.getElementById("stat-" + k).textContent = String(targets[k]);
-      });
-      return;
-    }
+    if (!statEls.length) return;
+    var targets = statEls.map(function (el) {
+      return Number(el.getAttribute("data-count-to")) || 0;
+    });
+    // Reduced motion: leave the static markup exactly as served. It already
+    // holds the final value, so there is nothing to "set".
+    if (reduced) return;
     var t0 = performance.now();
     var dur = 1100;
     function step(now) {
       var p = Math.min(1, (now - t0) / dur);
       var e = 1 - Math.pow(1 - p, 3);
-      keys.forEach(function (k) {
-        document.getElementById("stat-" + k).textContent = String(Math.round(targets[k] * e));
+      statEls.forEach(function (el, i) {
+        el.textContent = String(Math.round(targets[i] * e));
       });
       if (p < 1) requestAnimationFrame(step);
+      else statEls.forEach(function (el, i) { el.textContent = String(targets[i]); });
     }
     requestAnimationFrame(step);
   }

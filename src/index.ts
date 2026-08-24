@@ -5,6 +5,8 @@ import { CfWorkerJsonSchemaValidator } from "@modelcontextprotocol/sdk/validatio
 import type { CacheStore } from "./infra/cache.js";
 import { checkRateLimit, type RateLimiter } from "./infra/rate-limit.js";
 import { LANDING_PAGE_HTML, LANDING_PAGE_SCRIPT } from "./landing.js";
+import { listDatasetEntries } from "./registry/index.js";
+import { buildLlmsTxt, buildRobotsTxt, buildSitemapXml } from "./seo.js";
 import { airQualityInputShape, handleAirQualityTool } from "./tools/air-quality.js";
 import { handleYouBikeTool, youBikeInputShape } from "./tools/bike.js";
 import { busEtaInputShape, handleBusEtaTool } from "./tools/bus-eta.js";
@@ -373,21 +375,68 @@ const JSON_RPC_METHOD_NOT_ALLOWED = {
   id: null
 };
 
+/**
+ * The origin baked into `site/index.html`'s canonical/Open Graph URLs and
+ * into `site/support.js`'s copy-to-clipboard sample. It's a real URL there
+ * (not a placeholder token) so those two files stay valid when opened
+ * standalone — the way their module comment says to verify them. At request
+ * time it is rewritten to whatever origin actually served the request, so a
+ * self-hosted fork advertises its own URL instead of pointing every crawler
+ * and every "add to Claude" instruction at this project's demo deployment.
+ */
+const CANONICAL_ORIGIN = "https://opendata-mcp.dragonheartliu1440.workers.dev";
+
+function withRequestOrigin(text: string, origin: string): string {
+  return origin === CANONICAL_ORIGIN ? text : text.split(CANONICAL_ORIGIN).join(origin);
+}
+
+/**
+ * `lastmod` for the sitemap. A build-time constant, NOT `new Date()`:
+ * regenerating "today" on every request would tell crawlers the page changed
+ * daily when it didn't, which is the kind of claim that gets a sitemap
+ * ignored. Bump this when the landing page's content actually changes.
+ */
+const SITEMAP_LAST_MODIFIED = "2026-08-24";
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
 
     if (url.pathname === "/") {
-      return new Response(LANDING_PAGE_HTML, {
+      return new Response(withRequestOrigin(LANDING_PAGE_HTML, url.origin), {
         status: 200,
         headers: { "content-type": "text/html; charset=utf-8" }
       });
     }
 
     if (url.pathname === "/support.js") {
-      return new Response(LANDING_PAGE_SCRIPT, {
+      return new Response(withRequestOrigin(LANDING_PAGE_SCRIPT, url.origin), {
         status: 200,
         headers: { "content-type": "text/javascript; charset=utf-8" }
+      });
+    }
+
+    if (url.pathname === "/robots.txt") {
+      return new Response(buildRobotsTxt(url.origin), {
+        status: 200,
+        headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "public, max-age=3600" }
+      });
+    }
+
+    if (url.pathname === "/llms.txt") {
+      return new Response(buildLlmsTxt(url.origin, listDatasetEntries().length), {
+        status: 200,
+        // text/markdown, because that is what it is — the llms.txt proposal
+        // is explicitly a markdown format, and `rel="describedby" ...
+        // type="text/markdown"` in the page head promises this type.
+        headers: { "content-type": "text/markdown; charset=utf-8", "cache-control": "public, max-age=3600" }
+      });
+    }
+
+    if (url.pathname === "/sitemap.xml") {
+      return new Response(buildSitemapXml(url.origin, SITEMAP_LAST_MODIFIED), {
+        status: 200,
+        headers: { "content-type": "application/xml; charset=utf-8", "cache-control": "public, max-age=3600" }
       });
     }
 
