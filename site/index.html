@@ -4,7 +4,32 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>opendata-mcp — 台灣開放資料 MCP 閘道</title>
-<meta name="description" content="台灣官方開放資料的統一 MCP 閘道。一句話問天氣、地震、空品、交通，Claude 直接幫你查——不用申請金鑰、不用記資料集代碼。">
+<meta name="description" content="把中央氣象署、環境部、交通部的開放資料收斂成一組 MCP 工具：天氣、地震、颱風、空品、公車、YouBike、台鐵、捷運、國道事件，接上 Claude 就能用自然語言查詢，不必申請金鑰或記資料集代碼。部署於 Cloudflare Workers，可直接用公開 demo，也可自行架設。">
+<meta name="keywords" content="MCP,Model Context Protocol,MCP Server,台灣開放資料,開放資料 API,中央氣象署 API,環境部 API,交通部 TDX,天氣查詢,地震查詢,空氣品質,颱風,公車動態,YouBike,台鐵誤點,國道路況,Claude,Cloudflare Workers">
+<meta name="author" content="opendata-mcp">
+<link rel="canonical" href="https://opendata-mcp.dragonheartliu1440.workers.dev/">
+
+<!-- llms.txt v2 recommends pointing at the file that describes this page via
+     rel="describedby" (an HTTP Link: header is the other accepted form). -->
+<link rel="describedby" href="https://opendata-mcp.dragonheartliu1440.workers.dev/llms.txt" type="text/markdown">
+
+<!-- Open Graph. No og:image: this project has no brand artwork, and shipping
+     a placeholder that renders as an empty grey box is worse than letting a
+     platform fall back to its own text-only card. Everything else a card
+     needs is here, so adding an image later is a one-line change. -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="opendata-mcp">
+<meta property="og:locale" content="zh_TW">
+<meta property="og:url" content="https://opendata-mcp.dragonheartliu1440.workers.dev/">
+<meta property="og:title" content="opendata-mcp — 台灣開放資料 MCP 閘道">
+<meta property="og:description" content="一句話問天氣、地震、空品、交通，Claude 直接幫你查。把中央氣象署、環境部、交通部的開放資料收斂成一組 MCP 工具，不必申請金鑰或記資料集代碼。">
+
+<!-- summary (not summary_large_image) precisely because there is no og:image
+     to fill a large card with. -->
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="opendata-mcp — 台灣開放資料 MCP 閘道">
+<meta name="twitter:description" content="一句話問天氣、地震、空品、交通，Claude 直接幫你查。把中央氣象署、環境部、交通部的開放資料收斂成一組 MCP 工具，不必申請金鑰或記資料集代碼。">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -26,6 +51,58 @@
     [data-reveal] { opacity: 1; transform: none; }
   }
 </style>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebAPI",
+      "@id": "https://opendata-mcp.dragonheartliu1440.workers.dev/#api",
+      "name": "opendata-mcp",
+      "alternateName": "台灣開放資料 MCP 閘道",
+      "description": "台灣官方開放資料的統一 Remote MCP Server（Model Context Protocol）。把中央氣象署、環境部、交通部運輸資料流通服務（TDX）、交通部高速公路局的開放資料收斂成一組工具，讓 Claude 等 MCP client 以自然語言查詢天氣、地震、颱風、空氣品質、公車動態、YouBike、台鐵誤點、捷運營運狀態與國道即時事件。",
+      "url": "https://opendata-mcp.dragonheartliu1440.workers.dev/",
+      "documentation": "https://github.com/dragonheart8787/opendata-mcp#readme",
+      "termsOfService": "https://github.com/dragonheart8787/opendata-mcp#資料來源與授權",
+      "inLanguage": "zh-Hant",
+      "isAccessibleForFree": true,
+      "provider": {
+        "@type": "Organization",
+        "name": "opendata-mcp",
+        "url": "https://github.com/dragonheart8787/opendata-mcp"
+      },
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://opendata-mcp.dragonheartliu1440.workers.dev/mcp",
+        "description": "以 JSON-RPC over HTTP POST 呼叫 MCP 的 tools/call 方法查詢資料集。"
+      }
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://github.com/dragonheart8787/opendata-mcp#code",
+      "name": "opendata-mcp",
+      "codeRepository": "https://github.com/dragonheart8787/opendata-mcp",
+      "programmingLanguage": "TypeScript",
+      "runtimePlatform": "Cloudflare Workers",
+      "license": "https://opensource.org/licenses/MIT",
+      "about": {
+        "@id": "https://opendata-mcp.dragonheartliu1440.workers.dev/#api"
+      }
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://opendata-mcp.dragonheartliu1440.workers.dev/#website",
+      "url": "https://opendata-mcp.dragonheartliu1440.workers.dev/",
+      "name": "opendata-mcp",
+      "inLanguage": "zh-Hant",
+      "about": {
+        "@id": "https://opendata-mcp.dragonheartliu1440.workers.dev/#api"
+      }
+    }
+  ]
+}
+</script>
 </head>
 <body>
 <div style="font-family: 'Noto Sans TC', 'IBM Plex Sans', sans-serif; color: #E4EFE8; min-height: 100%; overflow-x: hidden; position: relative; z-index: 1;">
@@ -51,6 +128,7 @@
     </nav>
   </header>
 
+  <main>
   <section id="top" style="position: relative; z-index: 1; padding: clamp(56px, 11vw, 116px) 20px clamp(40px, 7vw, 78px); max-width: 1180px; margin: 0 auto;">
     <div style="display: grid; gap: 26px;">
       <div style="display: flex; align-items: center; gap: 12px; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; letter-spacing: .26em; color: #6E8F7E;">
@@ -73,23 +151,23 @@
   <section style="position: relative; z-index: 1; max-width: 1180px; margin: 0 auto; padding: 0 20px clamp(48px, 8vw, 86px);">
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 172px), 1fr)); border-top: 1px solid rgba(127,227,176,.18);">
       <div data-reveal style="padding: 26px 20px 26px 0; border-bottom: 1px solid rgba(127,227,176,.1);">
-        <div id="stat-n9" style="font-family: 'IBM Plex Mono', monospace; font-size: clamp(36px, 6vw, 54px); font-weight: 400; color: #fff; line-height: 1; letter-spacing: -.03em;">0</div>
+        <div id="stat-n9" style="font-family: 'IBM Plex Mono', monospace; font-size: clamp(36px, 6vw, 54px); font-weight: 400; color: #fff; line-height: 1; letter-spacing: -.03em;" data-count-to="9">9</div>
         <div style="font-size: 13px; color: #7E9C8B; margin-top: 12px; letter-spacing: .1em;">精選工具</div>
       </div>
       <div data-reveal style="padding: 26px 20px; border-bottom: 1px solid rgba(127,227,176,.1); border-left: 1px solid rgba(127,227,176,.1);">
-        <div id="stat-n2" style="font-family: 'IBM Plex Mono', monospace; font-size: clamp(36px, 6vw, 54px); font-weight: 400; color: #fff; line-height: 1; letter-spacing: -.03em;">0</div>
+        <div id="stat-n2" style="font-family: 'IBM Plex Mono', monospace; font-size: clamp(36px, 6vw, 54px); font-weight: 400; color: #fff; line-height: 1; letter-spacing: -.03em;" data-count-to="2">2</div>
         <div style="font-size: 13px; color: #7E9C8B; margin-top: 12px; letter-spacing: .1em;">通用查詢工具</div>
       </div>
       <div data-reveal style="padding: 26px 20px; border-bottom: 1px solid rgba(127,227,176,.1); border-left: 1px solid rgba(127,227,176,.1);">
-        <div id="stat-n4" style="font-family: 'IBM Plex Mono', monospace; font-size: clamp(36px, 6vw, 54px); font-weight: 400; color: #fff; line-height: 1; letter-spacing: -.03em;">0</div>
+        <div id="stat-n4" style="font-family: 'IBM Plex Mono', monospace; font-size: clamp(36px, 6vw, 54px); font-weight: 400; color: #fff; line-height: 1; letter-spacing: -.03em;" data-count-to="4">4</div>
         <div style="font-size: 13px; color: #7E9C8B; margin-top: 12px; letter-spacing: .1em;">資料平台</div>
       </div>
       <div data-reveal style="padding: 26px 20px; border-bottom: 1px solid rgba(127,227,176,.1); border-left: 1px solid rgba(127,227,176,.1);">
-        <div id="stat-n19" style="font-family: 'IBM Plex Mono', monospace; font-size: clamp(36px, 6vw, 54px); font-weight: 400; color: #fff; line-height: 1; letter-spacing: -.03em;">0</div>
+        <div id="stat-n19" style="font-family: 'IBM Plex Mono', monospace; font-size: clamp(36px, 6vw, 54px); font-weight: 400; color: #fff; line-height: 1; letter-spacing: -.03em;" data-count-to="19">19</div>
         <div style="font-size: 13px; color: #7E9C8B; margin-top: 12px; letter-spacing: .1em;">已登記資料集<span style="color: #4E6B5C;">（含 8 筆長尾）</span></div>
       </div>
       <div data-reveal style="padding: 26px 20px; border-bottom: 1px solid rgba(127,227,176,.1); border-left: 1px solid rgba(127,227,176,.1);">
-        <div id="stat-n333" style="font-family: 'IBM Plex Mono', monospace; font-size: clamp(36px, 6vw, 54px); font-weight: 400; color: #fff; line-height: 1; letter-spacing: -.03em;">0</div>
+        <div id="stat-n333" style="font-family: 'IBM Plex Mono', monospace; font-size: clamp(36px, 6vw, 54px); font-weight: 400; color: #fff; line-height: 1; letter-spacing: -.03em;" data-count-to="374">374</div>
         <div style="font-size: 13px; color: #7E9C8B; margin-top: 12px; letter-spacing: .1em;">單元測試</div>
       </div>
     </div>
@@ -292,6 +370,8 @@
       <p style="margin: 0; font-size: 14px; line-height: 1.95; color: #A9C4B6;">程式碼採用 <a href="https://github.com/dragonheart8787/opendata-mcp/blob/main/LICENSE">MIT License</a> 授權。透過本專案取得的<strong style="color: #E4EFE8;">資料本身</strong>另依<a href="https://data.gov.tw/license">政府資料開放授權條款第 1 版</a>釋出，授權範圍與程式碼分開，使用前請自行確認符合該授權條款的要求（主要是註明出處）。</p>
     </div>
   </section>
+
+  </main>
 
   <footer style="position: relative; z-index: 1; border-top: 1px solid rgba(127,227,176,.18); padding: 40px 20px 52px;">
     <div style="max-width: 1180px; margin: 0 auto; display: grid; gap: 26px;">
