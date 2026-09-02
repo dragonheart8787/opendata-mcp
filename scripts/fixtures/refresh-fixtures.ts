@@ -33,6 +33,7 @@ import { fileURLToPath } from "node:url";
 import { buildCwaUrl } from "../../src/adapters/cwa.js";
 import { buildHighwayUrl, parseHighwayXml } from "../../src/adapters/highway.js";
 import { buildMoenvUrl } from "../../src/adapters/moenv.js";
+import { buildOpenMeteoUrl } from "../../src/adapters/open-meteo.js";
 import { getAccessToken, buildTdxUrl } from "../../src/adapters/tdx.js";
 import { httpGet } from "../../src/infra/http.js";
 import { listDatasetEntries } from "../../src/registry/index.js";
@@ -45,6 +46,7 @@ import "../../src/registry/cwa.js";
 import "../../src/registry/moenv.js";
 import "../../src/registry/tdx.js";
 import "../../src/registry/highway.js";
+import "../../src/registry/open-meteo.js";
 
 const FIXTURES_DIR = path.resolve(fileURLToPath(new URL(".", import.meta.url)), "../../test/fixtures");
 
@@ -99,6 +101,39 @@ const TDX_EXTRA_DELAY_MS = 1500;
  * bug, and explicitly NOT treated as a fatal `hadFetchFailure` below.
  */
 const HIGHWAY_EXTRA_DELAY_MS = 40000;
+
+/**
+ * **`openmeteo` deliberately has NO extra delay — this is a considered
+ * decision, not an oversight.** Recorded here so a future session doesn't
+ * have to redo the arithmetic.
+ *
+ * Open-Meteo's free tier allows 10,000 calls/day, 5,000/hour and
+ * 600/minute (verbatim from its terms of use). The binding one for this
+ * pipeline is the per-minute figure, and `INTER_CHECK_DELAY_MS` (750ms,
+ * applied between *every* check regardless of source) already caps this
+ * whole script at ~80 requests/minute even in the impossible case where
+ * every registered entry were an Open-Meteo one — 13% of the per-minute
+ * allowance. With the two entries actually registered, one weekly
+ * scheduled dispatch costs 2 calls; it would take ~5,000 dispatches in a
+ * single day to reach the daily cap.
+ *
+ * Two further reasons the TDX/highway situation doesn't transfer:
+ * - TDX needed padding because each of its entries costs *two* upstream
+ *   requests (an OAuth token plus the data call). Open-Meteo is keyless:
+ *   one entry, one request.
+ * - highway needed padding to satisfy a hard published rule about
+ *   re-fetching the same file. Open-Meteo publishes rate limits, not a
+ *   minimum re-fetch interval, and this script is nowhere near them.
+ *
+ * The quota risk that IS real for this source lives elsewhere and is
+ * handled elsewhere: the deployed Worker serving public traffic, not this
+ * weekly script, is what could plausibly approach 10,000 calls/day. That
+ * is why `adapters/open-meteo.ts` treats HTTP 429 as its own distinct
+ * error with an actionable hint, and why the README's self-hosting section
+ * flags it. Note also that the two don't even share a quota bucket in
+ * practice — this script runs from GitHub Actions IPs, the Worker from
+ * Cloudflare's.
+ */
 
 /**
  * Sources whose real-world unreachability from GitHub Actions/this
@@ -212,6 +247,13 @@ function buildChecks(): DatasetCheck[] {
           // AGENTS.md §6 and KNOWN_UNREACHABLE_FROM_CI_SOURCES above),
           // confirmed via real dispatch attempts, not assumed.
           return fetchRawXml(buildHighwayUrl(entry));
+        }
+        if (entry.source === "openmeteo") {
+          // Keyless like `highway`, but JSON and genuinely reachable from
+          // GitHub Actions, so this one really does exercise the upstream
+          // every run. No extra pacing needed — see the comment above
+          // HIGHWAY_EXTRA_DELAY_MS for the rate-limit arithmetic.
+          return fetchRawJson(buildOpenMeteoUrl(entry, sampleParams), undefined);
         }
         throw new Error(`No fixtures-refresh fetch strategy for source "${entry.source}" (dataset ${entry.id}).`);
       }

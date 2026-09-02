@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { buildFailureEnvelope, buildSuccessEnvelope, type EnvelopeProvenance } from "../../src/infra/envelope.js";
+import {
+  buildFailureEnvelope,
+  buildSuccessEnvelope,
+  DEFAULT_ENVELOPE_LICENCE_ID,
+  type EnvelopeProvenance
+} from "../../src/infra/envelope.js";
 import { ToolError } from "../../src/infra/errors.js";
-import { SOURCE_PROVENANCE } from "../../src/registry/index.js";
+import { CC_BY_4_0_LICENCE, OGDL_V1_LICENCE, SOURCE_LICENCE, SOURCE_PROVENANCE } from "../../src/registry/index.js";
 
 describe("buildSuccessEnvelope", () => {
   it("builds an ok:true envelope with a fresh fetchedAt timestamp", () => {
@@ -84,14 +89,68 @@ describe("envelope provenance", () => {
     // is a duplicated literal union. This asserts the duplication hasn't
     // drifted — a registry value the envelope can't express would be a
     // compile error here, and an unknown value a runtime failure.
-    const valid: EnvelopeProvenance[] = ["official", "community-mirror"];
+    const valid: EnvelopeProvenance[] = ["official", "community-mirror", "third-party-aggregator"];
     for (const value of Object.values(SOURCE_PROVENANCE)) {
       expect(valid).toContain(value);
     }
   });
 
-  it("every source registered today is official", () => {
-    expect(Object.values(SOURCE_PROVENANCE).every(p => p === "official")).toBe(true);
+  it("emits `provenance` for a third-party aggregator", () => {
+    expect(buildSuccessEnvelope({ ...base, provenance: "third-party-aggregator" }).provenance).toBe("third-party-aggregator");
+  });
+
+  it("every Taiwanese government source is still official; only openmeteo is not", () => {
+    const nonOfficial = Object.entries(SOURCE_PROVENANCE).filter(([, value]) => value !== "official");
+    expect(nonOfficial).toEqual([["openmeteo", "third-party-aggregator"]]);
+  });
+});
+
+describe("envelope licence", () => {
+  const base = { source: "中央氣象署", dataset: "F-C0032-001", cached: false, updateFrequency: "每日數次", data: {} };
+
+  it("omits `licence` when not supplied at all", () => {
+    expect("licence" in buildSuccessEnvelope(base)).toBe(false);
+  });
+
+  it("omits `licence` for the default (OGDL v1) licence, so government responses stay byte-identical", () => {
+    expect("licence" in buildSuccessEnvelope({ ...base, licence: OGDL_V1_LICENCE })).toBe(false);
+  });
+
+  it("emits `licence` for a non-default licence, so a caller can't assume the default terms", () => {
+    const envelope = buildSuccessEnvelope({ ...base, licence: CC_BY_4_0_LICENCE });
+    expect(envelope.licence).toMatchObject({ id: "cc-by-4.0", commercialUseAllowed: false });
+    expect(envelope.licence?.attributionText).toContain("Weather data by Open-Meteo.com");
+  });
+
+  it("keeps the default-licence envelope's exact key set unchanged", () => {
+    expect(Object.keys(buildSuccessEnvelope({ ...base, provenance: "official", licence: OGDL_V1_LICENCE }))).toEqual([
+      "ok",
+      "source",
+      "dataset",
+      "fetchedAt",
+      "cached",
+      "updateFrequency",
+      "data"
+    ]);
+  });
+
+  it("the infra-side default licence id still matches the registry's OGDL entry", () => {
+    // infra/ must not import registry/ (AGENTS.md §1), so the id is
+    // duplicated as a literal — this asserts the duplication hasn't drifted.
+    expect(DEFAULT_ENVELOPE_LICENCE_ID).toBe(OGDL_V1_LICENCE.id);
+  });
+
+  it("every Taiwanese government source is under the default licence; only openmeteo differs", () => {
+    const nonDefault = Object.entries(SOURCE_LICENCE)
+      .filter(([, licence]) => licence.id !== DEFAULT_ENVELOPE_LICENCE_ID)
+      .map(([source]) => source);
+    expect(nonDefault).toEqual(["openmeteo"]);
+  });
+
+  it("a licence requiring attribution actually carries attribution text", () => {
+    // CC BY makes credit a condition of the licence — an empty string here
+    // would mean the envelope claims a licence it isn't satisfying.
+    expect(CC_BY_4_0_LICENCE.attributionText.length).toBeGreaterThan(0);
   });
 });
 

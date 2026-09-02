@@ -2,12 +2,20 @@ import { z } from "zod";
 import { cwaAdapter } from "../adapters/cwa.js";
 import { highwayAdapter } from "../adapters/highway.js";
 import { moenvAdapter } from "../adapters/moenv.js";
+import { openMeteoAdapter } from "../adapters/open-meteo.js";
 import { tdxAdapter } from "../adapters/tdx.js";
 import type { SourceAdapter } from "../adapters/types.js";
 import { withCacheTracked } from "../infra/cache.js";
 import { buildFailureEnvelope, buildSuccessEnvelope } from "../infra/envelope.js";
 import { ToolError, toToolError } from "../infra/errors.js";
-import { getSourceProvenance, listDatasetEntries, type DatasetEntry, type SourceProvenance } from "../registry/index.js";
+import {
+  getSourceLicence,
+  getSourceProvenance,
+  listDatasetEntries,
+  type DatasetEntry,
+  type SourceLicence,
+  type SourceProvenance
+} from "../registry/index.js";
 import type { Env } from "../index.js";
 import type { McpToolResult } from "./types.js";
 
@@ -26,7 +34,8 @@ const ADAPTERS: Record<DatasetEntry<never, unknown, unknown>["source"], SourceAd
   cwa: cwaAdapter,
   moenv: moenvAdapter,
   tdx: tdxAdapter,
-  highway: highwayAdapter
+  highway: highwayAdapter,
+  openmeteo: openMeteoAdapter
 };
 
 // --- tw_search_datasets ---
@@ -37,11 +46,12 @@ export const searchDatasetsInputShape = {
     .min(1)
     .describe("搜尋關鍵字，比對已註冊資料集的標題與關鍵字標籤（例如「地震」「空氣品質」「溫度」）。"),
   source: z
-    .enum(["cwa", "moenv", "tdx", "highway"])
+    .enum(["cwa", "moenv", "tdx", "highway", "openmeteo"])
     .optional()
     .describe(
-      "只搜尋特定機關的資料集：cwa（中央氣象署）、moenv（環境部）、tdx（交通部運輸資料流通服務）或 " +
-        "highway（交通部高速公路局『交通資料庫』）。不填則搜尋所有機關。"
+      "只搜尋特定來源的資料集：cwa（中央氣象署）、moenv（環境部）、tdx（交通部運輸資料流通服務）、" +
+        "highway（交通部高速公路局『交通資料庫』）或 openmeteo（Open-Meteo，非官方第三方全球氣象服務）。" +
+        "不填則搜尋所有來源。"
     )
 };
 
@@ -61,10 +71,17 @@ export interface DatasetSearchResultItem {
    * republisher. Surfaced here (not only on a curated tool's response)
    * because this is the discovery path: a caller browsing the registry
    * should be able to tell an official dataset from a community mirror
-   * before deciding to query it. Every registered dataset is currently
-   * "official".
+   * before deciding to query it.
    */
   provenance: SourceProvenance;
+  /**
+   * Reuse terms for this dataset. Surfaced alongside `provenance` for the
+   * same discovery reason, and as a separate field because the two are
+   * independent (see `SourceLicence` in registry/index.ts) — a caller
+   * planning to redistribute needs the licence even for a source whose
+   * provenance is impeccable.
+   */
+  licence: SourceLicence;
 }
 
 export interface SearchDatasetsResult {
@@ -96,7 +113,8 @@ export function runSearchDatasets(query: string, source?: DatasetEntry<never, un
       title: entry.title,
       params: describeParams(entry),
       source: ADAPTERS[entry.source].displayName,
-      provenance: getSourceProvenance(entry.source)
+      provenance: getSourceProvenance(entry.source),
+      licence: getSourceLicence(entry.source)
     }));
   return { query, results };
 }
@@ -109,10 +127,23 @@ export function formatSearchDatasetsText(result: SearchDatasetsResult): string {
   for (const item of result.results) {
     lines.push(`## ${item.datasetId} — ${item.title}`);
     lines.push(`- 資料來源：${item.source}`);
-    // Never fires today (every registered source is official) — present so
-    // a future community-mirror dataset can't be listed without the caveat.
-    if (item.provenance !== "official") {
+    if (item.provenance === "community-mirror") {
       lines.push("- ⚠️ 非官方來源：社群維護的鏡像服務，資料可能有延遲或缺漏，正式資訊請以原始官方平台為準。");
+    } else if (item.provenance === "third-party-aggregator") {
+      lines.push(
+        "- ⚠️ 非官方來源：第三方彙整服務，資料由該服務整合並內插各國官方模式輸出後產生，" +
+          "回傳值不一定等同任何一國官方發布的數字，正式資訊請以當地官方氣象機關為準。"
+      );
+    }
+    // Only shown when the licence differs from this server's default, for
+    // the same reason the envelope omits it there — repeating 政府資料開放
+    // 授權條款 on every government dataset would be noise, while silently
+    // omitting a *different* licence would be a compliance problem.
+    if (item.licence.id !== "ogdl-1.0") {
+      lines.push(
+        `- 📄 授權：${item.licence.name}（與本伺服器其他資料集的政府資料開放授權條款第 1 版不同）` +
+          `${item.licence.commercialUseAllowed ? "" : "，且**不得用於商業用途**"}。詳見 ${item.licence.url}`
+      );
     }
     if (item.params.length === 0) {
       lines.push(`- 參數：無`);

@@ -4,6 +4,8 @@ import { describe, expect, it } from "vitest";
 // Side-effect imports: registers the cwa/moenv registry entries these tests query against.
 import "../../src/registry/cwa.js";
 import "../../src/registry/moenv.js";
+import "../../src/registry/open-meteo.js";
+import { OGDL_V1_LICENCE } from "../../src/registry/index.js";
 import {
   formatSearchDatasetsText,
   handleQueryDatasetTool,
@@ -58,10 +60,32 @@ describe("runSearchDatasets", () => {
     expect(result.results).toEqual([]);
   });
 
-  it("labels every currently-registered dataset as official", () => {
+  it("labels every currently-registered Taiwanese government dataset as official", () => {
     const result = runSearchDatasets("地震");
     expect(result.results.length).toBeGreaterThan(0);
     expect(result.results.every(r => r.provenance === "official")).toBe(true);
+  });
+
+  it("labels the Open-Meteo datasets as a third-party aggregator under a non-default licence", () => {
+    const result = runSearchDatasets("open-meteo");
+    expect(result.results.map(r => r.datasetId).sort()).toEqual(["openmeteo:forecast", "openmeteo:geocoding"]);
+    expect(result.results.every(r => r.provenance === "third-party-aggregator")).toBe(true);
+    expect(result.results.every(r => r.licence.id === "cc-by-4.0")).toBe(true);
+    expect(result.results.every(r => r.licence.commercialUseAllowed === false)).toBe(true);
+  });
+
+  it("warns about the aggregator's derived data and its different licence in the rendered text", () => {
+    const text = formatSearchDatasetsText(runSearchDatasets("open-meteo"));
+    expect(text).toContain("非官方來源");
+    expect(text).toContain("內插");
+    expect(text).toContain("CC BY 4.0");
+    expect(text).toContain("不得用於商業用途");
+  });
+
+  it("does NOT print a licence line for datasets under the default government licence", () => {
+    // Repeating 政府資料開放授權條款 on every government dataset would be
+    // noise; the line exists to flag a *difference*.
+    expect(formatSearchDatasetsText(runSearchDatasets("地震"))).not.toContain("📄 授權");
   });
 
   it("does NOT print a non-official warning for official datasets", () => {
@@ -81,7 +105,8 @@ describe("runSearchDatasets", () => {
           title: "某個社群鏡像資料集",
           params: [],
           source: "某社群鏡像服務",
-          provenance: "community-mirror"
+          provenance: "community-mirror",
+          licence: OGDL_V1_LICENCE
         }
       ]
     });

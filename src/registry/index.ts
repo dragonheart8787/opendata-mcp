@@ -1,7 +1,14 @@
 import type { ZodTypeAny } from "zod";
 
+import {
+  OPEN_METEO_ATTRIBUTION,
+  OPEN_METEO_LICENCE_ID,
+  OPEN_METEO_LICENCE_NAME,
+  OPEN_METEO_LICENCE_URL
+} from "../constants.js";
+
 /** Every upstream this server can talk to. Adding one means adding an adapter with the same id. */
-export type SourceId = "cwa" | "moenv" | "tdx" | "highway";
+export type SourceId = "cwa" | "moenv" | "tdx" | "highway" | "openmeteo";
 
 /**
  * Whether a source is the agency publishing its own data, or a third party
@@ -14,17 +21,23 @@ export type SourceId = "cwa" | "moenv" | "tdx" | "highway";
  *   site), but it is a *copy*: it can lag, drop records, or go stale
  *   without the originating agency knowing or caring, and nothing about it
  *   is binding for any official purpose.
+ * - `third-party-aggregator`: a professionally-run service that ingests
+ *   multiple upstream authorities' data and *derives* new values from it
+ *   (interpolating model grids, harmonizing units, filling gaps). Unlike a
+ *   mirror it is not claiming to reproduce any one agency's output
+ *   verbatim, so a value it returns may not appear in ANY official
+ *   publication — which is exactly why it can't be labelled `official`,
+ *   and equally why "mirror" would understate what it does. Open-Meteo
+ *   (`openmeteo`) is the first: it serves interpolated output from DWD
+ *   ICON, NOAA HRRR, Météo-France AROME and others.
  *
- * Every source registered today is `official` — the `community-mirror`
- * variant is deliberately defined ahead of its first user. It exists
- * because the distinction has to be *carryable* the moment a non-official
- * source is added: the response envelope and `tw_search_datasets` both
- * consume it (see infra/envelope.ts's `provenance` and
- * tools/generic.ts), so a future mirror can't be added without the caveat
- * travelling with its data. See AGENTS.md §6 for the source that
- * prompted this and why it isn't registered.
+ * `community-mirror` still has no registered user — it is kept because the
+ * distinction has to be *carryable* the moment such a source is added: the
+ * response envelope and `tw_search_datasets` both consume this (see
+ * infra/envelope.ts's `provenance` and tools/generic.ts). See AGENTS.md §6
+ * for the mirror that prompted it and why it isn't registered.
  */
-export type SourceProvenance = "official" | "community-mirror";
+export type SourceProvenance = "official" | "community-mirror" | "third-party-aggregator";
 
 /**
  * The authoritative source-to-provenance mapping. Lives here (not on the
@@ -36,7 +49,8 @@ export const SOURCE_PROVENANCE: Record<SourceId, SourceProvenance> = {
   cwa: "official",
   moenv: "official",
   tdx: "official",
-  highway: "official"
+  highway: "official",
+  openmeteo: "third-party-aggregator"
 };
 
 export function getSourceProvenance(source: SourceId): SourceProvenance {
@@ -45,6 +59,80 @@ export function getSourceProvenance(source: SourceId): SourceProvenance {
 
 export function isOfficialSource(source: SourceId): boolean {
   return SOURCE_PROVENANCE[source] === "official";
+}
+
+/**
+ * The terms a source's DATA may be reused under.
+ *
+ * **This is deliberately a separate axis from `SourceProvenance`, not more
+ * values bolted onto it.** Provenance answers "how much authority does this
+ * carry" (is it the agency itself, a copy, or a derived product);
+ * `SourceLicence` answers "what am I allowed to do with it". The two are
+ * genuinely orthogonal — an official agency's data can be CC BY, and a
+ * non-official aggregator's can be public domain — so folding a licence
+ * into the provenance union (e.g. a `"cc-by-noncommercial"` member) would
+ * force one field to mean two unrelated things and make combinations that
+ * really occur inexpressible. Adding this alongside, rather than widening
+ * the existing enum, is the answer to "can SourceProvenance be extended to
+ * cover licensing" — the enum WAS extended (`third-party-aggregator`), but
+ * only for the part of Open-Meteo that is genuinely a provenance fact.
+ */
+export interface SourceLicence {
+  /** Stable machine id, e.g. "ogdl-1.0", "cc-by-4.0". */
+  id: string;
+  /** Human-readable name, surfaced to callers. */
+  name: string;
+  /** Canonical licence text URL. */
+  url: string;
+  /**
+   * Whether the licence permits commercial reuse. 政府資料開放授權條款第 1 版
+   * does; Open-Meteo's free tier explicitly does not (its terms restrict the
+   * free API to non-commercial use and direct commercial users to a paid
+   * plan), which is a real, caller-visible constraint and not merely
+   * paperwork.
+   */
+  commercialUseAllowed: boolean;
+  /**
+   * Attribution/notice text a caller must carry when redistributing. Non-
+   * empty for licences that make attribution a condition (CC BY); the
+   * curated tool also embeds this in its response DATA — see
+   * `OPEN_METEO_ATTRIBUTION` in constants.ts for why description-only
+   * placement is not sufficient.
+   */
+  attributionText: string;
+}
+
+/**
+ * 政府資料開放授權條款第 1 版 — the licence every Taiwanese government source
+ * in this server publishes under, and this project's default (see
+ * docs/ARCHITECTURE.md §4.4 and the README's licence section).
+ */
+export const OGDL_V1_LICENCE: SourceLicence = {
+  id: "ogdl-1.0",
+  name: "政府資料開放授權條款第 1 版",
+  url: "https://data.gov.tw/license",
+  commercialUseAllowed: true,
+  attributionText: ""
+};
+
+export const CC_BY_4_0_LICENCE: SourceLicence = {
+  id: OPEN_METEO_LICENCE_ID,
+  name: OPEN_METEO_LICENCE_NAME,
+  url: OPEN_METEO_LICENCE_URL,
+  commercialUseAllowed: false,
+  attributionText: OPEN_METEO_ATTRIBUTION
+};
+
+export const SOURCE_LICENCE: Record<SourceId, SourceLicence> = {
+  cwa: OGDL_V1_LICENCE,
+  moenv: OGDL_V1_LICENCE,
+  tdx: OGDL_V1_LICENCE,
+  highway: OGDL_V1_LICENCE,
+  openmeteo: CC_BY_4_0_LICENCE
+};
+
+export function getSourceLicence(source: SourceId): SourceLicence {
+  return SOURCE_LICENCE[source];
 }
 
 /**
