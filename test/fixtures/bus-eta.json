@@ -13,9 +13,10 @@
       "En": "615"
     },
     "Direction": 1,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "EstimateTime": 587,
+    "StopStatus": 0,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE187094",
@@ -31,9 +32,9 @@
       "En": "615"
     },
     "Direction": 0,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "StopStatus": 3,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE22008",
@@ -49,9 +50,9 @@
       "En": "615"
     },
     "Direction": 0,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "StopStatus": 3,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE22009",
@@ -67,9 +68,10 @@
       "En": "615"
     },
     "Direction": 0,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "EstimateTime": 174,
+    "StopStatus": 0,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE22000",
@@ -85,9 +87,9 @@
       "En": "615"
     },
     "Direction": 0,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "StopStatus": 3,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE22001",
@@ -103,9 +105,9 @@
       "En": "615"
     },
     "Direction": 0,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "StopStatus": 3,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE22002",
@@ -121,9 +123,9 @@
       "En": "615"
     },
     "Direction": 0,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "StopStatus": 3,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE22003",
@@ -139,9 +141,9 @@
       "En": "615"
     },
     "Direction": 0,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "StopStatus": 3,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE22004",
@@ -157,9 +159,9 @@
       "En": "615"
     },
     "Direction": 0,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "StopStatus": 3,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE22005",
@@ -175,9 +177,9 @@
       "En": "615"
     },
     "Direction": 0,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "StopStatus": 3,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE22006",
@@ -193,9 +195,9 @@
       "En": "615"
     },
     "Direction": 0,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "StopStatus": 3,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE22007",
@@ -211,9 +213,9 @@
       "En": "615"
     },
     "Direction": 0,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "StopStatus": 3,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE22033",
@@ -229,9 +231,10 @@
       "En": "615"
     },
     "Direction": 1,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "EstimateTime": 932,
+    "StopStatus": 0,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE22034",
@@ -247,9 +250,10 @@
       "En": "615"
     },
     "Direction": 1,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "EstimateTime": 1049,
+    "StopStatus": 0,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE22035",
@@ -265,9 +269,10 @@
       "En": "615"
     },
     "Direction": 1,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "EstimateTime": 1229,
+    "StopStatus": 0,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE22036",
@@ -283,9 +288,10 @@
       "En": "615"
     },
     "Direction": 1,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "EstimateTime": 1279,
+    "StopStatus": 0,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE22037",
@@ -301,9 +307,10 @@
       "En": "615"
     },
     "Direction": 1,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "EstimateTime": 1352,
+    "StopStatus": 0,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE22038",
@@ -319,9 +326,10 @@
       "En": "615"
     },
     "Direction": 1,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "EstimateTime": 1404,
+    "StopStatus": 0,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE22039",
@@ -337,9 +345,10 @@
       "En": "615"
     },
     "Direction": 1,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "EstimateTime": 1482,
+    "StopStatus": 0,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE22030",
@@ -355,9 +364,10 @@
       "En": "615"
     },
     "Direction": 1,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "EstimateTime": 696,
+    "StopStatus": 0,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE22031",
@@ -373,9 +383,10 @@
       "En": "615"
     },
     "Direction": 1,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "EstimateTime": 787,
+    "StopStatus": 0,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE22032",
@@ -391,9 +402,10 @@
       "En": "615"
     },
     "Direction": 1,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "EstimateTime": 876,
+    "StopStatus": 0,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE22044",
@@ -409,9 +421,10 @@
       "En": "615"
     },
     "Direction": 1,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "EstimateTime": 1815,
+    "StopStatus": 0,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE22045",
@@ -427,9 +440,10 @@
       "En": "615"
     },
     "Direction": 1,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "EstimateTime": 1989,
+    "StopStatus": 0,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE22046",
@@ -445,9 +459,10 @@
       "En": "615"
     },
     "Direction": 1,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "EstimateTime": 2087,
+    "StopStatus": 0,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE22040",
@@ -463,9 +478,10 @@
       "En": "615"
     },
     "Direction": 1,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "EstimateTime": 1529,
+    "StopStatus": 0,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE22041",
@@ -481,9 +497,10 @@
       "En": "615"
     },
     "Direction": 1,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "EstimateTime": 1599,
+    "StopStatus": 0,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE22042",
@@ -499,9 +516,10 @@
       "En": "615"
     },
     "Direction": 1,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "EstimateTime": 1735,
+    "StopStatus": 0,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE22019",
@@ -517,9 +535,10 @@
       "En": "615"
     },
     "Direction": 1,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "EstimateTime": 2657,
+    "StopStatus": 0,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE22011",
@@ -535,9 +554,10 @@
       "En": "615"
     },
     "Direction": 0,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "EstimateTime": 662,
+    "StopStatus": 0,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE22013",
@@ -553,9 +573,10 @@
       "En": "615"
     },
     "Direction": 0,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "EstimateTime": 778,
+    "StopStatus": 0,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE22014",
@@ -571,9 +592,10 @@
       "En": "615"
     },
     "Direction": 1,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "EstimateTime": 1207,
+    "StopStatus": 0,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE22015",
@@ -589,9 +611,10 @@
       "En": "615"
     },
     "Direction": 1,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "EstimateTime": 1242,
+    "StopStatus": 0,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE22017",
@@ -607,9 +630,10 @@
       "En": "615"
     },
     "Direction": 1,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "EstimateTime": 2316,
+    "StopStatus": 0,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE22018",
@@ -625,9 +649,10 @@
       "En": "615"
     },
     "Direction": 1,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "EstimateTime": 2538,
+    "StopStatus": 0,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE22010",
@@ -643,9 +668,10 @@
       "En": "615"
     },
     "Direction": 0,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "EstimateTime": 479,
+    "StopStatus": 0,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE22022",
@@ -661,9 +687,10 @@
       "En": "615"
     },
     "Direction": 1,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "EstimateTime": 2854,
+    "StopStatus": 0,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE22023",
@@ -679,9 +706,10 @@
       "En": "615"
     },
     "Direction": 1,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "EstimateTime": 56,
+    "StopStatus": 0,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE22024",
@@ -697,9 +725,10 @@
       "En": "615"
     },
     "Direction": 1,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "EstimateTime": 119,
+    "StopStatus": 0,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE22025",
@@ -715,9 +744,10 @@
       "En": "615"
     },
     "Direction": 1,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "EstimateTime": 157,
+    "StopStatus": 0,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE22026",
@@ -733,9 +763,10 @@
       "En": "615"
     },
     "Direction": 1,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "EstimateTime": 243,
+    "StopStatus": 0,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE22027",
@@ -751,9 +782,10 @@
       "En": "615"
     },
     "Direction": 1,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "EstimateTime": 362,
+    "StopStatus": 0,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE22028",
@@ -769,9 +801,10 @@
       "En": "615"
     },
     "Direction": 1,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "EstimateTime": 475,
+    "StopStatus": 0,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE22029",
@@ -787,9 +820,10 @@
       "En": "615"
     },
     "Direction": 1,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "EstimateTime": 641,
+    "StopStatus": 0,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE22020",
@@ -805,9 +839,10 @@
       "En": "615"
     },
     "Direction": 1,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "EstimateTime": 2698,
+    "StopStatus": 0,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE22021",
@@ -823,9 +858,10 @@
       "En": "615"
     },
     "Direction": 1,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "EstimateTime": 2737,
+    "StopStatus": 0,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE222545",
@@ -841,9 +877,9 @@
       "En": "615"
     },
     "Direction": 0,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "StopStatus": 3,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE129785",
@@ -859,9 +895,10 @@
       "En": "615"
     },
     "Direction": 1,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "EstimateTime": 1569,
+    "StopStatus": 0,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE130144",
@@ -877,9 +914,9 @@
       "En": "615"
     },
     "Direction": 0,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "StopStatus": 3,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE130145",
@@ -895,9 +932,10 @@
       "En": "615"
     },
     "Direction": 1,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "EstimateTime": 1850,
+    "StopStatus": 0,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE134857",
@@ -913,9 +951,10 @@
       "En": "615"
     },
     "Direction": 1,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "EstimateTime": 1167,
+    "StopStatus": 0,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE224416",
@@ -931,9 +970,10 @@
       "En": "615"
     },
     "Direction": 1,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "EstimateTime": 809,
+    "StopStatus": 0,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE224100",
@@ -949,9 +989,10 @@
       "En": "615"
     },
     "Direction": 1,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "EstimateTime": 1741,
+    "StopStatus": 0,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE170268",
@@ -967,9 +1008,10 @@
       "En": "615"
     },
     "Direction": 1,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "EstimateTime": 280,
+    "StopStatus": 0,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE170767",
@@ -985,9 +1027,10 @@
       "En": "615"
     },
     "Direction": 1,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "EstimateTime": 2013,
+    "StopStatus": 0,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE170766",
@@ -1003,9 +1046,10 @@
       "En": "615"
     },
     "Direction": 1,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "EstimateTime": 1950,
+    "StopStatus": 0,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE170765",
@@ -1021,9 +1065,9 @@
       "En": "615"
     },
     "Direction": 0,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "StopStatus": 3,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE21985",
@@ -1039,9 +1083,9 @@
       "En": "615"
     },
     "Direction": 0,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "StopStatus": 3,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE21984",
@@ -1057,9 +1101,9 @@
       "En": "615"
     },
     "Direction": 0,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "StopStatus": 3,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE21983",
@@ -1075,9 +1119,9 @@
       "En": "615"
     },
     "Direction": 0,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "StopStatus": 3,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE21981",
@@ -1093,9 +1137,9 @@
       "En": "615"
     },
     "Direction": 0,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "StopStatus": 3,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE21980",
@@ -1111,9 +1155,9 @@
       "En": "615"
     },
     "Direction": 0,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "StopStatus": 3,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE21989",
@@ -1129,9 +1173,9 @@
       "En": "615"
     },
     "Direction": 0,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "StopStatus": 3,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE21988",
@@ -1147,9 +1191,9 @@
       "En": "615"
     },
     "Direction": 0,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "StopStatus": 3,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE21987",
@@ -1165,9 +1209,9 @@
       "En": "615"
     },
     "Direction": 0,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "StopStatus": 3,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE21986",
@@ -1183,9 +1227,9 @@
       "En": "615"
     },
     "Direction": 0,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "StopStatus": 3,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE21996",
@@ -1201,9 +1245,9 @@
       "En": "615"
     },
     "Direction": 0,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "StopStatus": 3,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE21995",
@@ -1219,9 +1263,9 @@
       "En": "615"
     },
     "Direction": 0,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "StopStatus": 3,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE21994",
@@ -1237,9 +1281,9 @@
       "En": "615"
     },
     "Direction": 0,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "StopStatus": 3,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE21993",
@@ -1255,9 +1299,9 @@
       "En": "615"
     },
     "Direction": 0,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "StopStatus": 3,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE21992",
@@ -1273,9 +1317,9 @@
       "En": "615"
     },
     "Direction": 0,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "StopStatus": 3,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE21991",
@@ -1291,9 +1335,9 @@
       "En": "615"
     },
     "Direction": 0,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "StopStatus": 3,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE21990",
@@ -1309,9 +1353,9 @@
       "En": "615"
     },
     "Direction": 0,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "StopStatus": 3,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE21999",
@@ -1327,9 +1371,9 @@
       "En": "615"
     },
     "Direction": 0,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "StopStatus": 3,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE21998",
@@ -1345,9 +1389,9 @@
       "En": "615"
     },
     "Direction": 0,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "StopStatus": 3,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE21997",
@@ -1363,9 +1407,9 @@
       "En": "615"
     },
     "Direction": 0,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "StopStatus": 3,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE21979",
@@ -1381,9 +1425,9 @@
       "En": "615"
     },
     "Direction": 0,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "StopStatus": 3,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   },
   {
     "StopUID": "TPE181706",
@@ -1399,8 +1443,8 @@
       "En": "615"
     },
     "Direction": 0,
-    "StopStatus": 1,
-    "SrcUpdateTime": "2026-07-27T14:36:10+08:00",
-    "UpdateTime": "2026-07-27T14:36:17+08:00"
+    "StopStatus": 3,
+    "SrcUpdateTime": "2026-10-05T18:14:05+08:00",
+    "UpdateTime": "2026-10-05T18:14:10+08:00"
   }
 ]
