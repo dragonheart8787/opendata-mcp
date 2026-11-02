@@ -1,138 +1,290 @@
 [
   {
     "StationID": "1000",
-    "StationName": { "Zh_tw": "臺北", "En": "Taipei" },
-    "TrainNo": "221",
-    "Direction": 1,
-    "TrainTypeID": "110F",
+    "StationName": {
+      "Zh_tw": "臺北",
+      "En": "Taipei",
+      "Ja": null,
+      "Ko": null
+    },
+    "TrainNo": "4236",
+    "Direction": 0,
+    "TrainTypeID": "1131",
+    "TrainTypeCode": "6",
+    "TrainTypeName": {
+      "Zh_tw": "區間",
+      "En": "Local Train",
+      "Ja": null,
+      "Ko": null
+    },
+    "TripLine": 0,
+    "EndingStationID": "7360",
+    "EndingStationName": {
+      "Zh_tw": "瑞芳",
+      "En": "Ruifang",
+      "Ja": null,
+      "Ko": null
+    },
+    "ScheduledArrivalTime": "18:47:00",
+    "ScheduledDepartureTime": "18:50:00",
+    "DelayTime": 0,
+    "SrcUpdateTime": "2026-11-02T18:46:56+08:00",
+    "UpdateTime": "2026-11-02T18:48:04+08:00"
+  },
+  {
+    "StationID": "1000",
+    "StationName": {
+      "Zh_tw": "臺北",
+      "En": "Taipei",
+      "Ja": null,
+      "Ko": null
+    },
+    "TrainNo": "130",
+    "Direction": 0,
+    "TrainTypeID": "1108",
     "TrainTypeCode": "3",
-    "TrainTypeName": { "Zh_tw": "自強(DMU3100 型柴聯)", "En": "Tze-Chiang Express" },
+    "TrainTypeName": {
+      "Zh_tw": "自強(推拉式自強號且無自行車車廂)",
+      "En": "Tze-Chiang Express",
+      "Ja": null,
+      "Ko": null
+    },
+    "TripLine": 2,
+    "EndingStationID": "0900",
+    "EndingStationName": {
+      "Zh_tw": "基隆",
+      "En": "Keelung",
+      "Ja": null,
+      "Ko": null
+    },
+    "ScheduledArrivalTime": "18:51:00",
+    "ScheduledDepartureTime": "18:55:00",
+    "DelayTime": 0,
+    "SrcUpdateTime": "2026-11-02T18:47:20+08:00",
+    "UpdateTime": "2026-11-02T18:48:04+08:00"
+  },
+  {
+    "StationID": "1000",
+    "StationName": {
+      "Zh_tw": "臺北",
+      "En": "Taipei",
+      "Ja": null,
+      "Ko": null
+    },
+    "TrainNo": "4197",
+    "Direction": 1,
+    "TrainTypeID": "1131",
+    "TrainTypeCode": "6",
+    "TrainTypeName": {
+      "Zh_tw": "區間",
+      "En": "Local Train",
+      "Ja": null,
+      "Ko": null
+    },
     "TripLine": 0,
     "EndingStationID": "1040",
-    "EndingStationName": { "Zh_tw": "樹林", "En": "Shulin" },
-    "ScheduledArrivalTime": "15:45:00",
-    "ScheduledDepartureTime": "15:48:00",
-    "DelayTime": 1,
-    "SrcUpdateTime": "2026-07-22T15:39:39+08:00",
-    "UpdateTime": "2026-07-22T15:42:04+08:00"
-  },
-  {
-    "StationID": "1000",
-    "StationName": { "Zh_tw": "臺北", "En": "Taipei" },
-    "TrainNo": "172",
-    "Direction": 0,
-    "TrainTypeID": "110H",
-    "TrainTypeCode": "11",
-    "TrainTypeName": { "Zh_tw": "自強(3000)(EMU3000 型電車)", "En": "Tze-Chiang 3000 Express " },
-    "TripLine": 1,
-    "EndingStationID": "0930",
-    "EndingStationName": { "Zh_tw": "七堵", "En": "Qidu" },
-    "ScheduledArrivalTime": "15:46:00",
-    "ScheduledDepartureTime": "15:49:00",
+    "EndingStationName": {
+      "Zh_tw": "樹林",
+      "En": "Shulin",
+      "Ja": null,
+      "Ko": null
+    },
+    "ScheduledArrivalTime": "18:53:00",
+    "ScheduledDepartureTime": "18:54:00",
     "DelayTime": 0,
-    "SrcUpdateTime": "2026-07-22T15:41:55+08:00",
-    "UpdateTime": "2026-07-22T15:42:04+08:00"
+    "SrcUpdateTime": "2026-11-02T18:46:35+08:00",
+    "UpdateTime": "2026-11-02T18:48:04+08:00"
   },
   {
     "StationID": "1000",
-    "StationName": { "Zh_tw": "臺北", "En": "Taipei" },
-    "TrainNo": "167",
-    "Direction": 1,
-    "TrainTypeID": "110G",
-    "TrainTypeCode": "11",
-    "TrainTypeName": { "Zh_tw": "自強(3000)(EMU3000 型電車)", "En": "Tze-Chiang 3000 Express " },
-    "TripLine": 1,
-    "EndingStationID": "6000",
-    "EndingStationName": { "Zh_tw": "臺東", "En": "Taitung" },
-    "ScheduledArrivalTime": "15:51:00",
-    "ScheduledDepartureTime": "15:54:00",
-    "DelayTime": 3,
-    "SrcUpdateTime": "2026-07-22T15:41:10+08:00",
-    "UpdateTime": "2026-07-22T15:42:04+08:00"
-  },
-  {
-    "StationID": "1000",
-    "StationName": { "Zh_tw": "臺北", "En": "Taipei" },
-    "TrainNo": "238",
+    "StationName": {
+      "Zh_tw": "臺北",
+      "En": "Taipei",
+      "Ja": null,
+      "Ko": null
+    },
+    "TrainNo": "4046",
     "Direction": 0,
-    "TrainTypeID": "110F",
-    "TrainTypeCode": "3",
-    "TrainTypeName": { "Zh_tw": "自強(DMU3100 型柴聯)", "En": "Tze-Chiang Express" },
+    "TrainTypeID": "1132",
+    "TrainTypeCode": "10",
+    "TrainTypeName": {
+      "Zh_tw": "區間快",
+      "En": "Fast Local Train",
+      "Ja": null,
+      "Ko": null
+    },
     "TripLine": 0,
     "EndingStationID": "7000",
-    "EndingStationName": { "Zh_tw": "花蓮", "En": "Hualien" },
-    "ScheduledArrivalTime": "15:51:00",
-    "ScheduledDepartureTime": "15:53:00",
-    "DelayTime": 1,
-    "SrcUpdateTime": "2026-07-22T15:41:26+08:00",
-    "UpdateTime": "2026-07-22T15:42:04+08:00"
+    "EndingStationName": {
+      "Zh_tw": "花蓮",
+      "En": "Hualien",
+      "Ja": null,
+      "Ko": null
+    },
+    "ScheduledArrivalTime": "18:55:00",
+    "ScheduledDepartureTime": "19:00:00",
+    "DelayTime": 0,
+    "SrcUpdateTime": "2026-11-02T18:47:52+08:00",
+    "UpdateTime": "2026-11-02T18:48:04+08:00"
   },
   {
     "StationID": "1000",
-    "StationName": { "Zh_tw": "臺北", "En": "Taipei" },
-    "TrainNo": "175",
+    "StationName": {
+      "Zh_tw": "臺北",
+      "En": "Taipei",
+      "Ja": null,
+      "Ko": null
+    },
+    "TrainNo": "149",
     "Direction": 1,
     "TrainTypeID": "1108",
     "TrainTypeCode": "3",
-    "TrainTypeName": { "Zh_tw": "自強(推拉式自強號且無自行車車廂)", "En": "Tze-Chiang Express" },
+    "TrainTypeName": {
+      "Zh_tw": "自強(推拉式自強號且無自行車車廂)",
+      "En": "Tze-Chiang Express",
+      "Ja": null,
+      "Ko": null
+    },
     "TripLine": 1,
     "EndingStationID": "5050",
-    "EndingStationName": { "Zh_tw": "潮州", "En": "Chaozhou" },
-    "ScheduledArrivalTime": "15:55:00",
-    "ScheduledDepartureTime": "16:00:00",
-    "DelayTime": 1,
-    "SrcUpdateTime": "2026-07-22T15:38:47+08:00",
-    "UpdateTime": "2026-07-22T15:42:04+08:00"
-  },
-  {
-    "StationID": "1000",
-    "StationName": { "Zh_tw": "臺北", "En": "Taipei" },
-    "TrainNo": "434",
-    "Direction": 0,
-    "TrainTypeID": "110G",
-    "TrainTypeCode": "11",
-    "TrainTypeName": { "Zh_tw": "自強(3000)(EMU3000 型電車)", "En": "Tze-Chiang 3000 Express " },
-    "TripLine": 0,
-    "EndingStationID": "4340",
-    "EndingStationName": { "Zh_tw": "新左營", "En": "Xinzuoying" },
-    "ScheduledArrivalTime": "15:58:00",
-    "ScheduledDepartureTime": "16:02:00",
+    "EndingStationName": {
+      "Zh_tw": "潮州",
+      "En": "Chaozhou",
+      "Ja": null,
+      "Ko": null
+    },
+    "ScheduledArrivalTime": "18:57:00",
+    "ScheduledDepartureTime": "18:59:00",
     "DelayTime": 0,
-    "SrcUpdateTime": "2026-07-22T15:41:10+08:00",
-    "UpdateTime": "2026-07-22T15:42:04+08:00"
+    "SrcUpdateTime": "2026-11-02T18:45:16+08:00",
+    "UpdateTime": "2026-11-02T18:48:04+08:00"
   },
   {
     "StationID": "1000",
-    "StationName": { "Zh_tw": "臺北", "En": "Taipei" },
-    "TrainNo": "1211",
+    "StationName": {
+      "Zh_tw": "臺北",
+      "En": "Taipei",
+      "Ja": null,
+      "Ko": null
+    },
+    "TrainNo": "1241",
     "Direction": 1,
     "TrainTypeID": "1131",
     "TrainTypeCode": "6",
-    "TrainTypeName": { "Zh_tw": "區間", "En": "Local Train" },
+    "TrainTypeName": {
+      "Zh_tw": "區間",
+      "En": "Local Train",
+      "Ja": null,
+      "Ko": null
+    },
     "TripLine": 0,
     "EndingStationID": "1210",
-    "EndingStationName": { "Zh_tw": "新竹", "En": "Hsinchu" },
-    "ScheduledArrivalTime": "16:03:00",
-    "ScheduledDepartureTime": "16:04:00",
-    "DelayTime": 1,
-    "SrcUpdateTime": "2026-07-22T15:35:03+08:00",
-    "UpdateTime": "2026-07-22T15:42:04+08:00"
+    "EndingStationName": {
+      "Zh_tw": "新竹",
+      "En": "Hsinchu",
+      "Ja": null,
+      "Ko": null
+    },
+    "ScheduledArrivalTime": "19:02:00",
+    "ScheduledDepartureTime": "19:04:00",
+    "DelayTime": 0,
+    "SrcUpdateTime": "2026-11-02T18:43:30+08:00",
+    "UpdateTime": "2026-11-02T18:48:04+08:00"
   },
   {
     "StationID": "1000",
-    "StationName": { "Zh_tw": "臺北", "En": "Taipei" },
-    "TrainNo": "1214",
+    "StationName": {
+      "Zh_tw": "臺北",
+      "En": "Taipei",
+      "Ja": null,
+      "Ko": null
+    },
+    "TrainNo": "231",
+    "Direction": 1,
+    "TrainTypeID": "1101",
+    "TrainTypeCode": "1",
+    "TrainTypeName": {
+      "Zh_tw": "太魯閣(太魯閣)",
+      "En": "Taroko Express",
+      "Ja": null,
+      "Ko": null
+    },
+    "TripLine": 0,
+    "EndingStationID": "1040",
+    "EndingStationName": {
+      "Zh_tw": "樹林",
+      "En": "Shulin",
+      "Ja": null,
+      "Ko": null
+    },
+    "ScheduledArrivalTime": "19:07:00",
+    "ScheduledDepartureTime": "19:10:00",
+    "DelayTime": 0,
+    "SrcUpdateTime": "2026-11-02T18:47:46+08:00",
+    "UpdateTime": "2026-11-02T18:48:04+08:00"
+  },
+  {
+    "StationID": "1000",
+    "StationName": {
+      "Zh_tw": "臺北",
+      "En": "Taipei",
+      "Ja": null,
+      "Ko": null
+    },
+    "TrainNo": "2214",
     "Direction": 0,
     "TrainTypeID": "1131",
     "TrainTypeCode": "6",
-    "TrainTypeName": { "Zh_tw": "區間", "En": "Local Train" },
-    "TripLine": 0,
+    "TrainTypeName": {
+      "Zh_tw": "區間",
+      "En": "Local Train",
+      "Ja": null,
+      "Ko": null
+    },
+    "TripLine": 1,
     "EndingStationID": "0900",
-    "EndingStationName": { "Zh_tw": "基隆", "En": "Keelung" },
-    "ScheduledArrivalTime": "16:05:00",
-    "ScheduledDepartureTime": "16:07:00",
+    "EndingStationName": {
+      "Zh_tw": "基隆",
+      "En": "Keelung",
+      "Ja": null,
+      "Ko": null
+    },
+    "ScheduledArrivalTime": "19:08:00",
+    "ScheduledDepartureTime": "19:10:00",
     "DelayTime": 0,
-    "SrcUpdateTime": "2026-07-22T15:41:51+08:00",
-    "UpdateTime": "2026-07-22T15:42:04+08:00"
+    "SrcUpdateTime": "2026-11-02T18:44:41+08:00",
+    "UpdateTime": "2026-11-02T18:48:04+08:00"
+  },
+  {
+    "StationID": "1000",
+    "StationName": {
+      "Zh_tw": "臺北",
+      "En": "Taipei",
+      "Ja": null,
+      "Ko": null
+    },
+    "TrainNo": "653",
+    "Direction": 1,
+    "TrainTypeID": "1110",
+    "TrainTypeCode": "4",
+    "TrainTypeName": {
+      "Zh_tw": "莒光(無身障座位)",
+      "En": "Chu-Kuang Express",
+      "Ja": null,
+      "Ko": null
+    },
+    "TripLine": 2,
+    "EndingStationID": "3360",
+    "EndingStationName": {
+      "Zh_tw": "彰化",
+      "En": "Changhua",
+      "Ja": null,
+      "Ko": null
+    },
+    "ScheduledArrivalTime": "19:13:00",
+    "ScheduledDepartureTime": "19:16:00",
+    "DelayTime": 0,
+    "SrcUpdateTime": "2026-11-02T18:44:07+08:00",
+    "UpdateTime": "2026-11-02T18:48:04+08:00"
   }
 ]
